@@ -69,6 +69,12 @@ html.theme-light .bg-slate-700\/50 {
     background-color: rgba(255, 255, 255, 0.92) !important;
 }
 
+/* Protect sidebar PGI from the blanket light-mode bg overrides */
+html.theme-light .sidebar-pgi,
+html.theme-light aside .sidebar-pgi {
+    background: linear-gradient(180deg, #10325b 0%, #0c2644 48%, #071a30 100%) !important;
+}
+
 html.theme-light .bg-white\/5,
 html.theme-light .bg-white\/10,
 html.theme-light .hover\:bg-white\/5:hover,
@@ -120,6 +126,180 @@ html.theme-light .theme-toggle {
 }
 
 /* ==========================================================================
+   PGI Corporate Blue Sidebar (Signature Brand Color)
+   Dark mode + Light mode both use the same rich corporate blue
+   ========================================================================== */
+.sidebar-pgi {
+    background: linear-gradient(180deg, #123762 0%, #0d2847 48%, #081a30 100%) !important;
+    border-right: 1px solid rgba(56, 189, 248, 0.18) !important;
+    box-shadow: 4px 0 24px rgba(7, 25, 46, 0.45);
+}
+
+/* Dark mode: keep sidebar PGI blue regardless of any global overrides */
+html:not(.theme-light) .sidebar-pgi {
+    background: linear-gradient(180deg, #123762 0%, #0d2847 48%, #081a30 100%) !important;
+}
+
+html.theme-light .sidebar-pgi {
+    background: linear-gradient(180deg, #10325b 0%, #0c2644 48%, #071a30 100%) !important;
+    border-right: 1px solid rgba(18, 55, 98, 0.35) !important;
+    box-shadow: 4px 0 20px rgba(12, 36, 64, 0.18);
+}
+
+/* Ensure crisp contrast for all sidebar text and links across light/dark themes */
+.sidebar-pgi .sidebar-brand-title,
+html.theme-light .sidebar-pgi .sidebar-brand-title,
+.sidebar-pgi .sidebar-user-name,
+html.theme-light .sidebar-pgi .sidebar-user-name {
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-brand-subtitle,
+html.theme-light .sidebar-pgi .sidebar-brand-subtitle {
+    color: #7dd3fc !important;
+}
+
+.sidebar-pgi .sidebar-nav-inactive,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive {
+    color: #bae6fd !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+}
+
+.sidebar-pgi .sidebar-nav-inactive:hover,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar-pgi .sidebar-nav-inactive svg,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive svg {
+    color: #7dd3fc !important;
+    transition: color 0.2s ease;
+}
+
+.sidebar-pgi .sidebar-nav-inactive:hover svg,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-nav-active,
+html.theme-light .sidebar-pgi .sidebar-nav-active {
+    background: linear-gradient(135deg, #258cd2 0%, #155592 100%) !important;
+    color: #ffffff !important;
+    border-color: rgba(186, 230, 253, 0.35) !important;
+    box-shadow: 0 4px 14px -1px rgba(7, 26, 48, 0.6) !important;
+}
+
+.sidebar-pgi .sidebar-nav-active svg,
+html.theme-light .sidebar-pgi .sidebar-nav-active svg {
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-user-card,
+html.theme-light .sidebar-pgi .sidebar-user-card {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.sidebar-pgi .sidebar-user-avatar,
+html.theme-light .sidebar-pgi .sidebar-user-avatar {
+    background: linear-gradient(135deg, #38bdf8 0%, #1a5690 100%) !important;
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-divider,
+html.theme-light .sidebar-pgi .sidebar-divider {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ==========================================================================
+   Dashboard Button Hover Animations (Micro-interactions)
+   ========================================================================== */
+
+/* Primary action buttons: lift + glow on hover */
+.btn-primary-anim {
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.18s ease,
+                background-color 0.15s ease;
+}
+.btn-primary-anim:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.45);
+}
+.btn-primary-anim:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Secondary/outline buttons: gentle lift on hover */
+.btn-secondary-anim {
+    transition: transform 0.15s ease,
+                box-shadow 0.15s ease,
+                background-color 0.15s ease,
+                border-color 0.15s ease,
+                color 0.15s ease;
+}
+.btn-secondary-anim:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+}
+.btn-secondary-anim:active {
+    transform: translateY(0);
+}
+
+/* Memo/card links: slide-right arrow effect */
+.btn-card-link-anim {
+    transition: transform 0.15s ease,
+                border-color 0.15s ease,
+                background-color 0.15s ease;
+}
+.btn-card-link-anim:hover {
+    transform: translateX(2px);
+}
+
+/* Icon buttons (small): rotate or scale pulse */
+.btn-icon-anim {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                color 0.15s ease,
+                background-color 0.15s ease;
+}
+.btn-icon-anim:hover {
+    transform: scale(1.1);
+}
+
+/* Stats card hover: gentle rise */
+.card-hover-rise {
+    transition: transform 0.2s ease,
+                box-shadow 0.2s ease,
+                border-color 0.2s ease;
+}
+.card-hover-rise:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
+}
+
+/* ==========================================================================
+   Dashboard Table Header (Kop Tabel) — PGI Brand Blue
+   ========================================================================== */
+.table-head-pgi thead tr {
+    background: linear-gradient(90deg, #0d2847 0%, #123762 60%, #0e3060 100%);
+    border-bottom: 2px solid rgba(56, 189, 248, 0.25) !important;
+}
+.table-head-pgi thead th {
+    color: #bae6fd !important;
+    font-weight: 700;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+}
+.table-head-pgi thead th:first-child {
+    border-left: 3px solid #38bdf8;
+}
+
+/* ==========================================================================
    Print Styles for Official Documents
    ========================================================================== */
 @media print {
@@ -135,6 +315,11 @@ html.theme-light .theme-toggle {
         padding: 0 !important;
         width: 100% !important;
         height: auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    *, *::before, *::after {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }

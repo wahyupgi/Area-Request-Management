@@ -73,17 +73,23 @@ class DashboardController extends Controller
 
     private function adminDashboard($user)
     {
+        $memos = Memo::with(['template', 'branch.area', 'creator', 'areaManager'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         $stats = [
-            'total_memos' => Memo::count(),
+            'total_memos' => $memos->count(),
+            'approved_memos' => $memos->where('status', 'approved')->count(),
+            'pending_approvals' => $memos->where('status', 'submitted')->count(),
+            'rejected_memos' => $memos->where('status', 'rejected')->count(),
+            'draft_memos' => $memos->where('status', 'draft')->count(),
             'total_templates' => MemoTemplate::count(),
             'total_users' => \App\Models\User::count(),
-            'pending_approvals' => Memo::where('status', 'submitted')->count(),
+            'total_areas' => \App\Models\Area::count(),
+            'total_branches' => \App\Models\Branch::count(),
         ];
 
-        $recentMemos = Memo::with(['template', 'branch', 'creator', 'areaManager'])
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        $recentMemos = $memos->take(15)->values();
 
         return Inertia::render('Dashboard/Admin', [
             'stats' => $stats,

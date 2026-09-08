@@ -14,8 +14,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create Areas
-        $area1 = Area::create(['name' => 'Area Jakarta']);
-        $area2 = Area::create(['name' => 'Area Surabaya']);
+        $area1 = Area::create(['name' => 'Area Jawa Tengah']);
+        $area2 = Area::create(['name' => 'Area Jawa Timur']);
+        $area3 = Area::create(['name' => 'Area Jawa Barat']);
 
         // Create Admin
         $admin = User::create([
@@ -36,40 +37,40 @@ class DatabaseSeeder extends Seeder
 
         // Create Branches & KC Users
         $kc1 = User::create([
-            'name' => 'Andi Wijaya (KC Menteng)',
-            'email' => 'kc.menteng@arm.test',
-            'password' => 'password',
+            'name' => 'Gibran (KC Surakarta)',
+            'email' => 'kc.surakarta@arm.test',
+            'password' => 'gibran123',
             'role' => 'KC',
         ]);
         $branch1 = Branch::create([
-            'name' => 'Cabang Menteng',
+            'name' => 'Cabang Surakarta',
             'area_id' => $area1->id,
             'kc_user_id' => $kc1->id,
         ]);
         $kc1->update(['branch_id' => $branch1->id]);
 
         $kc2 = User::create([
-            'name' => 'Dewi Lestari (KC Kemang)',
-            'email' => 'kc.kemang@arm.test',
-            'password' => 'password',
+            'name' => 'Dewi Lestari (KC Klaten)',
+            'email' => 'kc.klaten@arm.test',
+            'password' => 'dewi123',
             'role' => 'KC',
         ]);
         $branch2 = Branch::create([
-            'name' => 'Cabang Kemang',
+            'name' => 'Cabang Klaten',
             'area_id' => $area1->id,
             'kc_user_id' => $kc2->id,
         ]);
         $kc2->update(['branch_id' => $branch2->id]);
 
         $kc3 = User::create([
-            'name' => 'Rudi Hartono (KC Tunjungan)',
-            'email' => 'kc.tunjungan@arm.test',
-            'password' => 'password',
+            'name' => 'Budi (KC Sragen)',
+            'email' => 'kc.sragen@arm.test',
+            'password' => 'budi123',
             'role' => 'KC',
         ]);
         $branch3 = Branch::create([
-            'name' => 'Cabang Tunjungan',
-            'area_id' => $area2->id,
+            'name' => 'Cabang Sragen',
+            'area_id' => $area1->id,
             'kc_user_id' => $kc3->id,
         ]);
         $kc3->update(['branch_id' => $branch3->id]);

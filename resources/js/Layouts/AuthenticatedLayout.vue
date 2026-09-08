@@ -17,11 +17,18 @@ const roleLabel = computed(() => {
     return labels[user.value?.role] || '';
 });
 
+const portalSubtitle = computed(() => {
+    if (user.value?.role === 'ADMIN') return 'Portal Administrator';
+    if (user.value?.role === 'AM') return 'Portal Area Manager';
+    if (user.value?.role === 'KC') return 'Portal Kantor Cabang';
+    return 'PT Pusat Gadai Indonesia';
+});
+
 const roleBadgeClass = computed(() => {
     const classes = {
-        KC: 'bg-blue-500/20 text-blue-400',
-        AM: 'bg-emerald-500/20 text-emerald-400',
-        ADMIN: 'bg-purple-500/20 text-purple-400'
+        KC: 'bg-sky-400/20 text-sky-200 border border-sky-400/30',
+        AM: 'bg-emerald-400/20 text-emerald-200 border border-emerald-400/30',
+        ADMIN: 'bg-purple-400/20 text-purple-200 border border-purple-400/30'
     };
     return classes[user.value?.role] || '';
 });
@@ -80,28 +87,33 @@ const isActive = (routeName) => {
     <div class="app-shell min-h-screen">
         <!-- Sidebar -->
         <aside :class="[sidebarCollapsed ? 'w-20' : 'w-72', 'fixed inset-y-0 left-0 z-30 flex flex-col transition-all duration-300 ease-in-out print:hidden']">
-            <div class="flex flex-col h-full bg-slate-900/80 backdrop-blur-xl border-r border-white/5">
+            <div class="sidebar-pgi flex flex-col h-full backdrop-blur-xl">
                 <!-- Logo -->
-                <div class="flex items-center gap-3 px-6 py-6 border-b border-white/5">
-                    <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-11 h-11 rounded-lg object-contain bg-white p-1 shadow-lg shadow-black/20 flex-shrink-0" />
-                    <div v-if="!sidebarCollapsed" class="flex flex-col">
-                        <span class="text-sm font-bold text-white tracking-tight leading-tight">SISTEM LAYANAN<br>PENGAJUAN</span>
-                        <span class="text-[10px] text-indigo-400 font-medium tracking-wide mt-0.5">Area Manager</span>
+                <div class="flex items-center gap-3 px-5 py-5 sidebar-divider border-b">
+                    <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-11 h-11 rounded-xl object-contain bg-white p-1 shadow-md ring-1 ring-white/20 flex-shrink-0" />
+                    <div v-if="!sidebarCollapsed" class="flex flex-col min-w-0">
+                        <span class="sidebar-brand-title text-xs font-bold tracking-wider uppercase leading-tight">SISTEM LAYANAN<br>PENGAJUAN</span>
+                        <div class="flex items-center gap-1.5 mt-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse flex-shrink-0"></span>
+                            <span class="sidebar-brand-subtitle text-[10px] font-medium tracking-wide truncate">{{ portalSubtitle }}</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Navigation -->
-                <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
                     <Link
                         v-for="item in navItems"
                         :key="item.route"
                         :href="route(item.route)"
                         :class="[
                             isActive(item.route)
-                                ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30'
-                                : 'text-slate-400 hover:text-white hover:bg-white/5 border-transparent',
-                            'group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border'
+                                ? 'sidebar-nav-active'
+                                : 'sidebar-nav-inactive',
+                            sidebarCollapsed ? 'justify-center px-2' : 'px-3.5',
+                            'group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border'
                         ]"
+                        :title="sidebarCollapsed ? item.name : undefined"
                     >
                         <!-- Icons -->
                         <svg v-if="item.icon === 'dashboard'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
@@ -118,14 +130,16 @@ const isActive = (routeName) => {
                 </nav>
 
                 <!-- User Card -->
-                <div class="p-4 border-t border-white/5">
-                    <div class="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                <div class="p-4 sidebar-divider border-t">
+                    <div :class="[sidebarCollapsed ? 'justify-center p-2' : 'px-3 py-2.5', 'sidebar-user-card flex items-center gap-3 rounded-xl border transition-all duration-200']">
+                        <div class="sidebar-user-avatar w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm ring-1 ring-white/10">
                             {{ user?.name?.charAt(0) }}
                         </div>
                         <div v-if="!sidebarCollapsed" class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-white truncate">{{ user?.name }}</p>
-                            <span :class="[roleBadgeClass, 'text-[10px] font-semibold px-2 py-0.5 rounded-full']">{{ roleLabel }}</span>
+                            <p class="sidebar-user-name text-sm font-semibold truncate">{{ user?.name }}</p>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span :class="[roleBadgeClass, 'text-[10px] font-medium px-2 py-0.5 rounded-md']">{{ roleLabel }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
