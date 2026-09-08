@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    color-scheme: dark;
+}
+
+html.theme-light {
+    color-scheme: light;
+}
+
+.app-shell,
+.app-login-surface {
+    background: linear-gradient(135deg, #020617 0%, #0f172a 52%, #020617 100%);
+}
+
+.login-watermark {
+    opacity: 0.15;
+    filter: saturate(0.98) brightness(1.1) contrast(1.02);
+    mix-blend-mode: screen;
+    transform-origin: center;
+    will-change: transform;
+    animation: watermark-float var(--wm-duration, 22s) ease-in-out infinite;
+    animation-delay: var(--wm-delay, 0s);
+    transform: translate3d(var(--wm-offset-x, 0px), var(--wm-offset-y, 0px), 0) rotate(var(--wm-rot, 0deg)) scale(var(--wm-scale, 1));
+}
+
+@keyframes watermark-float {
+    0%,
+    100% {
+        transform: translate3d(var(--wm-offset-x, 0px), var(--wm-offset-y, 0px), 0) rotate(var(--wm-rot, 0deg)) scale(var(--wm-scale, 1));
+    }
+
+    25% {
+        transform: translate3d(calc(var(--wm-offset-x, 0px) + 14px), calc(var(--wm-offset-y, 0px) - 10px), 0) rotate(calc(var(--wm-rot, 0deg) + 1deg)) scale(var(--wm-scale, 1));
+    }
+
+    50% {
+        transform: translate3d(calc(var(--wm-offset-x, 0px) - 10px), calc(var(--wm-offset-y, 0px) + 12px), 0) rotate(calc(var(--wm-rot, 0deg) - 1deg)) scale(var(--wm-scale, 1));
+    }
+
+    75% {
+        transform: translate3d(calc(var(--wm-offset-x, 0px) + 8px), calc(var(--wm-offset-y, 0px) + 4px), 0) rotate(calc(var(--wm-rot, 0deg) + 0.5deg)) scale(var(--wm-scale, 1));
+    }
+}
+
+html.theme-light .app-shell,
+html.theme-light .app-login-surface {
+    background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 52%, #eef2ff 100%);
+}
+
+html.theme-light .login-watermark {
+    opacity: 0.24;
+    mix-blend-mode: multiply;
+    filter: saturate(1.08) brightness(0.98) contrast(1.12) drop-shadow(0 4px 14px rgba(15, 23, 42, 0.08));
+}
+
+html.theme-light .bg-slate-950,
+html.theme-light .bg-slate-900,
+html.theme-light .bg-slate-900\/80,
+html.theme-light .bg-slate-900\/60,
+html.theme-light .bg-slate-900\/50,
+html.theme-light .bg-slate-800,
+html.theme-light .bg-slate-800\/50,
+html.theme-light .bg-slate-800\/70,
+html.theme-light .bg-slate-700,
+html.theme-light .bg-slate-700\/50 {
+    background-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.theme-light .bg-white\/5,
+html.theme-light .bg-white\/10,
+html.theme-light .hover\:bg-white\/5:hover,
+html.theme-light .hover\:bg-white\/\[0\.02\]:hover {
+    background-color: rgba(15, 23, 42, 0.055) !important;
+}
+
+html.theme-light .border-white\/5,
+html.theme-light .border-white\/10,
+html.theme-light .border-b-white\/5,
+html.theme-light .border-b-white\/10,
+html.theme-light .border-r-white\/5 {
+    border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html.theme-light .text-white {
+    color: #0f172a;
+}
+
+html.theme-light .text-slate-300 {
+    color: #334155;
+}
+
+html.theme-light .text-slate-400 {
+    color: #475569;
+}
+
+html.theme-light .text-slate-500 {
+    color: #64748b;
+}
+
+html.theme-light .placeholder-slate-500::placeholder {
+    color: #94a3b8;
+}
+
+html.theme-light .bg-indigo-600.text-white,
+html.theme-light .bg-emerald-600.text-white,
+html.theme-light .bg-red-600.text-white,
+html.theme-light .bg-gradient-to-br.text-white,
+html.theme-light .bg-indigo-600 .text-white,
+html.theme-light .bg-emerald-600 .text-white,
+html.theme-light .bg-red-600 .text-white {
+    color: #ffffff;
+}
+
+html.theme-light .theme-toggle {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* ==========================================================================
+   Print Styles for Official Documents
+   ========================================================================== */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm 12mm;
+    }
+
+    html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .app-shell {
+        background: transparent !important;
+        min-height: auto !important;
+    }
+
+    aside,
+    header,
+    nav,
+    .print\:hidden,
+    button:not(.allow-print) {
+        display: none !important;
+    }
+
+    .pl-72,
+    .pl-20 {
+        padding-left: 0 !important;
+    }
+
+    main {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    #printable-memo {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+}
+
