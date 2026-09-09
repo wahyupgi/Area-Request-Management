@@ -28,8 +28,19 @@ class Memo extends Model
         static::creating(function (Memo $memo) {
             if (empty($memo->code)) {
                 $date = now()->format('Ymd');
-                $count = static::whereDate('created_at', today())->count() + 1;
-                $memo->code = 'MEMO-' . $date . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+                $prefix = 'MEMO-' . $date . '-';
+                $lastCode = static::where('code', 'like', $prefix . '%')
+                    ->orderByDesc('code')
+                    ->value('code');
+                $sequence = $lastCode ? (int) substr($lastCode, -4) + 1 : 1;
+                $candidate = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+                while (static::where('code', $candidate)->exists()) {
+                    $sequence++;
+                    $candidate = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+                }
+
+                $memo->code = $candidate;
             }
         });
     }

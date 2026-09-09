@@ -6,6 +6,7 @@ use App\Models\DigitalSignature;
 use App\Models\Memo;
 use App\Models\MemoApproval;
 use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -43,6 +44,8 @@ class ApprovalController extends Controller
         }
 
         $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
+        $ids = collect($memo->template?->signature_schema ?? [])->pluck('user_id')->filter()->unique();
+        $memo->template?->setAttribute('signature_people', User::with('digitalSignature')->whereIn('id', $ids)->get()->keyBy('id'));
 
         $signature = DigitalSignature::where('user_id', $user->id)->first();
 

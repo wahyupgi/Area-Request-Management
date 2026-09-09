@@ -7,16 +7,21 @@ const props = defineProps({
     memo: Object,
     templates: Array,
     signature: Object,
+    openSignature: Boolean,
 });
+
+const initialItems = Array.isArray(props.memo.field_values?.items)
+    ? props.memo.field_values.items
+    : [props.memo.field_values || {}];
 
 const form = useForm({
     title: props.memo.title || '',
-    field_values: props.memo.field_values || {},
+    field_values: { items: initialItems },
 });
 
 const fileInput = ref(null);
 const uploading = ref(false);
-const showSignatureDialog = ref(false);
+const showSignatureDialog = ref(props.openSignature);
 const signatureFile = ref(null);
 const signaturePreview = ref(null);
 const submittingMemo = ref(false);
@@ -27,6 +32,16 @@ const save = () => {
 
 const submitMemo = () => {
     showSignatureDialog.value = true;
+};
+
+const addItem = () => {
+    form.field_values.items.push({});
+};
+
+const removeItem = (index) => {
+    if (form.field_values.items.length > 1) {
+        form.field_values.items.splice(index, 1);
+    }
 };
 
 const selectSignature = (event) => {
@@ -125,20 +140,24 @@ const deleteMemo = () => {
                 </div>
 
                 <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                    <h2 class="text-lg font-semibold text-white mb-4">Detail Memo</h2>
-                    <div class="space-y-4">
+                    <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-white/10 p-4 space-y-4">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                            <h3 class="text-sm font-semibold text-white">Item {{ itemIndex + 1 }}</h3>
+                            <button v-if="form.field_values.items.length > 1" type="button" class="text-sm text-red-400 hover:text-red-300" @click="removeItem(itemIndex)">Hapus item</button>
+                        </div>
                         <div v-for="field in memo.template.field_schema" :key="field.key">
                             <label class="block text-sm font-medium text-slate-300 mb-2">
                                 {{ field.label }}
                                 <span v-if="field.required" class="text-red-400">*</span>
                             </label>
-                            <input v-if="field.type === 'text'" v-model="form.field_values[field.key]" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <input v-else-if="field.type === 'number'" v-model="form.field_values[field.key]" type="number" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <input v-else-if="field.type === 'date'" v-model="form.field_values[field.key]" type="date" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <textarea v-else-if="field.type === 'textarea'" v-model="form.field_values[field.key]" rows="4" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-none"></textarea>
-                            <p v-if="form.errors['field_values.' + field.key]" class="text-red-400 text-sm mt-1">{{ form.errors['field_values.' + field.key] }}</p>
+                            <input v-if="field.type === 'text'" v-model="item[field.key]" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <input v-else-if="field.type === 'number'" v-model="item[field.key]" type="number" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <input v-else-if="field.type === 'date'" v-model="item[field.key]" type="date" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <textarea v-else-if="field.type === 'textarea'" v-model="item[field.key]" rows="4" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-none"></textarea>
+                            <p v-if="form.errors['field_values.items.' + itemIndex + '.' + field.key]" class="text-red-400 text-sm mt-1">{{ form.errors['field_values.items.' + itemIndex + '.' + field.key] }}</p>
                         </div>
                     </div>
+                    <button type="button" class="mt-4 px-4 py-2 border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-sm font-medium" @click="addItem">+ Tambah Item</button>
                 </div>
 
                 <div class="flex gap-3">
@@ -146,7 +165,7 @@ const deleteMemo = () => {
                         Simpan Draft
                     </button>
                     <button type="button" @click="submitMemo" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-emerald-500/25">
-                        Submit ke AM
+                        Tanda Tangani &amp; Kirim ke AM
                     </button>
                 </div>
             </form>

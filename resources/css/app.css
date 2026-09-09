@@ -245,6 +245,14 @@ html.theme-light .app-header-pgi {
     background-color: rgba(255, 255, 255, 0.28) !important;
 }
 
+/* Official memo typography */
+.memo-document,
+.memo-document * {
+    font-family: Tahoma, Arial, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+}
+
 /* Profile panels use the application's theme instead of Tailwind dark-mode classes. */
 .profile-panel {
     border: 1px solid rgba(125, 211, 252, 0.16);
@@ -511,7 +519,17 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
         size: A4 portrait;
         margin: 10mm 12mm;
     }
+     #printable-memo {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        max-width: 210mm !important;
+        margin: 0 !important;
+        padding: 15mm !important;
+     }       
 
+    #printable-memo {
+        aspect-ratio: 210 / 297;
+    }
     html, body {
         background: #ffffff !important;
         color: #000000 !important;

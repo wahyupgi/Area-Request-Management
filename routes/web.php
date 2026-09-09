@@ -68,6 +68,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/signature', [SignatureController::class, 'index'])->name('signature.index');
         Route::post('/signature', [SignatureController::class, 'store'])->name('signature.store');
         Route::delete('/signature', [SignatureController::class, 'destroy'])->name('signature.destroy');
+        Route::get('/signature/settings', [SignatureController::class, 'settings'])->name('signature.settings');
+        Route::put('/signature/settings/{template}', [SignatureController::class, 'updateSettings'])->name('signature.settings.update');
     });
 
     // Approval history (KC & AM)

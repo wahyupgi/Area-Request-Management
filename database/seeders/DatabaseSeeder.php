@@ -86,10 +86,14 @@ class DatabaseSeeder extends Seeder
             'certificate_no' => 'CERT-FATHUR-001',
         ]);
 
-        // Create Memo Templates (GA, FIN, HRD)
+        // Create Memo Templates (GA and Ma-Link: FIN, HRD)
         MemoTemplate::create([
-            'name' => 'Permintaan Inventaris Kantor',
+            'name' => 'Pengajuan Inventaris Cabang',
             'category' => 'GA',
+            'signature_schema' => [
+                ['label' => 'Dibuat Oleh', 'role' => 'Kepala Cabang', 'user_id' => null, 'location' => 'document'],
+                ['label' => 'Disetujui Oleh', 'role' => 'Area Manager', 'user_id' => null, 'location' => 'document'],
+            ],
             'field_schema' => [
                 ['key' => 'nama_barang', 'label' => 'Nama Barang / Permintaan', 'type' => 'text', 'required' => true],
                 ['key' => 'jumlah', 'label' => 'Jumlah / Qty', 'type' => 'text', 'required' => true],
@@ -100,23 +104,35 @@ class DatabaseSeeder extends Seeder
         ]);
 
         MemoTemplate::create([
-            'name' => 'Pengajuan Renovasi & Pemeliharaan Cabang',
+            'name' => 'Pengajuan ATK',
             'category' => 'GA',
             'field_schema' => [
-                ['key' => 'lokasi', 'label' => 'Lokasi Renovasi / Perbaikan', 'type' => 'text', 'required' => true],
-                ['key' => 'deskripsi_pekerjaan', 'label' => 'Deskripsi Pekerjaan', 'type' => 'textarea', 'required' => true],
-                ['key' => 'estimasi_biaya', 'label' => 'Estimasi Biaya (Rp)', 'type' => 'number', 'required' => true],
-                ['key' => 'vendor', 'label' => 'Nama Vendor / Kontraktor', 'type' => 'text', 'required' => false],
-                ['key' => 'jadwal_mulai', 'label' => 'Jadwal Mulai', 'type' => 'date', 'required' => false],
-                ['key' => 'jadwal_selesai', 'label' => 'Jadwal Selesai', 'type' => 'date', 'required' => false],
+                ['key' => 'nama_barang', 'label' => 'Nama ATK', 'type' => 'text', 'required' => true],
+                ['key' => 'jumlah', 'label' => 'Jumlah / Qty', 'type' => 'number', 'required' => true],
+                ['key' => 'keterangan', 'label' => 'Keterangan / Keperluan', 'type' => 'textarea', 'required' => true],
             ],
             'is_active' => true,
             'created_by' => $admin->id,
         ]);
 
         MemoTemplate::create([
-            'name' => 'Pembayaran Biaya Operasional / Iuran',
-            'category' => 'FIN',
+            'name' => 'Pengajuan Inventori/Kipas',
+            'category' => 'GA',
+            'field_schema' => [
+                ['key' => 'cabang', 'label' => 'Kode / Nama Cabang', 'type' => 'text', 'required' => true],
+                ['key' => 'permintaan', 'label' => 'Permintaan', 'type' => 'text', 'required' => true],
+                ['key' => 'tujuan', 'label' => 'Tujuan', 'type' => 'text', 'required' => true],
+                ['key' => 'area', 'label' => 'Area Penempatan', 'type' => 'text', 'required' => true],
+                ['key' => 'qty_kipas_ada', 'label' => 'Qty Kipas yang Ada', 'type' => 'number', 'required' => true],
+                ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'textarea', 'required' => true],
+            ],
+            'is_active' => true,
+            'created_by' => $admin->id,
+        ]);
+
+        MemoTemplate::create([
+            'name' => 'FIN - Pembayaran Biaya Operasional / Iuran',
+            'category' => 'Ma-Link',
             'field_schema' => [
                 ['key' => 'nama_barang', 'label' => 'Nama Keperluan / Pembayaran', 'type' => 'text', 'required' => true],
                 ['key' => 'jumlah', 'label' => 'Nominal Pembayaran (Rp)', 'type' => 'number', 'required' => true],
@@ -127,8 +143,26 @@ class DatabaseSeeder extends Seeder
         ]);
 
         MemoTemplate::create([
-            'name' => 'Permohonan Penambahan Karyawan',
-            'category' => 'HRD',
+            'name' => 'FIN - Pemberitahuan Kas Keluar',
+            'category' => 'Ma-Link',
+            'field_schema' => [
+                ['key' => 'nominal_kas_keluar', 'label' => 'Nominal Kas Keluar (Rp)', 'type' => 'number', 'required' => true],
+                ['key' => 'cabang', 'label' => 'Kode / Nama Cabang', 'type' => 'text', 'required' => true],
+                ['key' => 'direktorat', 'label' => 'Direktorat', 'type' => 'text', 'required' => true],
+                ['key' => 'divisi', 'label' => 'Divisi', 'type' => 'text', 'required' => true],
+                ['key' => 'penerima', 'label' => 'Nama Penerima', 'type' => 'text', 'required' => true],
+                ['key' => 'penerima_jabatan', 'label' => 'Jabatan Penerima', 'type' => 'text', 'required' => true],
+                ['key' => 'penyetuju_akhir', 'label' => 'Penyetuju Akhir', 'type' => 'text', 'required' => false],
+                ['key' => 'alasan', 'label' => 'Alasan Pengeluaran Kas', 'type' => 'textarea', 'required' => true],
+                ['key' => 'lampiran', 'label' => 'Lampiran Pendukung', 'type' => 'text', 'required' => false],
+            ],
+            'is_active' => true,
+            'created_by' => $admin->id,
+        ]);
+
+        MemoTemplate::create([
+            'name' => 'HRD - Permohonan Penambahan Karyawan',
+            'category' => 'Ma-Link',
             'field_schema' => [
                 ['key' => 'posisi', 'label' => 'Posisi yang Dibutuhkan', 'type' => 'text', 'required' => true],
                 ['key' => 'jumlah', 'label' => 'Jumlah Karyawan', 'type' => 'number', 'required' => true],

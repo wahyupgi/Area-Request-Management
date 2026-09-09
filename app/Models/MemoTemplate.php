@@ -9,10 +9,11 @@ class MemoTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'category', 'field_schema', 'is_active', 'created_by'];
+    protected $fillable = ['name', 'category', 'field_schema', 'signature_schema', 'is_active', 'created_by'];
 
     protected $casts = [
         'field_schema' => 'array',
+        'signature_schema' => 'array',
         'is_active' => 'boolean',
     ];
 

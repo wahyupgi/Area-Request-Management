@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DigitalSignature;
+use App\Models\MemoTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -53,5 +54,37 @@ class SignatureController extends Controller
         }
 
         return back()->with('success', 'Tanda tangan digital berhasil dihapus.');
+    }
+
+    public function settings()
+    {
+        abort_unless(auth()->user()->isAM(), 403);
+
+        return Inertia::render('Signature/Settings', [
+            'templates' => MemoTemplate::where('is_active', true)->orderBy('category')->orderBy('name')->get(['id', 'name', 'category', 'signature_schema']),
+        ]);
+    }
+
+    public function updateSettings(Request $request, MemoTemplate $template)
+    {
+        abort_unless(auth()->user()->isAM(), 403);
+
+        $validated = $request->validate([
+            'signature_schema' => ['nullable', 'array', 'max:6'],
+            'signature_schema.*.name' => ['required', 'string', 'max:255'],
+            'signature_schema.*.role' => ['required', 'string', 'max:100'],
+            'signature_schema.*.location' => ['required', 'in:document,bottom_right'],
+        ]);
+
+        $template->update([
+            'signature_schema' => collect($validated['signature_schema'] ?? [])
+                ->map(fn ($slot) => [
+                    'name' => $slot['name'],
+                    'role' => $slot['role'],
+                    'location' => $slot['location'],
+                ])->values()->all(),
+        ]);
+
+        return back()->with('success', 'Pengaturan tanda tangan template berhasil disimpan.');
     }
 }

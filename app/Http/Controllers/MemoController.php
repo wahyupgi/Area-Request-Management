@@ -8,6 +8,7 @@ use App\Models\MemoTemplate;
 use App\Models\Notification;
 use App\Models\Branch;
 use App\Models\DigitalSignature;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -87,8 +88,15 @@ class MemoController extends Controller
             'status' => 'draft',
         ]);
 
-        return redirect()->route('memos.edit', $memo->id)
+        $routeParameters = ['memo' => $memo->id];
+        if ($request->boolean('submit_after_save')) {
+            $routeParameters['submit'] = 1;
+        }
+
+        $redirect = redirect()->route('memos.edit', $routeParameters)
             ->with('success', 'Memo berhasil dibuat sebagai draft.');
+
+        return $redirect;
     }
 
     /**
@@ -99,6 +107,7 @@ class MemoController extends Controller
         $this->authorizeAccess($memo);
 
         $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'areaManager.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
+        $this->loadConfiguredSigners($memo);
 
         return Inertia::render('Memo/Show', [
             'memo' => $memo,
@@ -108,7 +117,7 @@ class MemoController extends Controller
     /**
      * Show edit form (only for draft/rejected memos).
      */
-    public function edit(Memo $memo)
+    public function edit(Request $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -128,7 +137,15 @@ class MemoController extends Controller
             'memo' => $memo,
             'templates' => $templates,
             'signature' => $user->digitalSignature,
+            'openSignature' => $request->boolean('submit'),
         ]);
+    }
+
+    private function loadConfiguredSigners(Memo $memo): void
+    {
+        $ids = collect($memo->template?->signature_schema ?? [])->pluck('user_id')->filter()->unique();
+        $people = User::with('digitalSignature')->whereIn('id', $ids)->get()->keyBy('id');
+        $memo->template?->setAttribute('signature_people', $people);
     }
 
     /**
@@ -179,11 +196,16 @@ class MemoController extends Controller
         // Validate required fields from template schema
         $template = $memo->template;
         $fieldValues = $memo->field_values ?? [];
+        $items = isset($fieldValues['items']) && is_array($fieldValues['items'])
+            ? $fieldValues['items']
+            : [$fieldValues];
         $errors = [];
 
-        foreach ($template->field_schema as $field) {
-            if ($field['required'] && empty($fieldValues[$field['key']])) {
-                $errors['field_values.' . $field['key']] = $field['label'] . ' wajib diisi.';
+        foreach ($items as $itemIndex => $item) {
+            foreach ($template->field_schema as $field) {
+                if ($field['required'] && empty($item[$field['key']])) {
+                    $errors['field_values.items.' . $itemIndex . '.' . $field['key']] = $field['label'] . ' pada item ' . ($itemIndex + 1) . ' wajib diisi.';
+                }
             }
         }
 
