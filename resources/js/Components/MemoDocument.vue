@@ -156,7 +156,13 @@ const handleImgError = (e) => {
             <div class="flex flex-col items-center w-44 text-center">
                 <p class="mb-1 font-semibold">Dibuat Oleh,</p>
                 <div class="h-16 w-full flex items-end justify-center relative">
-                    <!-- Physical signature placeholder for KC -->
+                    <img
+                        v-if="memo.creator?.digital_signature?.signature_image"
+                        :src="'/storage/' + memo.creator.digital_signature.signature_image"
+                        alt="Tanda Tangan KC"
+                        @error="handleImgError"
+                        class="h-14 object-contain absolute bottom-0"
+                    />
                 </div>
                 <p class="font-bold underline mt-1 text-black">{{ memo.creator?.name }}</p>
                 <p class="font-bold text-gray-800">Kepala Cabang</p>

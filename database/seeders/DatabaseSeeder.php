@@ -13,31 +13,33 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create Areas
+       
         $area1 = Area::create(['name' => 'Area Jawa Tengah']);
         $area2 = Area::create(['name' => 'Area Jawa Timur']);
         $area3 = Area::create(['name' => 'Area Jawa Barat']);
 
-        // Create Admin
+
         $admin = User::create([
             'name' => 'Admin System',
+            'username' => 'admin',
             'email' => 'admin@arm.test',
-            'password' => 'password',
+            'password' => 'pgiadmin',
             'role' => 'ADMIN',
         ]);
 
-        // Create Area Manager
         $am1 = User::create([
             'name' => 'Fathurrahman (Area Manager)',
+            'username' => 'fathurrahman',
             'email' => 'am.fathurrahman@arm.test',
             'password' => 'password',
             'role' => 'AM',
             'area_id' => $area1->id,
         ]);
 
-        // Create Branches & KC Users
+      
         $kc1 = User::create([
             'name' => 'Gibran (KC Surakarta)',
+            'username' => 'gibran',
             'email' => 'kc.surakarta@arm.test',
             'password' => 'gibran123',
             'role' => 'KC',
@@ -51,6 +53,7 @@ class DatabaseSeeder extends Seeder
 
         $kc2 = User::create([
             'name' => 'Dewi Lestari (KC Klaten)',
+            'username' => 'dewi',
             'email' => 'kc.klaten@arm.test',
             'password' => 'dewi123',
             'role' => 'KC',
@@ -64,6 +67,7 @@ class DatabaseSeeder extends Seeder
 
         $kc3 = User::create([
             'name' => 'Budi (KC Sragen)',
+            'username' => 'budi',
             'email' => 'kc.sragen@arm.test',
             'password' => 'budi123',
             'role' => 'KC',

@@ -152,7 +152,7 @@ const filteredMemos = computed(() => {
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- Date & Realtime Clock Pill -->
-                <div class="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-xl bg-slate-800/60 border border-white/5 text-xs text-slate-300 shadow-sm">
+                <div class="dashboard-clock hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-xl bg-slate-800/60 border border-white/5 text-xs text-slate-300 shadow-sm">
                     <!-- Date -->
                     <div class="flex items-center gap-1.5 font-medium">
                         <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -179,35 +179,35 @@ const filteredMemos = computed(() => {
         <!-- Stats Cards Grid -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <!-- Total -->
-            <div class="card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm">
+            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Memo</span>
                 <p class="text-2xl font-bold text-white mt-1">{{ stats.total ?? 0 }}</p>
                 <p class="text-[11px] text-slate-500 mt-2">Semua riwayat</p>
             </div>
 
             <!-- Draft -->
-            <div class="card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-slate-500/20 shadow-sm">
+            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-slate-500/20 shadow-sm">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Draft Tersimpan</span>
                 <p class="text-2xl font-bold text-slate-300 mt-1">{{ stats.draft ?? 0 }}</p>
                 <p class="text-[11px] text-slate-500 mt-2">Belum diajukan</p>
             </div>
 
             <!-- Submitted / Pending -->
-            <div class="card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-amber-500/20 shadow-sm">
+            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-amber-500/20 shadow-sm">
                 <span class="text-xs font-semibold text-amber-400/90 uppercase tracking-wider">Menunggu AM</span>
                 <p class="text-2xl font-bold text-amber-300 mt-1">{{ stats.submitted ?? 0 }}</p>
                 <p class="text-[11px] text-amber-400/70 mt-2">Dalam proses verifikasi</p>
             </div>
 
             <!-- Approved -->
-            <div class="card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 shadow-sm">
+            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 shadow-sm">
                 <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Disetujui</span>
                 <p class="text-2xl font-bold text-emerald-400 mt-1">{{ stats.approved ?? 0 }}</p>
                 <p class="text-[11px] text-emerald-500/70 mt-2">Selesai & resmi</p>
             </div>
 
             <!-- Rejected -->
-            <div class="card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-rose-500/20 shadow-sm">
+            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-rose-500/20 shadow-sm">
                 <span class="text-xs font-semibold text-rose-400 uppercase tracking-wider">Perlu Revisi</span>
                 <p class="text-2xl font-bold text-rose-400 mt-1">{{ stats.rejected ?? 0 }}</p>
                 <p class="text-[11px] text-rose-500/70 mt-2">Ditolak Area Manager</p>
@@ -303,6 +303,7 @@ const filteredMemos = computed(() => {
                             <th class="px-6 py-3.5">Perihal & Template</th>
                             <th class="px-6 py-3.5">Tanggal Dibuat</th>
                             <th class="px-6 py-3.5">Status</th>
+                            <th class="px-6 py-3.5">TTD Digital</th>
                             <th class="px-6 py-3.5 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -336,6 +337,17 @@ const filteredMemos = computed(() => {
                                     <span class="w-1.5 h-1.5 rounded-full" :class="statusConfig[memo.status]?.dotClass || 'bg-slate-400'"></span>
                                     <span>{{ statusConfig[memo.status]?.label || memo.status }}</span>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div v-if="memo.latest_approval?.signature" class="flex items-center gap-2">
+                                    <img
+                                        :src="'/storage/' + memo.latest_approval.signature.signature_image"
+                                        alt="Tanda tangan digital AM"
+                                        class="h-8 w-20 object-contain rounded bg-white/10 p-1"
+                                    />
+                                    <span class="text-[11px] text-emerald-400">Tertanda</span>
+                                </div>
+                                <span v-else class="text-[11px] text-slate-500">Belum ditandatangani</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <div class="flex items-center justify-end gap-2">

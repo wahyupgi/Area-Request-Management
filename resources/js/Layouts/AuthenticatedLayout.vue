@@ -37,6 +37,7 @@ const navItems = computed(() => {
     const role = user.value?.role;
     const items = [
         { name: 'Dashboard', route: 'dashboard', icon: 'dashboard', roles: ['KC', 'AM', 'ADMIN'] },
+        { name: 'Profil Saya', route: 'profile.edit', icon: 'profile', roles: ['KC', 'AM', 'ADMIN'] },
         { name: 'Memo Saya', route: 'memos.index', icon: 'memo', roles: ['KC'] },
         { name: 'Buat Memo', route: 'memos.create', icon: 'create', roles: ['KC'] },
         { name: 'Pending Approval', route: 'approvals.pending', icon: 'approval', roles: ['AM'] },
@@ -111,7 +112,7 @@ const isActive = (routeName) => {
                                 ? 'sidebar-nav-active'
                                 : 'sidebar-nav-inactive',
                             sidebarCollapsed ? 'justify-center px-2' : 'px-3.5',
-                            'group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border'
+                            'sidebar-nav-item group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border'
                         ]"
                         :title="sidebarCollapsed ? item.name : undefined"
                     >
@@ -125,6 +126,7 @@ const isActive = (routeName) => {
                         <svg v-else-if="item.icon === 'area'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <svg v-else-if="item.icon === 'branch'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                         <svg v-else-if="item.icon === 'users'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <svg v-else-if="item.icon === 'profile'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0112 19.5c-1.052 0-2.062-.133-3-.384m6-3.06a9.38 9.38 0 00-2.625-.372 9.37 9.37 0 00-2.625.372m5.25 0a24.73 24.73 0 01-1.5 3.06M9 19.128v-.003a9.37 9.37 0 012.625-.372M9 19.128v.106a12.318 12.318 0 003 .384m-3.75-9.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0z"/></svg>
                         <span v-if="!sidebarCollapsed">{{ item.name }}</span>
                     </Link>
                 </nav>
@@ -149,7 +151,7 @@ const isActive = (routeName) => {
         <!-- Main Content -->
         <div :class="[sidebarCollapsed ? 'pl-20' : 'pl-72', 'print:pl-0', 'transition-all duration-300']">
             <!-- Top Bar -->
-            <header class="sticky top-0 z-20 h-16 flex items-center justify-between px-6 bg-slate-900/60 backdrop-blur-xl border-b border-white/5 print:hidden">
+            <header class="app-header-pgi sticky top-0 z-20 h-16 flex items-center justify-between px-6 backdrop-blur-xl print:hidden">
                 <div class="flex items-center gap-4">
                     <button @click="sidebarCollapsed = !sidebarCollapsed" class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>

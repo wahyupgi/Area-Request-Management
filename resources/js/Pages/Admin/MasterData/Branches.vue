@@ -63,7 +63,7 @@ const save = () => {
             </div>
 
             <div class="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
-                <table class="w-full">
+                <table class="w-full table-head-pgi">
                     <thead>
                         <tr class="border-b border-white/5">
                             <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Cabang</th>

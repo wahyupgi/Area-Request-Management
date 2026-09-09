@@ -7,6 +7,7 @@ use App\Models\MemoAttachment;
 use App\Models\MemoTemplate;
 use App\Models\Notification;
 use App\Models\Branch;
+use App\Models\DigitalSignature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -97,7 +98,7 @@ class MemoController extends Controller
     {
         $this->authorizeAccess($memo);
 
-        $memo->load(['template', 'branch.area', 'creator', 'areaManager.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
+        $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'areaManager.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
 
         return Inertia::render('Memo/Show', [
             'memo' => $memo,
@@ -120,12 +121,13 @@ class MemoController extends Controller
                 ->with('error', 'Memo tidak bisa diedit.');
         }
 
-        $memo->load(['template', 'attachments', 'approvals.approver']);
+        $memo->load(['template', 'attachments', 'approvals.approver', 'creator.digitalSignature']);
         $templates = MemoTemplate::where('is_active', true)->get();
 
         return Inertia::render('Memo/Edit', [
             'memo' => $memo,
             'templates' => $templates,
+            'signature' => $user->digitalSignature,
         ]);
     }
 
@@ -162,7 +164,7 @@ class MemoController extends Controller
     /**
      * Submit memo to AM.
      */
-    public function submit(Memo $memo)
+    public function submit(Request $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -191,6 +193,29 @@ class MemoController extends Controller
 
         if (!$memo->area_manager_id) {
             return back()->withErrors(['area_manager' => 'Area Manager belum tersedia untuk area ini.']);
+        }
+
+        $request->validate([
+            'signature_image' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
+        ]);
+
+        $signature = DigitalSignature::where('user_id', $user->id)->first();
+        if ($request->hasFile('signature_image')) {
+            $path = $request->file('signature_image')->store('signatures', 'public');
+
+            if ($signature) {
+                Storage::disk('public')->delete($signature->signature_image);
+                $signature->update(['signature_image' => $path]);
+            } else {
+                $signature = DigitalSignature::create([
+                    'user_id' => $user->id,
+                    'signature_image' => $path,
+                ]);
+            }
+        }
+
+        if (!$signature) {
+            return back()->withErrors(['signature' => 'Tanda tangan digital KC wajib diunggah sebelum memo dikirim ke Area Manager.']);
         }
 
         DB::transaction(function () use ($memo) {

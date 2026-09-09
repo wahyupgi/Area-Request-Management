@@ -85,7 +85,7 @@ const formatTime = (dateString) => {
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- Date & Realtime Clock Pill -->
-                <div class="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-xl bg-slate-800/60 border border-white/5 text-xs text-slate-300 shadow-sm">
+                <div class="dashboard-clock hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-xl bg-slate-800/60 border border-white/5 text-xs text-slate-300 shadow-sm">
                     <div class="flex items-center gap-1.5 font-medium">
                         <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span>{{ formattedDate }}</span>
@@ -109,7 +109,7 @@ const formatTime = (dateString) => {
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <!-- Pending -->
-            <div class="card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-amber-500/20 shadow-sm flex flex-col justify-between">
+            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-amber-500/20 shadow-sm flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-amber-400/90 uppercase tracking-wider">Perlu Persetujuan</span>
@@ -132,7 +132,7 @@ const formatTime = (dateString) => {
             </div>
 
             <!-- Approved -->
-            <div class="card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-emerald-500/20 shadow-sm flex flex-col justify-between">
+            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-emerald-500/20 shadow-sm flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Telah Disetujui</span>
@@ -151,7 +151,7 @@ const formatTime = (dateString) => {
             </div>
 
             <!-- Rejected -->
-            <div class="card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-rose-500/20 shadow-sm flex flex-col justify-between">
+            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-rose-500/20 shadow-sm flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-rose-400 uppercase tracking-wider">Ditolak / Revisi</span>

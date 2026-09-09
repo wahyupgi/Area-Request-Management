@@ -69,12 +69,6 @@ html.theme-light .bg-slate-700\/50 {
     background-color: rgba(255, 255, 255, 0.92) !important;
 }
 
-/* Protect sidebar PGI from the blanket light-mode bg overrides */
-html.theme-light .sidebar-pgi,
-html.theme-light aside .sidebar-pgi {
-    background: linear-gradient(180deg, #10325b 0%, #0c2644 48%, #071a30 100%) !important;
-}
-
 html.theme-light .bg-white\/5,
 html.theme-light .bg-white\/10,
 html.theme-light .hover\:bg-white\/5:hover,
@@ -126,24 +120,18 @@ html.theme-light .theme-toggle {
 }
 
 /* ==========================================================================
-   PGI Corporate Blue Sidebar (Signature Brand Color)
-   Dark mode + Light mode both use the same rich corporate blue
+   Theme-aware PGI blue shell
    ========================================================================== */
 .sidebar-pgi {
-    background: linear-gradient(180deg, #123762 0%, #0d2847 48%, #081a30 100%) !important;
-    border-right: 1px solid rgba(56, 189, 248, 0.18) !important;
-    box-shadow: 4px 0 24px rgba(7, 25, 46, 0.45);
-}
-
-/* Dark mode: keep sidebar PGI blue regardless of any global overrides */
-html:not(.theme-light) .sidebar-pgi {
-    background: linear-gradient(180deg, #123762 0%, #0d2847 48%, #081a30 100%) !important;
+    background: linear-gradient(180deg, #0369a1 0%, #075985 52%, #0c4a6e 100%) !important;
+    border-right: 1px solid rgba(125, 211, 252, 0.28) !important;
+    box-shadow: 4px 0 24px rgba(3, 105, 161, 0.28);
 }
 
 html.theme-light .sidebar-pgi {
-    background: linear-gradient(180deg, #10325b 0%, #0c2644 48%, #071a30 100%) !important;
-    border-right: 1px solid rgba(18, 55, 98, 0.35) !important;
-    box-shadow: 4px 0 20px rgba(12, 36, 64, 0.18);
+    background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 52%, #0284c7 100%) !important;
+    border-right-color: rgba(3, 105, 161, 0.28) !important;
+    box-shadow: 4px 0 20px rgba(3, 105, 161, 0.2);
 }
 
 /* Ensure crisp contrast for all sidebar text and links across light/dark themes */
@@ -184,6 +172,14 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
     color: #ffffff !important;
 }
 
+.sidebar-pgi .sidebar-nav-item {
+    border-bottom-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+html.theme-light .sidebar-pgi .sidebar-nav-item {
+    border-bottom-color: rgba(8, 47, 73, 0.22) !important;
+}
+
 .sidebar-pgi .sidebar-nav-active,
 html.theme-light .sidebar-pgi .sidebar-nav-active {
     background: linear-gradient(135deg, #258cd2 0%, #155592 100%) !important;
@@ -212,6 +208,214 @@ html.theme-light .sidebar-pgi .sidebar-user-avatar {
 .sidebar-pgi .sidebar-divider,
 html.theme-light .sidebar-pgi .sidebar-divider {
     border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.app-header-pgi {
+    background: linear-gradient(90deg, #075985 0%, #0284c7 55%, #0369a1 100%) !important;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.3) !important;
+    box-shadow: 0 4px 18px rgba(3, 105, 161, 0.22);
+    color: #ffffff;
+}
+
+html.theme-light .app-header-pgi {
+    background: linear-gradient(90deg, #38bdf8 0%, #0ea5e9 55%, #0284c7 100%) !important;
+    border-bottom-color: rgba(3, 105, 161, 0.24) !important;
+    box-shadow: 0 4px 18px rgba(3, 105, 161, 0.16);
+    color: #082f49;
+}
+
+.app-header-pgi button,
+.app-header-pgi a {
+    color: inherit;
+}
+
+.app-header-pgi button:hover,
+.app-header-pgi a:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+}
+
+.app-header-pgi .theme-toggle {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.28) !important;
+    color: inherit;
+}
+
+.app-header-pgi .theme-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* Profile panels use the application's theme instead of Tailwind dark-mode classes. */
+.profile-panel {
+    border: 1px solid rgba(125, 211, 252, 0.16);
+}
+
+html:not(.theme-light) .profile-panel {
+    background-color: #1e293b !important;
+    color: #f8fafc;
+    border-color: rgba(125, 211, 252, 0.18);
+}
+
+html.theme-light .profile-panel {
+    background-color: #ffffff !important;
+    color: #0f172a;
+    border-color: rgba(3, 105, 161, 0.18);
+}
+
+.profile-panel h2,
+.profile-panel label,
+.profile-panel p {
+    color: #f8fafc;
+}
+
+html.theme-light .profile-panel h2,
+html.theme-light .profile-panel label,
+html.theme-light .profile-panel p {
+    color: #0f172a;
+}
+
+.profile-panel input {
+    background-color: #0f172a !important;
+    border-color: rgba(148, 163, 184, 0.35) !important;
+    color: #f8fafc !important;
+}
+
+html.theme-light .profile-panel input {
+    background-color: #f8fafc !important;
+    border-color: rgba(3, 105, 161, 0.25) !important;
+    color: #0f172a !important;
+}
+
+.profile-panel input::placeholder {
+    color: #94a3b8;
+}
+
+/* Data tables: visible cell separators and a distinct blue header row. */
+.table-head-pgi {
+    border: 1px solid rgba(125, 211, 252, 0.24);
+    border-collapse: collapse;
+}
+
+.table-head-pgi thead tr {
+    background: linear-gradient(90deg, #075985 0%, #0369a1 55%, #0284c7 100%) !important;
+}
+
+.table-head-pgi thead th {
+    color: #ffffff !important;
+    border: 1px solid rgba(186, 230, 253, 0.28) !important;
+}
+
+.table-head-pgi tbody tr {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2) !important;
+}
+
+.table-head-pgi tbody td {
+    border-right: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+html.theme-light .table-head-pgi {
+    border-color: rgba(3, 105, 161, 0.2);
+}
+
+html.theme-light .table-head-pgi thead tr {
+    background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 55%, #38bdf8 100%) !important;
+}
+
+html.theme-light .table-head-pgi thead th {
+    color: #082f49 !important;
+    border-color: rgba(3, 105, 161, 0.22) !important;
+}
+
+html.theme-light .table-head-pgi tbody tr {
+    border-bottom-color: rgba(3, 105, 161, 0.18) !important;
+}
+
+html.theme-light .table-head-pgi tbody td {
+    border-right-color: rgba(3, 105, 161, 0.14);
+}
+
+/* Dashboard utility controls stay readable in both themes. */
+.dashboard-clock {
+    background-color: rgba(15, 23, 42, 0.62) !important;
+    border-color: rgba(125, 211, 252, 0.22) !important;
+    color: #e2e8f0 !important;
+}
+
+html.theme-light .dashboard-clock {
+    background-color: #ffffff !important;
+    border-color: rgba(3, 105, 161, 0.22) !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 8px rgba(3, 105, 161, 0.08);
+}
+
+html.theme-light .dashboard-clock .text-indigo-300,
+html.theme-light .dashboard-clock .text-indigo-400 {
+    color: #075985 !important;
+}
+
+html.theme-light .dashboard-clock .text-slate-600 {
+    color: #475569 !important;
+}
+
+.dashboard-status {
+    color: #86efac !important;
+}
+
+html.theme-light .dashboard-status {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(5, 150, 105, 0.24) !important;
+    color: #047857 !important;
+}
+
+html:not(.theme-light) .app-header-pgi .theme-toggle {
+    background-color: rgba(8, 47, 73, 0.72) !important;
+    border-color: rgba(125, 211, 252, 0.32) !important;
+    color: #ffffff !important;
+}
+
+html.theme-light .app-header-pgi .theme-toggle {
+    background-color: #ffffff !important;
+    border-color: rgba(3, 105, 161, 0.24) !important;
+    color: #075985 !important;
+}
+
+html.theme-light .dashboard-kpi-card span,
+html.theme-light .dashboard-kpi-card a {
+    color: #000000 !important;
+}
+
+/* Square dashboard surfaces: keep circular status dots and avatars intact. */
+.app-shell [class*="rounded-2xl"],
+.app-shell [class*="rounded-xl"],
+.app-shell [class*="rounded-lg"],
+.app-shell [class*="rounded-md"] {
+    border-radius: 0 !important;
+}
+
+/* Sidebar text follows the theme contrast. */
+.sidebar-pgi .sidebar-brand-title,
+.sidebar-pgi .sidebar-user-name,
+.sidebar-pgi .sidebar-nav-inactive,
+.sidebar-pgi .sidebar-nav-inactive svg {
+    color: #ffffff !important;
+}
+
+html.theme-light .sidebar-pgi .sidebar-brand-title,
+html.theme-light .sidebar-pgi .sidebar-user-name,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive svg {
+    color: #082f49 !important;
+}
+
+html.theme-light .sidebar-pgi .sidebar-brand-subtitle {
+    color: #075985 !important;
+}
+
+html.theme-light .sidebar-pgi .sidebar-nav-active,
+html.theme-light .sidebar-pgi .sidebar-nav-active svg,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
+    color: #082f49 !important;
 }
 
 /* ==========================================================================

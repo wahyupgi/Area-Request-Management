@@ -42,7 +42,7 @@ class ApprovalController extends Controller
             abort(403);
         }
 
-        $memo->load(['template', 'branch.area', 'creator', 'attachments', 'approvals.approver', 'approvals.signature']);
+        $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
 
         $signature = DigitalSignature::where('user_id', $user->id)->first();
 

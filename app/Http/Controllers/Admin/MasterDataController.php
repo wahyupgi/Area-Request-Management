@@ -87,6 +87,7 @@ class MasterDataController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'role' => 'required|in:KC,AM,ADMIN',
@@ -96,6 +97,7 @@ class MasterDataController extends Controller
 
         User::create([
             'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => $request->password,
             'role' => $request->role,
@@ -104,5 +106,45 @@ class MasterDataController extends Controller
         ]);
 
         return back()->with('success', 'User berhasil ditambahkan.');
+    }
+
+    public function updateUser(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,'.$user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'password' => 'nullable|string|min:6',
+            'role' => 'required|in:KC,AM,ADMIN',
+            'branch_id' => 'nullable|exists:branches,id',
+            'area_id' => 'nullable|exists:areas,id',
+        ]);
+
+        if ($validated['role'] !== 'KC') {
+            $validated['branch_id'] = null;
+        }
+
+        if ($validated['role'] !== 'AM') {
+            $validated['area_id'] = null;
+        }
+
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        }
+
+        $user->update($validated);
+
+        return back()->with('success', 'User berhasil diperbarui.');
+    }
+
+    public function deleteUser(Request $request, User $user)
+    {
+        if ($request->user()->is($user)) {
+            return back()->with('error', 'Anda tidak dapat menghapus akun sendiri.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'User berhasil dihapus.');
     }
 }

@@ -6,6 +6,7 @@ import { ref } from 'vue';
 const props = defineProps({
     memo: Object,
     templates: Array,
+    signature: Object,
 });
 
 const form = useForm({
@@ -15,15 +16,44 @@ const form = useForm({
 
 const fileInput = ref(null);
 const uploading = ref(false);
+const showSignatureDialog = ref(false);
+const signatureFile = ref(null);
+const signaturePreview = ref(null);
+const submittingMemo = ref(false);
 
 const save = () => {
     form.put(route('memos.update', props.memo.id));
 };
 
 const submitMemo = () => {
-    if (confirm('Apakah Anda yakin ingin mengirim memo ini ke Area Manager? Setelah dikirim, memo tidak bisa diedit.')) {
-        router.post(route('memos.submit', props.memo.id));
+    showSignatureDialog.value = true;
+};
+
+const selectSignature = (event) => {
+    const file = event.target.files[0];
+    signatureFile.value = file || null;
+
+    if (!file) {
+        signaturePreview.value = null;
+        return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => { signaturePreview.value = event.target.result; };
+    reader.readAsDataURL(file);
+};
+
+const confirmSubmit = () => {
+    if (!props.signature && !signatureFile.value) return;
+
+    submittingMemo.value = true;
+    const formData = new FormData();
+    if (signatureFile.value) formData.append('signature_image', signatureFile.value);
+
+    router.post(route('memos.submit', props.memo.id), formData, {
+        forceFormData: true,
+        onFinish: () => { submittingMemo.value = false; },
+    });
 };
 
 const uploadFile = () => {
@@ -120,6 +150,36 @@ const deleteMemo = () => {
                     </button>
                 </div>
             </form>
+
+            <!-- Digital signature confirmation before submission -->
+            <div v-if="showSignatureDialog" class="bg-slate-800/70 border border-emerald-500/20 rounded-2xl p-6 shadow-sm">
+                <div class="flex items-start justify-between gap-4 mb-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Tanda Tangan Digital KC</h2>
+                        <p class="text-sm text-slate-400 mt-1">Masukkan tanda tangan terlebih dahulu sebelum memo dikirim ke Area Manager.</p>
+                    </div>
+                    <button type="button" @click="showSignatureDialog = false" class="text-slate-400 hover:text-white text-xl leading-none" aria-label="Tutup">&times;</button>
+                </div>
+
+                <div v-if="signature && !signatureFile" class="flex items-center gap-4 mb-4 p-3 rounded-xl bg-slate-900/40 border border-white/5">
+                    <img :src="'/storage/' + signature.signature_image" alt="Tanda tangan digital KC" class="h-14 w-32 object-contain bg-white/10 rounded-lg p-1" />
+                    <div>
+                        <p class="text-sm text-emerald-400 font-medium">Tanda tangan terdaftar</p>
+                        <p class="text-xs text-slate-400 mt-1">Tanda tangan ini akan digunakan untuk memo.</p>
+                    </div>
+                </div>
+
+                <label class="block text-sm font-medium text-slate-300 mb-2">{{ signature ? 'Ganti tanda tangan (opsional)' : 'Upload tanda tangan' }}</label>
+                <input type="file" @change="selectSignature" accept="image/png,image/jpeg" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer" />
+                <p class="text-xs text-slate-500 mt-1">Format PNG/JPG, maksimal 2MB.</p>
+                <img v-if="signaturePreview" :src="signaturePreview" alt="Preview tanda tangan digital KC" class="h-16 mt-4 object-contain bg-white/10 rounded-lg p-1" />
+                <p v-if="$page.props.errors?.signature" class="text-red-400 text-sm mt-2">{{ $page.props.errors.signature }}</p>
+
+                <div class="flex gap-3 mt-5">
+                    <button type="button" @click="showSignatureDialog = false" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-xl transition-colors">Batal</button>
+                    <button type="button" @click="confirmSubmit" :disabled="submittingMemo || (!signature && !signatureFile)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors">{{ submittingMemo ? 'Mengirim...' : 'Tanda Tangani & Kirim ke AM' }}</button>
+                </div>
+            </div>
 
             <!-- Attachments -->
             <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">

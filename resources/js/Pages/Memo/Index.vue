@@ -37,7 +37,7 @@ const statusConfig = {
             <div v-if="memos.length === 0" class="px-6 py-16 text-center">
                 <p class="text-slate-500">Tidak ada memo ditemukan.</p>
             </div>
-            <table v-else class="w-full">
+            <table v-else class="w-full table-head-pgi">
                 <thead>
                     <tr class="border-b border-white/5">
                         <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Kode</th>

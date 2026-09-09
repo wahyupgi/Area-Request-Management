@@ -24,7 +24,7 @@ class DashboardController extends Controller
 
     private function kcDashboard($user)
     {
-        $memos = Memo::with(['template', 'branch', 'areaManager', 'latestApproval'])
+        $memos = Memo::with(['template', 'branch', 'areaManager', 'latestApproval.signature'])
             ->where('created_by', $user->id)
             ->orderBy('updated_at', 'desc')
             ->get();

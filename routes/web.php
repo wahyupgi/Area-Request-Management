@@ -94,6 +94,8 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/users', [MasterDataController::class, 'users'])->name('users.index');
         Route::post('/users', [MasterDataController::class, 'storeUser'])->name('users.store');
+        Route::put('/users/{user}', [MasterDataController::class, 'updateUser'])->name('users.update');
+        Route::delete('/users/{user}', [MasterDataController::class, 'deleteUser'])->name('users.destroy');
     });
 });
 
