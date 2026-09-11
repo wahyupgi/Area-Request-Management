@@ -7,8 +7,10 @@ use App\Models\Memo;
 use App\Models\MemoApproval;
 use App\Models\Notification;
 use App\Models\User;
+use App\Mail\MemoApproved;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -106,6 +108,11 @@ class ApprovalController extends Controller
                 'message' => 'Memo "' . $memo->title . '" telah DISETUJUI oleh ' . $user->name . '.',
             ]);
         });
+
+        $memo->loadMissing(['creator', 'areaManager', 'branch', 'template']);
+        if ($memo->creator?->email) {
+            Mail::to($memo->creator->email)->send(new MemoApproved($memo));
+        }
 
         return redirect()->route('approvals.pending')
             ->with('success', 'Memo berhasil disetujui.');

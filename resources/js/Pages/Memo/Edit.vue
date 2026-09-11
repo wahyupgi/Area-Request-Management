@@ -16,7 +16,11 @@ const initialItems = Array.isArray(props.memo.field_values?.items)
 
 const form = useForm({
     title: props.memo.title || '',
-    field_values: { items: initialItems },
+    field_values: {
+        ...(props.memo.field_values || {}),
+        pengantar: props.memo.field_values?.pengantar || `Sehubungan dengan pengajuan ${props.memo.template?.name || props.memo.title || 'memo ini'}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`,
+        items: initialItems,
+    },
 });
 
 const fileInput = ref(null);
@@ -108,7 +112,8 @@ const deleteMemo = () => {
             <h1 class="text-xl font-bold text-white">Edit Memo</h1>
         </template>
 
-        <div class="max-w-3xl space-y-6">
+        <div class="w-full max-w-none space-y-6">
+            <div class="space-y-6">
             <!-- Rejection Notes -->
             <div v-if="memo.status === 'rejected' && memo.approvals?.length > 0" class="bg-red-500/10 border border-red-500/20 rounded-2xl p-5">
                 <div class="flex items-start gap-3">
@@ -133,31 +138,58 @@ const deleteMemo = () => {
             </div>
 
             <!-- Edit Form -->
-            <form @submit.prevent="save" class="space-y-6">
-                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
-                    <input v-model="form.title" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                </div>
-
-                <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                    <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-white/10 p-4 space-y-4">
-                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                            <h3 class="text-sm font-semibold text-white">Item {{ itemIndex + 1 }}</h3>
-                            <button v-if="form.field_values.items.length > 1" type="button" class="text-sm text-red-400 hover:text-red-300" @click="removeItem(itemIndex)">Hapus item</button>
+            <form @submit.prevent="save" class="space-y-4">
+                <div class="grid w-full grid-cols-1 lg:grid-cols-[minmax(260px,0.7fr)_minmax(0,1.3fr)] gap-4 items-start">
+                    <div class="flex flex-col gap-4 self-start">
+                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
+                            <input v-model="form.title" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
                         </div>
-                        <div v-for="field in memo.template.field_schema" :key="field.key">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">
-                                {{ field.label }}
-                                <span v-if="field.required" class="text-red-400">*</span>
-                            </label>
-                            <input v-if="field.type === 'text'" v-model="item[field.key]" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <input v-else-if="field.type === 'number'" v-model="item[field.key]" type="number" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <input v-else-if="field.type === 'date'" v-model="item[field.key]" type="date" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <textarea v-else-if="field.type === 'textarea'" v-model="item[field.key]" rows="4" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-none"></textarea>
-                            <p v-if="form.errors['field_values.items.' + itemIndex + '.' + field.key]" class="text-red-400 text-sm mt-1">{{ form.errors['field_values.items.' + itemIndex + '.' + field.key] }}</p>
+
+                        <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Isi Memo</label>
+                            <textarea v-model="form.field_values.pengantar" rows="5" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-y"></textarea>
+                            <p class="text-xs text-slate-500 mt-2">Teks ini akan tampil pada bagian “Sehubungan dengan” dan dapat diubah sesuai kebutuhan pengajuan.</p>
+                        </div>
+
+                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                            <h2 class="text-lg font-semibold text-white mb-4">Lampiran</h2>
+                            <div v-if="memo.attachments?.length > 0" class="space-y-2 mb-4">
+                                <div v-for="att in memo.attachments" :key="att.id" class="flex items-center justify-between bg-slate-700/30 rounded-xl px-4 py-3">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <svg class="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                        <span class="text-sm text-slate-300 truncate">{{ att.original_name || att.file_path }}</span>
+                                    </div>
+                                    <button type="button" @click="deleteAttachment(att)" class="text-red-400 hover:text-red-300 text-sm flex-shrink-0">Hapus</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input ref="fileInput" type="file" @change="uploadFile" class="max-w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer" />
+                                <span v-if="uploading" class="text-sm text-slate-400">Mengupload...</span>
+                            </div>
                         </div>
                     </div>
-                    <button type="button" class="mt-4 px-4 py-2 border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-sm font-medium" @click="addItem">+ Tambah Item</button>
+
+                    <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 min-w-0 self-start">
+                        <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-white/10 p-4 space-y-4 mb-4 last:mb-0">
+                            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                                <h3 class="text-sm font-semibold text-white">Item {{ itemIndex + 1 }}</h3>
+                                <button v-if="form.field_values.items.length > 1" type="button" class="text-sm text-red-400 hover:text-red-300" @click="removeItem(itemIndex)">Hapus item</button>
+                            </div>
+                            <div v-for="field in memo.template.field_schema" :key="field.key">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">
+                                    {{ field.label }}
+                                    <span v-if="field.required" class="text-red-400">*</span>
+                                </label>
+                                <input v-if="field.type === 'text'" v-model="item[field.key]" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                                <input v-else-if="field.type === 'number'" v-model="item[field.key]" type="number" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                                <input v-else-if="field.type === 'date'" v-model="item[field.key]" type="date" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                                <textarea v-else-if="field.type === 'textarea'" v-model="item[field.key]" rows="4" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-none"></textarea>
+                                <p v-if="form.errors['field_values.items.' + itemIndex + '.' + field.key]" class="text-red-400 text-sm mt-1">{{ form.errors['field_values.items.' + itemIndex + '.' + field.key] }}</p>
+                            </div>
+                        </div>
+                        <button type="button" class="w-full mt-4 px-4 py-2.5 border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-sm font-medium" @click="addItem">+ Tambah Item</button>
+                    </div>
                 </div>
 
                 <div class="flex gap-3">
@@ -170,8 +202,11 @@ const deleteMemo = () => {
                 </div>
             </form>
 
+            </div>
+
             <!-- Digital signature confirmation before submission -->
-            <div v-if="showSignatureDialog" class="bg-slate-800/70 border border-emerald-500/20 rounded-2xl p-6 shadow-sm">
+            <div v-if="showSignatureDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4">
+                <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-slate-800 border border-emerald-500/30 rounded-2xl p-6 shadow-2xl">
                 <div class="flex items-start justify-between gap-4 mb-4">
                     <div>
                         <h2 class="text-lg font-semibold text-white">Tanda Tangan Digital KC</h2>
@@ -198,23 +233,6 @@ const deleteMemo = () => {
                     <button type="button" @click="showSignatureDialog = false" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-xl transition-colors">Batal</button>
                     <button type="button" @click="confirmSubmit" :disabled="submittingMemo || (!signature && !signatureFile)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors">{{ submittingMemo ? 'Mengirim...' : 'Tanda Tangani & Kirim ke AM' }}</button>
                 </div>
-            </div>
-
-            <!-- Attachments -->
-            <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                <h2 class="text-lg font-semibold text-white mb-4">Lampiran</h2>
-                <div v-if="memo.attachments?.length > 0" class="space-y-2 mb-4">
-                    <div v-for="att in memo.attachments" :key="att.id" class="flex items-center justify-between bg-slate-700/30 rounded-xl px-4 py-3">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                            <span class="text-sm text-slate-300">{{ att.original_name || att.file_path }}</span>
-                        </div>
-                        <button @click="deleteAttachment(att)" class="text-red-400 hover:text-red-300 text-sm">Hapus</button>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <input ref="fileInput" type="file" @change="uploadFile" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer" />
-                    <span v-if="uploading" class="text-sm text-slate-400">Mengupload...</span>
                 </div>
             </div>
 

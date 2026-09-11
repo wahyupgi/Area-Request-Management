@@ -10,11 +10,12 @@ const props = defineProps({
 const form = useForm({
     template_id: '',
     title: '',
-    field_values: { items: [{}] },
+    field_values: { pengantar: '', items: [{}] },
     submit_after_save: false,
 });
 
 const selectedTemplate = ref(null);
+const attachment = ref(null);
 
 const groupedTemplates = computed(() => {
     const groups = {};
@@ -34,7 +35,12 @@ const groupedTemplates = computed(() => {
 
 watch(() => form.template_id, (val) => {
     selectedTemplate.value = props.templates.find(t => t.id == val) || null;
-    form.field_values = { items: [{}] };
+    form.field_values = {
+        pengantar: selectedTemplate.value
+            ? `Sehubungan dengan pengajuan ${selectedTemplate.value.name}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`
+            : '',
+        items: [{}],
+    };
 });
 
 const addItem = () => {
@@ -47,14 +53,18 @@ const removeItem = (index) => {
     }
 };
 
+const selectAttachment = (event) => {
+    attachment.value = event.target.files[0] || null;
+};
+
 const submit = () => {
     form.submit_after_save = false;
-    form.post(route('memos.store'));
+    form.transform((data) => ({ ...data, attachment: attachment.value })).post(route('memos.store'), { forceFormData: true });
 };
 
 const submitAndSign = () => {
     form.submit_after_save = true;
-    form.post(route('memos.store'));
+    form.transform((data) => ({ ...data, attachment: attachment.value })).post(route('memos.store'), { forceFormData: true });
 };
 </script>
 
@@ -65,10 +75,10 @@ const submitAndSign = () => {
             <h1 class="text-xl font-bold text-white">Buat Memo Baru</h1>
         </template>
 
-        <div class="max-w-3xl">
+        <div class="w-full max-w-none">
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Template Selection -->
-                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 lg:col-span-2">
                     <h2 class="text-lg font-semibold text-white mb-2">Pilih Template Memo</h2>
                     <p class="text-xs text-slate-400 mb-4">Pilih jenis memo sesuai kebutuhan cabang pada Divisi GA atau Ma-Link (FIN dan HRD).</p>
                     <select v-model="form.template_id" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
@@ -82,16 +92,31 @@ const submitAndSign = () => {
                     <p v-if="form.errors.template_id" class="text-red-400 text-sm mt-2">{{ form.errors.template_id }}</p>
                 </div>
 
-                <!-- Title -->
-                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
-                    <input v-model="form.title" type="text" placeholder="Masukkan judul memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                    <p v-if="form.errors.title" class="text-red-400 text-sm mt-2">{{ form.errors.title }}</p>
-                </div>
+                <div v-if="selectedTemplate" class="grid grid-cols-1 lg:grid-cols-[minmax(260px,0.7fr)_minmax(0,1.3fr)] gap-4 items-start">
+                    <div class="flex flex-col gap-4 self-start">
+                        <!-- Title -->
+                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
+                            <input v-model="form.title" type="text" placeholder="Masukkan judul memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <p v-if="form.errors.title" class="text-red-400 text-sm mt-2">{{ form.errors.title }}</p>
+                        </div>
 
-                <!-- Dynamic Fields -->
-                <div v-if="selectedTemplate" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                    <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-white/10 p-4 space-y-4">
+                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Isi Memo</label>
+                            <textarea v-model="form.field_values.pengantar" rows="5" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-y"></textarea>
+                            <p class="text-xs text-slate-500 mt-2">Teks ini akan tampil pada bagian “Sehubungan dengan” dan dapat diubah sesuai kebutuhan pengajuan.</p>
+                        </div>
+
+                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                            <h2 class="text-lg font-semibold text-white mb-4">Lampiran</h2>
+                            <input type="file" @change="selectAttachment" class="max-w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer" />
+                            <p class="text-xs text-slate-500 mt-2">Maksimal 10MB. Lampiran akan tersimpan bersama draft memo.</p>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Fields -->
+                    <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 min-w-0 self-start">
+                        <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-white/10 p-4 space-y-4 mb-4 last:mb-0">
                         <div class="flex items-center justify-between border-b border-white/10 pb-3">
                             <h3 class="text-sm font-semibold text-white">Item {{ itemIndex + 1 }}</h3>
                             <button v-if="form.field_values.items.length > 1" type="button" class="text-sm text-red-400 hover:text-red-300" @click="removeItem(itemIndex)">Hapus item</button>
@@ -107,8 +132,9 @@ const submitAndSign = () => {
                             <textarea v-else-if="field.type === 'textarea'" v-model="item[field.key]" rows="4" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-none"></textarea>
                             <p v-if="form.errors['field_values.items.' + itemIndex + '.' + field.key]" class="text-red-400 text-sm mt-1">{{ form.errors['field_values.items.' + itemIndex + '.' + field.key] }}</p>
                         </div>
+                        </div>
+                        <button type="button" class="w-full mt-4 px-4 py-2.5 border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-sm font-medium" @click="addItem">+ Tambah Item</button>
                     </div>
-                    <button type="button" class="mt-4 px-4 py-2 border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-sm font-medium" @click="addItem">+ Tambah Item</button>
                 </div>
 
                 <!-- Submit -->

@@ -9,8 +9,10 @@ use App\Models\Notification;
 use App\Models\Branch;
 use App\Models\DigitalSignature;
 use App\Models\User;
+use App\Mail\MemoSubmitted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -64,6 +66,7 @@ class MemoController extends Controller
             'template_id' => 'required|exists:memo_templates,id',
             'title' => 'required|string|max:255',
             'field_values' => 'nullable|array',
+            'attachment' => 'nullable|file|max:10240',
         ]);
 
         $user = auth()->user();
@@ -87,6 +90,15 @@ class MemoController extends Controller
             'area_manager_id' => $areaManager?->id,
             'status' => 'draft',
         ]);
+
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            MemoAttachment::create([
+                'memo_id' => $memo->id,
+                'file_path' => $file->store('attachments/' . $memo->id, 'public'),
+                'original_name' => $file->getClientOriginalName(),
+            ]);
+        }
 
         $routeParameters = ['memo' => $memo->id];
         if ($request->boolean('submit_after_save')) {
@@ -253,6 +265,11 @@ class MemoController extends Controller
                 'message' => 'Memo baru "' . $memo->title . '" dari ' . $memo->creator->name . ' menunggu persetujuan Anda.',
             ]);
         });
+
+        $memo->loadMissing(['creator', 'areaManager', 'branch', 'template']);
+        if ($memo->areaManager?->email) {
+            Mail::to($memo->areaManager->email)->send(new MemoSubmitted($memo));
+        }
 
         return redirect()->route('memos.show', $memo->id)
             ->with('success', 'Memo berhasil disubmit ke Area Manager.');

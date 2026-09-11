@@ -311,6 +311,7 @@ html.theme-light .profile-panel input {
 .table-head-pgi thead th {
     color: #ffffff !important;
     border: 1px solid rgba(186, 230, 253, 0.28) !important;
+    text-transform: none !important;
 }
 
 .table-head-pgi tbody tr {
@@ -392,12 +393,23 @@ html.theme-light .dashboard-kpi-card a {
     color: #000000 !important;
 }
 
-/* Square dashboard surfaces: keep circular status dots and avatars intact. */
+/* Use one neutral text color across dashboard cards. */
+.dashboard-kpi-card,
+.dashboard-kpi-card [class*="text-"] {
+    color: #e2e8f0 !important;
+}
+
+html.theme-light .dashboard-kpi-card,
+html.theme-light .dashboard-kpi-card [class*="text-"] {
+    color: #0f172a !important;
+}
+
+/* Keep dashboard surfaces softly rounded while preserving circular status dots. */
 .app-shell [class*="rounded-2xl"],
 .app-shell [class*="rounded-xl"],
 .app-shell [class*="rounded-lg"],
 .app-shell [class*="rounded-md"] {
-    border-radius: 0 !important;
+    border-radius: 0.75rem !important;
 }
 
 /* Sidebar text follows the theme contrast. */
