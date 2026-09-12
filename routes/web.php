@@ -70,10 +70,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/signature', [SignatureController::class, 'destroy'])->name('signature.destroy');
         Route::get('/signature/settings', [SignatureController::class, 'settings'])->name('signature.settings');
         Route::put('/signature/settings/{template}', [SignatureController::class, 'updateSettings'])->name('signature.settings.update');
+        Route::post('/approvals/{memo}/signers', [ApprovalController::class, 'updateSigners'])->name('approvals.updateSigners');
     });
 
     // Approval history (KC & AM)
     Route::get('/approvals/{memo}/history', [ApprovalController::class, 'history'])->name('approvals.history');
+
+    // Update memo header meta (KC & AM)
+    Route::post('/approvals/{memo}/update-meta', [ApprovalController::class, 'updateMeta'])->name('approvals.updateMeta');
 
     // ---- Admin Routes ----
     Route::middleware('role:ADMIN')->prefix('admin')->name('admin.')->group(function () {

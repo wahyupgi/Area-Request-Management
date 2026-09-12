@@ -33,6 +33,51 @@ const handleReject = () => {
     });
 };
 
+const showSignerModal = ref(false);
+const showMetaModal = ref(false);
+
+const existingCustom = props.memo.field_values?.custom_signers || [];
+const existingSlot3 = existingCustom[2] || {};
+const existingSlot4 = existingCustom[3] || {};
+
+const signersForm = useForm({
+    slot3_name: existingSlot3.name || '',
+    slot3_role: existingSlot3.role || '',
+    slot4_name: existingSlot4.name || '',
+    slot4_role: existingSlot4.role || '',
+});
+
+const existingMeta = props.memo.field_values?.meta || {};
+const metaForm = useForm({
+    direktorat: existingMeta.direktorat || '',
+    divisi: existingMeta.divisi || '',
+    perihal: existingMeta.perihal || '',
+    lampiran: existingMeta.lampiran || '',
+});
+
+const saveMeta = () => {
+    metaForm.post(route('approvals.updateMeta', props.memo.id), {
+        preserveScroll: true,
+        onSuccess: () => { showMetaModal.value = false; },
+    });
+};
+
+const saveSigners = () => {
+    signersForm.transform(() => ({
+        signers: [
+            { name: props.memo.creator?.name || '', role: 'Kepala Cabang', location: 'document' },
+            { name: props.memo.area_manager?.name || '', role: 'Area Manager', location: 'document' },
+            { name: signersForm.slot3_name, role: signersForm.slot3_role, location: 'document' },
+            { name: signersForm.slot4_name, role: signersForm.slot4_role, location: 'document' },
+        ],
+    })).post(route('approvals.updateSigners', props.memo.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showSignerModal.value = false;
+        },
+    });
+};
+
 const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -68,7 +113,15 @@ const formatDate = (dateString) => {
                 </div>
 
                 <div class="flex items-center gap-2.5">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    <span v-if="memo.status === 'approved'" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        Disetujui Resmi
+                    </span>
+                    <span v-else-if="memo.status === 'rejected'" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                        Ditolak
+                    </span>
+                    <span v-else class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
                         Menunggu Persetujuan
                     </span>
@@ -84,13 +137,13 @@ const formatDate = (dateString) => {
         </template>
 
         <!-- Main Workspace Grid: Responsive 2-Column Desktop, Stack on Mobile -->
-        <div class="max-w-7xl mx-auto py-2">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div class="max-w-7xl mx-auto py-2 print:p-0 print:m-0 print:max-w-none print:w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start print:block print:w-full print:m-0 print:p-0">
                 
                 <!-- Left: Document Preview Stage (lg:col-span-8) -->
-                <div class="lg:col-span-8 w-full flex justify-center">
-                    <div class="w-full max-w-[210mm] transition-all">
-                        <MemoDocument :memo="memo" :show-am-signature="false" />
+                <div class="lg:col-span-8 w-full flex justify-center print:block print:w-full print:m-0 print:p-0">
+                    <div class="w-full max-w-[210mm] print:max-w-none print:w-full transition-all">
+                        <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
                     </div>
                 </div>
 
@@ -100,15 +153,41 @@ const formatDate = (dateString) => {
                     <!-- Card 1: Decision Action Panel -->
                     <div class="bg-slate-800/50 border border-white/10 rounded-2xl p-5 shadow-sm">
                         <div class="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
-                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Aksi Keputusan AM</h3>
-                            <span class="text-[10px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">Perlu Tindakan</span>
+                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Status Keputusan AM</h3>
+                            <span v-if="memo.status === 'approved'" class="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">Sudah Disetujui</span>
+                            <span v-else-if="memo.status === 'rejected'" class="text-[10px] font-semibold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">Ditolak</span>
+                            <span v-else class="text-[10px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">Perlu Tindakan</span>
                         </div>
 
-                        <p class="text-xs text-slate-300 leading-relaxed mb-4">
-                            Periksa kelayakan rincian permohonan memo. Keputusan Anda akan dibubuhkan tanda tangan digital dan tercatat pada riwayat audit sistem.
-                        </p>
+                        <div v-if="memo.status === 'approved'" class="space-y-3">
+                            <p class="text-xs text-emerald-300 leading-relaxed bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                                ✓ Memo ini telah resmi <strong>disetujui</strong> dan tanda tangan digital telah dibubuhkan pada dokumen.
+                            </p>
+                            <Link
+                                :href="route('approvals.pending')"
+                                class="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-xl transition-colors"
+                            >
+                                <span>&larr; Kembali ke Daftar Antrean</span>
+                            </Link>
+                        </div>
 
-                        <div class="space-y-2.5">
+                        <div v-else-if="memo.status === 'rejected'" class="space-y-3">
+                            <p class="text-xs text-rose-300 leading-relaxed bg-rose-500/10 border border-rose-500/20 rounded-xl p-3">
+                                Memo ini telah <strong>ditolak</strong> untuk revisi cabang.
+                            </p>
+                            <Link
+                                :href="route('approvals.pending')"
+                                class="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-xl transition-colors"
+                            >
+                                <span>&larr; Kembali ke Daftar Antrean</span>
+                            </Link>
+                        </div>
+
+                        <div v-else class="space-y-2.5">
+                            <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                                Periksa kelayakan rincian permohonan memo. Keputusan Anda akan dibubuhkan tanda tangan digital dan tercatat pada riwayat audit sistem.
+                            </p>
+
                             <button
                                 @click="showApproveConfirm = true"
                                 class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-emerald-600/20"
@@ -160,7 +239,76 @@ const formatDate = (dateString) => {
                         </div>
                     </div>
 
-                    <!-- Card 3: Information Summary -->
+                    <!-- Card 3: Penandatangan Dokumen (Slot 3 & 4) -->
+                    <div class="bg-slate-800/50 border border-white/10 rounded-2xl p-5 shadow-sm">
+                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Penandatangan Memo</h3>
+                            <button
+                                @click="showSignerModal = true"
+                                class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span>Edit Nama / TTD</span>
+                            </button>
+                        </div>
+
+                        <div class="space-y-2 text-xs">
+                            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Penandatangan 1 (Dibuat):</span>
+                                <p class="text-white font-semibold">{{ memo.creator?.name || '-' }}</p>
+                                <p class="text-slate-400 text-[11px]">Kepala Cabang</p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Penandatangan 2 (Disetujui):</span>
+                                <p class="text-white font-semibold">{{ memo.area_manager?.name || '-' }}</p>
+                                <p class="text-slate-400 text-[11px]">Area Manager</p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+                                <span class="text-[10px] uppercase font-bold text-indigo-400 block mb-0.5">Penandatangan 3:</span>
+                                <p class="text-white font-semibold">{{ signersForm.slot3_name || '(Belum diisi)' }}</p>
+                                <p class="text-slate-400 text-[11px]">{{ signersForm.slot3_role || '-' }}</p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+                                <span class="text-[10px] uppercase font-bold text-indigo-400 block mb-0.5">Penandatangan 4:</span>
+                                <p class="text-white font-semibold">{{ signersForm.slot4_name || '(Belum diisi)' }}</p>
+                                <p class="text-slate-400 text-[11px]">{{ signersForm.slot4_role || '-' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Informasi Dokumen (Meta, AM editable) -->
+                    <div class="bg-slate-800/50 border border-white/10 rounded-2xl p-5 shadow-sm">
+                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Informasi Dokumen</h3>
+                            <button
+                                @click="showMetaModal = true"
+                                class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span>Edit</span>
+                            </button>
+                        </div>
+                        <div class="space-y-1.5 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Direktorat</span>
+                                <span class="text-white font-medium text-right max-w-[150px] truncate">{{ metaForm.direktorat || '(default)' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Divisi</span>
+                                <span class="text-white font-medium text-right max-w-[150px] truncate">{{ metaForm.divisi || '(default)' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Perihal</span>
+                                <span class="text-white font-medium text-right max-w-[150px] truncate">{{ metaForm.perihal || memo.title }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Lampiran</span>
+                                <span class="text-white font-medium text-right max-w-[150px] truncate">{{ metaForm.lampiran || '(auto)' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: Information Summary -->
                     <div class="bg-slate-800/50 border border-white/10 rounded-2xl p-5 shadow-sm">
                         <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-3 pb-3 border-b border-white/5">Informasi Permohonan</h3>
                         
@@ -184,7 +332,7 @@ const formatDate = (dateString) => {
                         </div>
                     </div>
 
-                    <!-- Card 4: Attachments (if any) -->
+                    <!-- Card 5: Attachments (if any) -->
                     <div v-if="memo.attachments?.length > 0" class="bg-slate-800/50 border border-white/10 rounded-2xl p-5 shadow-sm">
                         <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-3 pb-3 border-b border-white/5">
                             Lampiran Dokumen ({{ memo.attachments.length }})
@@ -276,29 +424,127 @@ const formatDate = (dateString) => {
                 </div>
             </div>
         </div>
+        <!-- Edit Signers Modal -->
+        <div v-if="showSignerModal" class="fixed inset-0 z-50 flex items-center justify-center print:hidden">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showSignerModal = false"></div>
+            <div class="relative bg-slate-800 border border-white/10 rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl">
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+                    <h3 class="text-base font-bold text-white">Sesuaikan Penandatangan Memo</h3>
+                    <button @click="showSignerModal = false" class="text-slate-400 hover:text-white text-lg font-bold leading-none">&times;</button>
+                </div>
+                
+                <p class="text-xs text-slate-300 mb-4">
+                    Atur nama dan jabatan untuk kolom penandatangan ke-3 dan ke-4 yang tampil pada dokumen cetak memo ini.
+                </p>
+
+                <div class="space-y-4 mb-6">
+                    <!-- Slot 3 -->
+                    <div class="p-3.5 rounded-xl bg-slate-900/50 border border-white/5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Penandatangan 3 (Disetujui Oleh)</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Nama Lengkap</label>
+                            <input
+                                v-model="signersForm.slot3_name"
+                                type="text"
+                                placeholder="Contoh: Nama Pejabat / Pimpinan"
+                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Jabatan</label>
+                            <input
+                                v-model="signersForm.slot3_role"
+                                type="text"
+                                placeholder="Contoh: General Manager / Operational Director"
+                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Slot 4 -->
+                    <div class="p-3.5 rounded-xl bg-slate-900/50 border border-white/5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Penandatangan 4 (Disetujui Oleh)</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Nama Lengkap</label>
+                            <input
+                                v-model="signersForm.slot4_name"
+                                type="text"
+                                placeholder="Contoh: Nama Pejabat / Pimpinan"
+                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Jabatan</label>
+                            <input
+                                v-model="signersForm.slot4_role"
+                                type="text"
+                                placeholder="Contoh: Direktur Utama"
+                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5">
+                    <button
+                        type="button"
+                        @click="showSignerModal = false"
+                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium rounded-xl transition-colors"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        @click="saveSigners"
+                        :disabled="signersForm.processing"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-colors shadow-md shadow-indigo-600/20"
+                    >
+                        {{ signersForm.processing ? 'Menyimpan...' : 'Simpan Penandatangan' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Info Dokumen Modal (AM) -->
+        <div v-if="showMetaModal" class="fixed inset-0 z-50 flex items-center justify-center print:hidden">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showMetaModal = false"></div>
+            <div class="relative bg-slate-800 border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+                    <h3 class="text-base font-bold text-white">Edit Informasi Dokumen</h3>
+                    <button @click="showMetaModal = false" class="text-slate-400 hover:text-white text-lg font-bold leading-none">&times;</button>
+                </div>
+
+                <p class="text-xs text-slate-400 mb-4">Nilai ini akan tampil di header dokumen cetak. Kosongkan untuk menggunakan nilai default.</p>
+
+                <div class="space-y-3 mb-6">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Direktorat</label>
+                        <input v-model="metaForm.direktorat" type="text" placeholder="contoh: Operasional" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Divisi</label>
+                        <input v-model="metaForm.divisi" type="text" placeholder="contoh: GA / Ma-Link" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Perihal <span class="text-slate-500">(default: judul memo)</span></label>
+                        <input v-model="metaForm.perihal" type="text" :placeholder="memo.title" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Lampiran <span class="text-slate-500">(default: jumlah file)</span></label>
+                        <input v-model="metaForm.lampiran" type="text" placeholder="contoh: 1 Lembar, 3 Berkas" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5">
+                    <button type="button" @click="showMetaModal = false" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium rounded-xl transition-colors">Batal</button>
+                    <button type="button" @click="saveMeta" :disabled="metaForm.processing" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-colors shadow-md shadow-indigo-600/20">
+                        {{ metaForm.processing ? 'Menyimpan...' : 'Simpan Perubahan' }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </AuthenticatedLayout>
 </template>
-
-<style>
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    #printable-memo, #printable-memo * {
-        visibility: visible;
-    }
-    #printable-memo {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        max-width: none;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        padding: 40px !important;
-    }
-    .print\:hidden {
-        display: none !important;
-    }
-}
-</style>

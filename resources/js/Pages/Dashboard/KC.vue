@@ -32,13 +32,13 @@ onUnmounted(() => {
 const greeting = computed(() => {
     const hour = now.value.getHours();
     if (hour >= 4 && hour < 11) {
-        return { text: 'Selamat Pagi', icon: '🌅' };
+        return { text: 'Selamat Pagi'}; 
     } else if (hour >= 11 && hour < 15) {
-        return { text: 'Selamat Siang', icon: '☀️' };
+        return { text: 'Selamat Siang'}; 
     } else if (hour >= 15 && hour < 18) {
-        return { text: 'Selamat Sore', icon: '🌇' };
+        return { text: 'Selamat Sore'}; 
     } else {
-        return { text: 'Selamat Malam', icon: '🌙' };
+        return { text: 'Selamat Malam'}; 
     }
 });
 
@@ -138,13 +138,8 @@ const filteredMemos = computed(() => {
         <!-- Page Context Banner with Realtime Greeting & Live Clock -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
-                <div class="flex items-center gap-2 text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-1">
-                    <span>Portal Kantor Cabang</span>
-                    <span>•</span>
-                    <span>{{ user?.branch?.name || 'PT Pusat Gadai Indonesia' }}</span>
-                </div>
                 <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
-                    <span>{{ greeting.text }}, <span class="text-indigo-400">{{ userDisplayName }}</span>!</span>
+                    <span>{{ greeting.icon }} {{ greeting.text }}, <span class="text-indigo-400">{{ userDisplayName }}</span>!</span>
                 </h1>
                 <p class="text-xs md:text-sm text-slate-400 mt-1">
                     Kelola pembuatan dan pantau status persetujuan memo pengajuan unit <span class="text-slate-200 font-medium">{{ user?.branch?.name || 'kantor cabang' }}</span>.

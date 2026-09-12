@@ -87,12 +87,12 @@ const formatDate = (dateString) => {
         </template>
 
         <!-- Main Workspace: 2-Column Desktop, Stack on Mobile -->
-        <div class="max-w-7xl mx-auto py-2">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div class="max-w-7xl mx-auto py-2 print:p-0 print:m-0 print:max-w-none print:w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start print:block print:w-full print:m-0 print:p-0">
                 
                 <!-- Left: Document Preview Stage (lg:col-span-8) -->
-                <div class="lg:col-span-8 w-full flex justify-center">
-                    <div class="w-full max-w-[210mm]">
+                <div class="lg:col-span-8 w-full flex justify-center print:block print:w-full print:m-0 print:p-0">
+                    <div class="w-full max-w-[210mm] print:max-w-none print:w-full">
                         <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
                     </div>
                 </div>

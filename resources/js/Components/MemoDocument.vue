@@ -32,15 +32,30 @@ const isCashOut = computed(() => props.memo.template?.name === 'FIN - Pemberitah
 const cashOutValues = computed(() => memoItems.value[0] || {});
 const introText = computed(() => props.memo.field_values?.pengantar || `Sehubungan dengan pengajuan ${props.memo.title || 'memo ini'}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`);
 
-const configuredSignatures = computed(() => (props.memo.template?.signature_schema || [])
-    .map((slot) => ({
-        ...slot,
-        name: slot.name || slot.label || slot.user?.name || 'Penandatangan',
-        user: slot.user || props.memo.template?.signature_people?.[slot.user_id],
-    }))
-    .filter((slot) => slot.name && slot.role));
+// Meta: editable header fields (KC/AM customizable)
+const memoMeta = computed(() => props.memo.field_values?.meta || {});
 
-const documentSignatures = computed(() => configuredSignatures.value.filter((slot) => slot.location === 'document'));
+const configuredSignatures = computed(() => {
+    const custom = props.memo.field_values?.custom_signers;
+    if (Array.isArray(custom) && custom.length > 0) {
+        return custom.map((slot) => ({
+            ...slot,
+            name: slot.name || '',
+            role: slot.role || '',
+            location: slot.location || 'document',
+        }));
+    }
+
+    return (props.memo.template?.signature_schema || [])
+        .map((slot) => ({
+            ...slot,
+            name: slot.name || slot.label || slot.user?.name || 'Penandatangan',
+            user: slot.user || props.memo.template?.signature_people?.[slot.user_id],
+        }))
+        .filter((slot) => slot.name && slot.role);
+});
+
+const documentSignatures = computed(() => configuredSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
 const parafSignatures = computed(() => configuredSignatures.value.filter((slot) => slot.location === 'bottom_right'));
 
 const handleImgError = (event) => {
@@ -49,7 +64,7 @@ const handleImgError = (event) => {
 </script>
 
 <template>
-    <div id="printable-memo" class="memo-document bg-white text-black pt-[3cm] px-[2.54cm] pb-[15mm] print:pt-[3cm] print:px-[2.54cm] print:pb-[15mm] rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] min-h-[297mm] mx-auto print:max-w-full print:min-h-[297mm] flex flex-col text-xs leading-normal border border-slate-200 print:border-none transition-all">
+    <div id="printable-memo" class="memo-document bg-white text-black pt-[3.4cm] pl-[2.54cm] pr-[2cm] pb-[2cm] print:p-0 rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] min-h-[297mm] mx-auto print:max-w-full print:min-h-0 flex flex-col text-xs leading-normal border border-slate-200 print:border-none transition-all">
         <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
                 <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-14 h-14 object-contain" />
@@ -69,10 +84,10 @@ const handleImgError = (event) => {
         </div>
 
         <div class="grid grid-cols-[120px_12px_1fr] text-xs gap-y-1 mb-3">
-            <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div>{{ isCashOut ? (cashOutValues.direktorat || 'Regional Branch Office') : 'Operasional' }}</div>
-            <div class="font-bold text-gray-900">Divisi</div><div>:</div><div>{{ isCashOut ? (cashOutValues.divisi || 'Branch Leader') : (memo.template?.category || 'Support') }}</div>
-            <div class="font-bold text-gray-900">Perihal</div><div>:</div><div class="font-bold text-black">{{ memo.title }}</div>
-            <div class="font-bold text-gray-900">Lampiran</div><div>:</div><div>{{ isCashOut ? (cashOutValues.lampiran || '-') : (memo.attachments?.length ? memo.attachments.length + ' Berkas' : '-') }}</div>
+            <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div>{{ memoMeta.direktorat || (isCashOut ? (cashOutValues.direktorat || 'Regional Branch Office') : 'Operasional') }}</div>
+            <div class="font-bold text-gray-900">Divisi</div><div>:</div><div>{{ memoMeta.divisi || (isCashOut ? (cashOutValues.divisi || 'Branch Leader') : (memo.template?.category || 'Support')) }}</div>
+            <div class="font-bold text-gray-900">Perihal</div><div>:</div><div class="font-bold text-black">{{ memoMeta.perihal || memo.title }}</div>
+            <div class="font-bold text-gray-900">Lampiran</div><div>:</div><div>{{ memoMeta.lampiran || (isCashOut ? (cashOutValues.lampiran || '-') : (memo.attachments?.length ? memo.attachments.length + ' Berkas' : '-')) }}</div>
         </div>
 
         <hr class="border-t-2 border-black my-3" />
@@ -93,7 +108,7 @@ const handleImgError = (event) => {
         <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" />
         <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
 
-        <div class="flex justify-end gap-2 mt-8 pt-4 mb-2">
+        <div class="flex justify-end gap-2 mt-4 pt-2 mb-1">
             <template v-if="parafSignatures.length">
                 <div v-for="slot in parafSignatures" :key="'paraf-' + slot.name + slot.role" class="w-10 h-10">
                     <div class="w-10 h-10 border border-black flex items-center justify-center">
@@ -107,7 +122,7 @@ const handleImgError = (event) => {
             </template>
         </div>
 
-        <div class="flex justify-between text-[10px] font-medium pt-1.5 text-gray-800">
+        <div class="flex justify-between text-[10px] font-medium pt-1 text-gray-800">
             <span>{{ memo.code }}</span>
             <span>PT. PUSAT GADAI INDONESIA</span>
         </div>

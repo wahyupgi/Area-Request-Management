@@ -111,7 +111,11 @@ class ApprovalController extends Controller
 
         $memo->loadMissing(['creator', 'areaManager', 'branch', 'template']);
         if ($memo->creator?->email) {
-            Mail::to($memo->creator->email)->send(new MemoApproved($memo));
+            try {
+                Mail::to($memo->creator->email)->send(new MemoApproved($memo));
+            } catch (\Throwable $e) {
+                \Log::warning('Gagal mengirim email MemoApproved: ' . $e->getMessage());
+            }
         }
 
         return redirect()->route('approvals.pending')
@@ -165,6 +169,31 @@ class ApprovalController extends Controller
     }
 
     /**
+     * Update custom signers for a memo by AM.
+     */
+    public function updateSigners(Request $request, Memo $memo)
+    {
+        $user = auth()->user();
+
+        if ($memo->area_manager_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'signers' => 'nullable|array',
+            'signers.*.name' => 'nullable|string|max:255',
+            'signers.*.role' => 'nullable|string|max:100',
+            'signers.*.location' => 'nullable|string|in:document,bottom_right',
+        ]);
+
+        $fieldValues = $memo->field_values ?? [];
+        $fieldValues['custom_signers'] = $validated['signers'] ?? [];
+        $memo->update(['field_values' => $fieldValues]);
+
+        return back()->with('success', 'Nama penandatangan berhasil diperbarui.');
+    }
+
+    /**
      * View approval history for a memo.
      */
     public function history(Memo $memo)
@@ -184,5 +213,33 @@ class ApprovalController extends Controller
         return Inertia::render('Approval/History', [
             'memo' => $memo,
         ]);
+    }
+
+    /**
+     * Update editable header meta fields (Direktorat, Divisi, Perihal, Lampiran).
+     * Can be called by either the memo creator (KC) or the assigned AM.
+     */
+    public function updateMeta(Request $request, Memo $memo)
+    {
+        $user = auth()->user();
+
+        // Allow both the creator (KC) and the area manager (AM) to update meta
+        if ($memo->created_by !== $user->id && $memo->area_manager_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'direktorat' => ['nullable', 'string', 'max:255'],
+            'divisi'     => ['nullable', 'string', 'max:255'],
+            'perihal'    => ['nullable', 'string', 'max:500'],
+            'lampiran'   => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $fieldValues = $memo->field_values ?? [];
+        $fieldValues['meta'] = $validated;
+        $memo->field_values = $fieldValues;
+        $memo->save();
+
+        return back()->with('success', 'Informasi dokumen berhasil diperbarui.');
     }
 }

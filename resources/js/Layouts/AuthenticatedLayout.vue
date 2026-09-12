@@ -9,6 +9,7 @@ const unreadCount = computed(() => page.props.unreadNotificationsCount || 0);
 
 const showingNavDropdown = ref(false);
 const showNotifications = ref(false);
+const showUserMenu = ref(false);
 const notifications = ref([]);
 const sidebarCollapsed = ref(false);
 
@@ -132,21 +133,6 @@ const isActive = (routeName) => {
                         <span v-if="!sidebarCollapsed">{{ item.name }}</span>
                     </Link>
                 </nav>
-
-                <!-- User Card -->
-                <div class="p-4 sidebar-divider border-t">
-                    <div :class="[sidebarCollapsed ? 'justify-center p-2' : 'px-3 py-2.5', 'sidebar-user-card flex items-center gap-3 rounded-xl border transition-all duration-200']">
-                        <div class="sidebar-user-avatar w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm ring-1 ring-white/10">
-                            {{ user?.name?.charAt(0) }}
-                        </div>
-                        <div v-if="!sidebarCollapsed" class="flex-1 min-w-0">
-                            <p class="sidebar-user-name text-sm font-semibold truncate">{{ user?.name }}</p>
-                            <div class="flex items-center gap-1.5 mt-0.5">
-                                <span :class="[roleBadgeClass, 'text-[10px] font-medium px-2 py-0.5 rounded-md']">{{ roleLabel }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </aside>
 
@@ -195,10 +181,28 @@ const isActive = (routeName) => {
                         </div>
                     </div>
 
-                    <!-- Logout -->
-                    <Link :href="route('logout')" method="post" as="button" class="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    </Link>
+                    <!-- User Dropdown -->
+                    <div class="relative">
+                        <button @click="showUserMenu = !showUserMenu" class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-colors">
+                            <span class="text-sm font-medium text-slate-300">{{ user?.name }}</span>
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        
+                        <div v-if="showUserMenu" class="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50 py-1">
+                            <div class="px-4 py-2 border-b border-white/10 mb-1">
+                                <p class="text-sm font-medium text-white truncate">{{ user?.name }}</p>
+                                <p class="text-xs text-slate-400 truncate">{{ roleLabel }}</p>
+                            </div>
+                            <Link :href="route('profile.edit')" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                Profil Saya
+                            </Link>
+                            <Link :href="route('logout')" method="post" as="button" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                Keluar
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -222,7 +226,7 @@ const isActive = (routeName) => {
             </main>
         </div>
 
-        <!-- Click outside to close notifications -->
-        <div v-if="showNotifications" @click="showNotifications = false" class="fixed inset-0 z-10"></div>
+        <!-- Click outside to close notifications/user menu -->
+        <div v-if="showNotifications || showUserMenu" @click="showNotifications = false; showUserMenu = false" class="fixed inset-0 z-10"></div>
     </div>
 </template>

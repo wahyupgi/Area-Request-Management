@@ -12,7 +12,7 @@ html.theme-light {
 
 .app-shell,
 .app-login-surface {
-    background: linear-gradient(135deg, #020617 0%, #0f172a 52%, #020617 100%);
+    background-color: #0f172a;
 }
 
 .login-watermark {
@@ -27,6 +27,7 @@ html.theme-light {
 }
 
 @keyframes watermark-float {
+
     0%,
     100% {
         transform: translate3d(var(--wm-offset-x, 0px), var(--wm-offset-y, 0px), 0) rotate(var(--wm-rot, 0deg)) scale(var(--wm-scale, 1));
@@ -47,7 +48,7 @@ html.theme-light {
 
 html.theme-light .app-shell,
 html.theme-light .app-login-surface {
-    background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 52%, #eef2ff 100%);
+    background-color: #f1f5f9;
 }
 
 html.theme-light .login-watermark {
@@ -66,7 +67,8 @@ html.theme-light .bg-slate-800\/50,
 html.theme-light .bg-slate-800\/70,
 html.theme-light .bg-slate-700,
 html.theme-light .bg-slate-700\/50 {
-    background-color: rgba(255, 255, 255, 0.92) !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
 }
 
 html.theme-light .bg-white\/5,
@@ -81,7 +83,7 @@ html.theme-light .border-white\/10,
 html.theme-light .border-b-white\/5,
 html.theme-light .border-b-white\/10,
 html.theme-light .border-r-white\/5 {
-    border-color: rgba(15, 23, 42, 0.12) !important;
+    border-color: rgba(15, 23, 42, 0.08) !important;
 }
 
 html.theme-light .text-white {
@@ -114,22 +116,17 @@ html.theme-light .bg-red-600 .text-white {
     color: #ffffff;
 }
 
-html.theme-light .theme-toggle {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    border-color: rgba(15, 23, 42, 0.12) !important;
-}
-
 /* ==========================================================================
    Theme-aware PGI blue shell
    ========================================================================== */
 .sidebar-pgi {
-    background: linear-gradient(180deg, #0369a1 0%, #075985 52%, #0c4a6e 100%) !important;
+    background-color: #075985 !important;
     border-right: 1px solid rgba(125, 211, 252, 0.28) !important;
     box-shadow: 4px 0 24px rgba(3, 105, 161, 0.28);
 }
 
 html.theme-light .sidebar-pgi {
-    background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 52%, #0284c7 100%) !important;
+    background-color: #0ea5e9 !important;
     border-right-color: rgba(3, 105, 161, 0.28) !important;
     box-shadow: 4px 0 20px rgba(3, 105, 161, 0.2);
 }
@@ -182,7 +179,7 @@ html.theme-light .sidebar-pgi .sidebar-nav-item {
 
 .sidebar-pgi .sidebar-nav-active,
 html.theme-light .sidebar-pgi .sidebar-nav-active {
-    background: linear-gradient(135deg, #258cd2 0%, #155592 100%) !important;
+    background-color: #155592 !important;
     color: #ffffff !important;
     border-color: rgba(186, 230, 253, 0.35) !important;
     box-shadow: 0 4px 14px -1px rgba(7, 26, 48, 0.6) !important;
@@ -201,7 +198,7 @@ html.theme-light .sidebar-pgi .sidebar-user-card {
 
 .sidebar-pgi .sidebar-user-avatar,
 html.theme-light .sidebar-pgi .sidebar-user-avatar {
-    background: linear-gradient(135deg, #38bdf8 0%, #1a5690 100%) !important;
+    background-color: #1a5690 !important;
     color: #ffffff !important;
 }
 
@@ -211,17 +208,17 @@ html.theme-light .sidebar-pgi .sidebar-divider {
 }
 
 .app-header-pgi {
-    background: linear-gradient(90deg, #075985 0%, #0284c7 55%, #0369a1 100%) !important;
-    border-bottom: 1px solid rgba(125, 211, 252, 0.3) !important;
-    box-shadow: 0 4px 18px rgba(3, 105, 161, 0.22);
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
     color: #ffffff;
 }
 
 html.theme-light .app-header-pgi {
-    background: linear-gradient(90deg, #38bdf8 0%, #0ea5e9 55%, #0284c7 100%) !important;
-    border-bottom-color: rgba(3, 105, 161, 0.24) !important;
-    box-shadow: 0 4px 18px rgba(3, 105, 161, 0.16);
-    color: #082f49;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-bottom-color: rgba(15, 23, 42, 0.1) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+    color: #0f172a;
 }
 
 .app-header-pgi button,
@@ -235,15 +232,7 @@ html.theme-light .app-header-pgi {
     color: #ffffff !important;
 }
 
-.app-header-pgi .theme-toggle {
-    background-color: rgba(255, 255, 255, 0.16) !important;
-    border-color: rgba(255, 255, 255, 0.28) !important;
-    color: inherit;
-}
 
-.app-header-pgi .theme-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.28) !important;
-}
 
 /* Official memo typography */
 .memo-document,
@@ -305,7 +294,7 @@ html.theme-light .profile-panel input {
 }
 
 .table-head-pgi thead tr {
-    background: linear-gradient(90deg, #075985 0%, #0369a1 55%, #0284c7 100%) !important;
+    background-color: #0369a1 !important;
 }
 
 .table-head-pgi thead th {
@@ -327,7 +316,7 @@ html.theme-light .table-head-pgi {
 }
 
 html.theme-light .table-head-pgi thead tr {
-    background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 55%, #38bdf8 100%) !important;
+    background-color: #0ea5e9 !important;
 }
 
 html.theme-light .table-head-pgi thead th {
@@ -376,17 +365,7 @@ html.theme-light .dashboard-status {
     color: #047857 !important;
 }
 
-html:not(.theme-light) .app-header-pgi .theme-toggle {
-    background-color: rgba(8, 47, 73, 0.72) !important;
-    border-color: rgba(125, 211, 252, 0.32) !important;
-    color: #ffffff !important;
-}
 
-html.theme-light .app-header-pgi .theme-toggle {
-    background-color: #ffffff !important;
-    border-color: rgba(3, 105, 161, 0.24) !important;
-    color: #075985 !important;
-}
 
 html.theme-light .dashboard-kpi-card span,
 html.theme-light .dashboard-kpi-card a {
@@ -445,13 +424,15 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
 /* Primary action buttons: lift + glow on hover */
 .btn-primary-anim {
     transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.18s ease,
-                background-color 0.15s ease;
+        box-shadow 0.18s ease,
+        background-color 0.15s ease;
 }
+
 .btn-primary-anim:hover {
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.45);
 }
+
 .btn-primary-anim:active {
     transform: translateY(0) scale(0.98);
 }
@@ -459,15 +440,17 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
 /* Secondary/outline buttons: gentle lift on hover */
 .btn-secondary-anim {
     transition: transform 0.15s ease,
-                box-shadow 0.15s ease,
-                background-color 0.15s ease,
-                border-color 0.15s ease,
-                color 0.15s ease;
+        box-shadow 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 }
+
 .btn-secondary-anim:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
 }
+
 .btn-secondary-anim:active {
     transform: translateY(0);
 }
@@ -475,9 +458,10 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
 /* Memo/card links: slide-right arrow effect */
 .btn-card-link-anim {
     transition: transform 0.15s ease,
-                border-color 0.15s ease,
-                background-color 0.15s ease;
+        border-color 0.15s ease,
+        background-color 0.15s ease;
 }
+
 .btn-card-link-anim:hover {
     transform: translateX(2px);
 }
@@ -485,9 +469,10 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
 /* Icon buttons (small): rotate or scale pulse */
 .btn-icon-anim {
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-                color 0.15s ease,
-                background-color 0.15s ease;
+        color 0.15s ease,
+        background-color 0.15s ease;
 }
+
 .btn-icon-anim:hover {
     transform: scale(1.1);
 }
@@ -495,9 +480,10 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
 /* Stats card hover: gentle rise */
 .card-hover-rise {
     transition: transform 0.2s ease,
-                box-shadow 0.2s ease,
-                border-color 0.2s ease;
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
 }
+
 .card-hover-rise:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
@@ -507,9 +493,10 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
    Dashboard Table Header (Kop Tabel) — PGI Brand Blue
    ========================================================================== */
 .table-head-pgi thead tr {
-    background: linear-gradient(90deg, #0d2847 0%, #123762 60%, #0e3060 100%);
+    background-color: #123762;
     border-bottom: 2px solid rgba(56, 189, 248, 0.25) !important;
 }
+
 .table-head-pgi thead th {
     color: #bae6fd !important;
     font-weight: 700;
@@ -519,6 +506,7 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
     padding-top: 0.875rem;
     padding-bottom: 0.875rem;
 }
+
 .table-head-pgi thead th:first-child {
     border-left: 3px solid #38bdf8;
 }
@@ -529,31 +517,24 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
 @media print {
     @page {
         size: A4 portrait;
-        margin: 10mm 12mm;
+        margin: 0;
     }
-     #printable-memo {
-        width: 210mm !important;
-        min-height: 297mm !important;
-        max-width: 210mm !important;
-        margin: 0 !important;
-        padding: 15mm !important;
-     }       
 
-    #printable-memo {
-        aspect-ratio: 210 / 297;
-    }
-    html, body {
+    html,
+    body {
         background: #ffffff !important;
         color: #000000 !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 100% !important;
-        height: auto !important;
+        width: 210mm !important;
+        min-height: 297mm !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
@@ -584,14 +565,20 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
     #printable-memo {
         box-shadow: none !important;
         border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
+        padding-top: 3cm !important;
+        padding-left: 2.54cm !important;
+        padding-right: 2cm !important;
+        padding-bottom: 2cm !important;
+        margin: 0 auto !important;
+        width: 210mm !important;
+        max-width: 210mm !important;
+        min-height: 297mm !important;
+        height: auto !important;
+        box-sizing: border-box !important;
         background: #ffffff !important;
         color: #000000 !important;
-        page-break-inside: avoid;
-        break-inside: avoid;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: avoid !important;
     }
 }
-

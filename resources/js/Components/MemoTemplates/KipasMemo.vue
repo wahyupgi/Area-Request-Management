@@ -13,36 +13,96 @@ const getApprovedSignature = () => {
 };
 
 const signatures = computed(() => {
-    const configured = props.documentSignatures.slice(0, 4).map((slot) => ({
-        displayName: slot.name,
-        displayRole: slot.role,
-        signature: slot.user?.digital_signature?.signature_image,
-        label: slot.label,
-    }));
+    const creatorSig = {
+        displayName: props.memo.creator?.name || '',
+        displayRole: 'Kepala Cabang',
+        signature: props.memo.creator?.digital_signature?.signature_image,
+        label: 'Tanda tangan KC',
+    };
 
-    if (configured.length) {
-        while (configured.length < 4) {
-            configured.push({ displayName: '', displayRole: '', signature: '', label: `Tanda tangan ${configured.length + 1}` });
-        }
-        return configured;
+    const isApproved = props.memo.status === 'approved';
+    const amSig = {
+        displayName: props.memo.area_manager?.name || '',
+        displayRole: 'Area Manager',
+        // Only show AM signature after memo is approved
+        signature: isApproved
+            ? (getApprovedSignature()?.signature_image || props.memo.area_manager?.digital_signature?.signature_image)
+            : null,
+        label: 'Tanda tangan AM',
+    };
+
+    if (props.documentSignatures && props.documentSignatures.length > 0) {
+        const slot1 = props.documentSignatures[0] ? {
+            displayName: props.documentSignatures[0].name || creatorSig.displayName,
+            displayRole: props.documentSignatures[0].role || creatorSig.displayRole,
+            signature: props.documentSignatures[0].signature || creatorSig.signature,
+            label: props.documentSignatures[0].label || 'Dibuat oleh',
+        } : creatorSig;
+
+        const slot2 = props.documentSignatures[1] ? {
+            displayName: props.documentSignatures[1].name || amSig.displayName,
+            displayRole: props.documentSignatures[1].role || amSig.displayRole,
+            signature: props.documentSignatures[1].signature || amSig.signature,
+            label: props.documentSignatures[1].label || 'Disetujui oleh',
+        } : amSig;
+
+        const slot3 = props.documentSignatures[2] ? {
+            displayName: props.documentSignatures[2].name || '',
+            displayRole: props.documentSignatures[2].role || '',
+            signature: props.documentSignatures[2].signature || '',
+            label: props.documentSignatures[2].label || 'Disetujui oleh',
+        } : { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 3' };
+
+        const slot4 = props.documentSignatures[3] ? {
+            displayName: props.documentSignatures[3].name || '',
+            displayRole: props.documentSignatures[3].role || '',
+            signature: props.documentSignatures[3].signature || '',
+            label: props.documentSignatures[3].label || 'Disetujui oleh',
+        } : { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 4' };
+
+        return [slot1, slot2, slot3, slot4];
     }
 
     return [
-        {
-            displayName: props.memo.creator?.name || '',
-            displayRole: 'Kepala Cabang',
-            signature: props.memo.creator?.digital_signature?.signature_image,
-            label: 'Tanda tangan KC',
-        },
-        {
-            displayName: props.memo.area_manager?.name || '',
-            displayRole: 'Area Manager',
-            signature: getApprovedSignature()?.signature_image || props.memo.area_manager?.digital_signature?.signature_image,
-            label: 'Tanda tangan AM',
-        },
+        creatorSig,
+        amSig,
         { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 3' },
         { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 4' },
     ];
+});
+
+// Flatten items into table rows with rowspan support for area sub-rows
+const tableRows = computed(() => {
+    const rows = [];
+    props.items.forEach((item) => {
+        if (Array.isArray(item.areas) && item.areas.length > 0) {
+            item.areas.forEach((areaRow, aIndex) => {
+                rows.push({
+                    cabang: item.cabang || '-',
+                    permintaan: item.permintaan || props.memo.title || '-',
+                    tujuan: item.tujuan || '-',
+                    area: areaRow.area || '-',
+                    qty: areaRow.qty ?? '-',
+                    keterangan: item.keterangan || '-',
+                    isFirstRow: aIndex === 0,
+                    rowSpan: item.areas.length,
+                });
+            });
+        } else {
+            // Legacy fallback: single row per item
+            rows.push({
+                cabang: item.cabang || '-',
+                permintaan: item.permintaan || props.memo.title || '-',
+                tujuan: item.tujuan || '-',
+                area: item.area || '-',
+                qty: item.qty_kipas_ada ?? '-',
+                keterangan: item.keterangan || '-',
+                isFirstRow: true,
+                rowSpan: 1,
+            });
+        }
+    });
+    return rows;
 });
 
 const handleImgError = (event) => {
@@ -66,13 +126,13 @@ const handleImgError = (event) => {
             </tr>
         </thead>
         <tbody>
-            <tr v-for="(item, index) in items" :key="'kipas-' + index">
-                <td class="border border-black px-2 py-1.5 align-top">{{ item?.cabang || '-' }}</td>
-                <td class="border border-black px-2 py-1.5 align-top">{{ item?.permintaan || memo.title }}</td>
-                <td class="border border-black px-2 py-1.5 align-top">{{ item?.tujuan || '-' }}</td>
-                <td class="border border-black px-2 py-1.5 align-top">{{ item?.area || '-' }}</td>
-                <td class="border border-black px-2 py-1.5 text-center align-top">{{ item?.qty_kipas_ada ?? '-' }}</td>
-                <td class="border border-black px-2 py-1.5 align-top whitespace-pre-wrap">{{ item?.keterangan || '-' }}</td>
+            <tr v-for="(row, index) in tableRows" :key="'kipas-row-' + index">
+                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 align-top">{{ row.cabang }}</td>
+                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 align-top">{{ row.permintaan }}</td>
+                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 align-top">{{ row.tujuan }}</td>
+                <td class="border border-black px-2 py-1.5 align-top">{{ row.area }}</td>
+                <td class="border border-black px-2 py-1.5 text-center align-top">{{ row.qty }}</td>
+                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 align-top whitespace-pre-wrap">{{ row.keterangan }}</td>
             </tr>
         </tbody>
     </table>

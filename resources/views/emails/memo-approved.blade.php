@@ -10,4 +10,4 @@
     <li><strong>Area Manager:</strong> {{ $memo->areaManager->name }}</li>
 </ul>
 
-<p>Silakan masuk ke sistem untuk melihat detail memo.</p>
+<p>Silakan masuk ke sistem untuk melihat detail memo: <a href="http://36.67.11.130:81/suket/public/">http://36.67.11.130:81/suket/public/</a></p>

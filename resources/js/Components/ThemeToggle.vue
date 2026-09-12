@@ -12,7 +12,7 @@ const label = computed(() => theme.value === 'dark' ? 'Aktifkan mode terang' : '
         :aria-label="label"
         :title="label"
         @click="toggleTheme"
-        class="theme-toggle inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-slate-800/70 text-slate-300 shadow-lg shadow-black/10 transition-colors hover:bg-slate-700 hover:text-white"
+        class="theme-toggle inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
     >
         <svg v-if="theme === 'dark'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v2.25M12 18.75V21M3 12h2.25M18.75 12H21M5.636 5.636l1.591 1.591m9.546 9.546l1.591 1.591m0-12.728l-1.591 1.591m-9.546 9.546l-1.591 1.591M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />

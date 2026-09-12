@@ -26,10 +26,10 @@ onUnmounted(() => {
 // Dynamic Greeting
 const greeting = computed(() => {
     const hour = now.value.getHours();
-    if (hour >= 4 && hour < 11) return { text: 'Selamat Pagi'};
-    if (hour >= 11 && hour < 15) return { text: 'Selamat Siang'};
-    if (hour >= 15 && hour < 18) return { text: 'Selamat Sore'};
-    return { text: 'Selamat Malam'};
+    if (hour >= 4 && hour < 11) return { text: 'Selamat Pagi'}; 
+    if (hour >= 11 && hour < 15) return { text: 'Selamat Siang'}; 
+    if (hour >= 15 && hour < 18) return { text: 'Selamat Sore'}; 
+    return { text: 'Selamat Malam'}; 
 });
 
 const userDisplayName = computed(() => {
@@ -139,15 +139,10 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
         <!-- Page Context Banner -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
-                <div class="flex items-center gap-2 text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-1">
-                    <span>Panel Administrasi Utama</span>
-                    <span>•</span>
-                    <span>PT Pusat Gadai Indonesia</span>
-                </div>
                 <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
                     <span>{{ greeting.icon }} {{ greeting.text }}, <span class="text-indigo-400">{{ userDisplayName }}</span>!</span>
                 </h1>
-                <p class="text-xs md:text-sm text-slate-400 mt-1">Monitoring pergerakan memo antar cabang dan tata kelola master data sistem.</p>
+                <p class="text-base font-medium text-slate-400 tracking-tight">Monitoring pergerakan memo antar cabang dan tata kelola master data sistem.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- Date & Realtime Clock Pill -->
@@ -156,15 +151,10 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                         <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span>{{ formattedDate }}</span>
                     </div>
-                    <span class="text-slate-600 font-bold">•</span>
                     <div class="flex items-center gap-1.5 font-mono text-indigo-300 font-semibold">
                         <svg class="w-3.5 h-3.5 text-indigo-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span>{{ formattedTime }}</span>
                     </div>
-                </div>
-                <div class="dashboard-status flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Sistem Aktif</span>
                 </div>
             </div>
         </div>
@@ -182,13 +172,12 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-white tracking-tight">{{ stats.total_memos ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">pengajuan</span>
+                        <span class="text-xs font-medium text-slate-400">Pengajuan</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-                    <span>{{ stats.approved_memos ?? 0 }} disetujui</span>
-                    <span class="text-slate-600">•</span>
-                    <span>{{ stats.draft_memos ?? 0 }} draft</span>
+                    <span>{{ stats.approved_memos ?? 0 }} Disetujui</span>
+                    <span>{{ stats.draft_memos ?? 0 }} Draft</span>
                 </div>
             </div>
 
@@ -203,12 +192,12 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-amber-300 tracking-tight">{{ stats.pending_approvals ?? 0 }}</span>
-                        <span class="text-xs font-medium text-amber-400/80">perlu review AM</span>
+                        <span class="text-xs font-medium text-amber-400/80">Perlu Review AM</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center text-xs text-amber-400/75 gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span>Menunggu verifikasi Area Manager</span>
+                    <span>Menunggu Verifikasi Area Manager</span>
                 </div>
             </div>
 
@@ -223,7 +212,7 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-white tracking-tight">{{ stats.total_templates ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">skema aktif</span>
+                        <span class="text-xs font-medium text-slate-400">Skema Aktif</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
@@ -236,19 +225,18 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
             <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-cyan-500/20 shadow-sm flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengguna & Jaringan</span>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengguna</span>
                         <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         </div>
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-white tracking-tight">{{ stats.total_users ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">akun terdaftar</span>
+                        <span class="text-xs font-medium text-slate-400">Akun Terdaftar</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
                     <span>{{ stats.total_branches ?? 0 }} Cabang</span>
-                    <span class="text-slate-600">•</span>
                     <span>{{ stats.total_areas ?? 0 }} Area</span>
                 </div>
             </div>
@@ -395,7 +383,6 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                                         </div>
                                     </td>
 
-                                    <!-- Status Badge -->
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border" :class="statusConfig[memo.status]?.badgeClass || 'bg-slate-700 text-slate-300 border-slate-600'">
                                             <span class="w-1.5 h-1.5 rounded-full" :class="statusConfig[memo.status]?.dotClass || 'bg-slate-400'"></span>
@@ -403,7 +390,6 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                                         </div>
                                     </td>
 
-                                    <!-- Aksi -->
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
                                         <Link
                                             :href="route('memos.show', memo.id)"
@@ -415,7 +401,6 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                                     </td>
                                 </tr>
 
-                                <!-- Empty State -->
                                 <tr v-if="filteredMemos.length === 0">
                                     <td colspan="5" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center justify-center">
@@ -438,7 +423,6 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                         </table>
                     </div>
 
-                    <!-- Table Footer -->
                     <div class="pt-4 mt-2 border-t border-white/5 flex items-center justify-between text-xs text-slate-500">
                         <span>Menampilkan {{ filteredMemos.length }} dari {{ recentMemos.length }} memo terkini</span>
                         <span class="hidden sm:inline">Data diperbarui secara otomatis</span>
@@ -479,7 +463,7 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                         ></div>
                     </div>
 
-                    <!-- Distribution Breakdown List -->
+                   
                     <div class="space-y-2 text-xs">
                         <div class="flex items-center justify-between py-1 border-b border-white/5">
                             <div class="flex items-center gap-2">
@@ -527,11 +511,10 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                     </div>
                 </div>
 
-                <!-- Widget 2: Master Data Shortcuts -->
+
                 <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-5 shadow-sm">
                     <h3 class="text-sm font-bold text-white tracking-tight mb-3">Pusat Akses Master Data</h3>
                     <div class="space-y-2">
-                        <!-- Kelola Template -->
                         <Link
                             :href="route('admin.templates.index')"
                             class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 hover:border-indigo-500/30 transition-all group"
@@ -611,17 +594,6 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                             </div>
                         </Link>
                     </div>
-                </div>
-
-                <!-- Widget 3: SOP Flow Info Box -->
-                <div class="bg-gradient-to-br from-indigo-950/40 to-slate-900/60 border border-indigo-500/15 rounded-2xl p-5 shadow-sm">
-                    <div class="flex items-center gap-2 mb-2 text-indigo-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <h4 class="text-xs font-bold uppercase tracking-wider">Alur Tata Kelola Memo</h4>
-                    </div>
-                    <p class="text-xs text-slate-300 leading-relaxed">
-                        Kepala Cabang (KC) mengajukan memo via template resmi diverifikasi dan ditandatangani secara digital oleh Area Manager (AM) memo terbit resmi dan terdokumentasi di sistem.
-                    </p>
                 </div>
             </div>
         </div>
