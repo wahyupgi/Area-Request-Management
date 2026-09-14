@@ -118,6 +118,11 @@ class MemoController extends Controller
     {
         $this->authorizeAccess($memo);
 
+        Notification::where('user_id', auth()->id())
+            ->where('memo_id', $memo->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
         $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'areaManager.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
         $this->loadConfiguredSigners($memo);
 

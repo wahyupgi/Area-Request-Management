@@ -45,6 +45,11 @@ class ApprovalController extends Controller
             abort(403);
         }
 
+        Notification::where('user_id', $user->id)
+            ->where('memo_id', $memo->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
         $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
         $ids = collect($memo->template?->signature_schema ?? [])->pluck('user_id')->filter()->unique();
         $memo->template?->setAttribute('signature_people', User::with('digitalSignature')->whereIn('id', $ids)->get()->keyBy('id'));

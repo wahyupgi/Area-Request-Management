@@ -91,13 +91,6 @@ const formatTime = (dateString) => {
                         <span>{{ formattedTime }}</span>
                     </div>
                 </div>
-                <Link
-                    :href="route('signature.index')"
-                    class="btn-primary-anim flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20"
-                >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                    <span>Kelola Tanda Tangan Digital</span>
-                </Link>
             </div>
         </div>
 
@@ -114,7 +107,7 @@ const formatTime = (dateString) => {
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-amber-300 tracking-tight">{{ stats.pending ?? 0 }}</span>
-                        <span class="text-xs font-medium text-amber-400/80">memo menunggu</span>
+                        <span class="text-xs font-medium text-amber-400/80">Memo Menunggu</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
@@ -137,7 +130,7 @@ const formatTime = (dateString) => {
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-white tracking-tight">{{ stats.approved ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">memo disetujui</span>
+                        <span class="text-xs font-medium text-slate-400">Memo Disetujui</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center text-xs text-slate-400">
@@ -156,7 +149,7 @@ const formatTime = (dateString) => {
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-white tracking-tight">{{ stats.rejected ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">memo ditolak</span>
+                        <span class="text-xs font-medium text-slate-400">Memo Ditolak</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center text-xs text-slate-400">

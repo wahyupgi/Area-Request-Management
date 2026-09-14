@@ -39,6 +39,17 @@ const groupedTemplates = computed(() => {
 
 watch(() => form.template_id, (val) => {
     selectedTemplate.value = props.templates.find(t => t.id == val) || null;
+<template>
+    <Head title="Buat Memo Baru" />
+    <AuthenticatedLayout>
+        <template #header>
+            <h1 class="text-xl font-bold text-white">Buat Memo Baru</h1>
+        </template>
+
+        <div class="w-full max-w-none">
+            <form @submit.prevent="submit" class="space-y-6">
+                <!-- Template Selection -->
+                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 lg:col-span-2">
     form.field_values = {
         pengantar: selectedTemplate.value
             ? `Sehubungan dengan pengajuan ${selectedTemplate.value.name}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`
@@ -205,17 +216,31 @@ const submitAndSign = () => {
                         </div>
                         </div>
                         <button type="button" class="w-full mt-4 px-4 py-2.5 border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-sm font-medium" @click="addItem">+ Tambah Item</button>
+                        <div class="hidden mt-6 border-t border-white/10 pt-5 lg:block">
+                            <p class="text-xs text-slate-400 mb-3">Jika data sudah lengkap, pilih tindakan berikut:</p>
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                                <button type="submit" :disabled="form.processing" class="w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/20 sm:w-auto">
+                                    {{ form.processing ? 'Menyimpan...' : 'Simpan Draft' }}
+                                </button>
+                                <button type="button" @click="submitAndSign" :disabled="form.processing" class="w-full px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-500/25 sm:w-auto">
+                                    Tanda Tangani &amp; Kirim ke AM
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Submit -->
-                <div class="flex flex-wrap gap-3">
-                    <button type="submit" :disabled="form.processing" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors">
-                        {{ form.processing ? 'Menyimpan...' : 'Simpan Draft' }}
-                    </button>
-                    <button type="button" @click="submitAndSign" :disabled="form.processing" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-emerald-500/25">
-                        Tanda Tangani &amp; Kirim ke AM
-                    </button>
+                <div v-if="selectedTemplate" class="bg-slate-800/50 border border-white/5 rounded-2xl p-5 lg:hidden">
+                    <p class="text-xs text-slate-400 mb-3">Jika data sudah lengkap, pilih tindakan berikut:</p>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                        <button type="submit" :disabled="form.processing" class="order-2 w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/20 sm:order-1 sm:w-auto">
+                            {{ form.processing ? 'Menyimpan...' : 'Simpan Draft' }}
+                        </button>
+                        <button type="button" @click="submitAndSign" :disabled="form.processing" class="order-1 w-full px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-500/25 sm:order-2 sm:w-auto">
+                            Tanda Tangani &amp; Kirim ke AM
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

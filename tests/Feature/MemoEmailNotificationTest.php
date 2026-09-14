@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\DigitalSignature;
 use App\Models\Memo;
 use App\Models\MemoTemplate;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -50,6 +51,30 @@ class MemoEmailNotificationTest extends TestCase
         Mail::assertSent(MemoApproved::class, function (MemoApproved $mail) use ($kc, $memo) {
             return $mail->hasTo($kc->email) && $mail->memo->is($memo);
         });
+    }
+
+    public function test_viewing_a_memo_marks_only_the_current_users_notification_as_read(): void
+    {
+        [$kc, $am, $memo] = $this->createMemo('submitted');
+        $kcNotification = Notification::create([
+            'user_id' => $kc->id,
+            'memo_id' => $memo->id,
+            'message' => 'Memo telah disetujui.',
+        ]);
+        $amNotification = Notification::create([
+            'user_id' => $am->id,
+            'memo_id' => $memo->id,
+            'message' => 'Memo baru menunggu persetujuan.',
+        ]);
+
+        $this->actingAs($kc)->get(route('memos.show', $memo));
+
+        $this->assertTrue($kcNotification->fresh()->is_read);
+        $this->assertFalse($amNotification->fresh()->is_read);
+
+        $this->actingAs($am)->get(route('approvals.review', $memo));
+
+        $this->assertTrue($amNotification->fresh()->is_read);
     }
 
     private function createMemo(string $status): array

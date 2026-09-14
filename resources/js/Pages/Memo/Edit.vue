@@ -154,16 +154,6 @@ const deleteMemo = () => {
                         <p class="text-xs text-red-400/50 mt-2">Oleh: {{ memo.approvals[0]?.approver?.name }}</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Memo Info -->
-            <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="text-xs font-mono text-slate-500 bg-slate-700/50 px-3 py-1 rounded-lg">{{ memo.code }}</span>
-                    <span :class="[memo.status === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-slate-500/20 text-slate-400', 'text-xs font-semibold px-3 py-1 rounded-full']">
-                        {{ memo.status }}
-                    </span>
-                </div>
                 <p class="text-sm text-slate-400">Template: <span class="text-slate-300">{{ memo.template?.name }}</span></p>
             </div>
 
@@ -175,7 +165,16 @@ const deleteMemo = () => {
                             <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
                             <input v-model="form.title" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
                         </div>
+            </div>
 
+            <!-- Memo Info -->
+            <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-xs font-mono text-slate-500 bg-slate-700/50 px-3 py-1 rounded-lg">{{ memo.code }}</span>
+                    <span :class="[memo.status === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-slate-500/20 text-slate-400', 'text-xs font-semibold px-3 py-1 rounded-full']">
+                        {{ memo.status }}
+                    </span>
+                </div>
                         <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
                             <label class="block text-sm font-medium text-slate-300 mb-2">Isi Memo</label>
                             <textarea v-model="form.field_values.pengantar" rows="5" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-y"></textarea>
@@ -255,16 +254,30 @@ const deleteMemo = () => {
                                 </div>
                         </div>
                         <button type="button" class="w-full mt-4 px-4 py-2.5 border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-sm font-medium" @click="addItem">+ Tambah Item</button>
+                        <div class="hidden mt-6 border-t border-white/10 pt-5 lg:block">
+                            <p class="text-xs text-slate-400 mb-3">Jika data sudah lengkap, pilih tindakan berikut:</p>
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                                <button type="submit" :disabled="form.processing" class="w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/20 sm:w-auto">
+                                    Simpan Draft
+                                </button>
+                                <button type="button" @click="submitMemo" class="w-full px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-500/25 sm:w-auto">
+                                    Tanda Tangani &amp; Kirim ke AM
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex gap-3">
-                    <button type="submit" :disabled="form.processing" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors">
-                        Simpan Draft
-                    </button>
-                    <button type="button" @click="submitMemo" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-emerald-500/25">
-                        Tanda Tangani &amp; Kirim ke AM
-                    </button>
+                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-5 lg:hidden">
+                    <p class="text-xs text-slate-400 mb-3">Jika data sudah lengkap, pilih tindakan berikut:</p>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                        <button type="submit" :disabled="form.processing" class="order-2 w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/20 sm:order-1 sm:w-auto">
+                            Simpan Draft
+                        </button>
+                        <button type="button" @click="submitMemo" class="order-1 w-full px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-500/25 sm:order-2 sm:w-auto">
+                            Tanda Tangani &amp; Kirim ke AM
+                        </button>
+                    </div>
                 </div>
             </form>
 
