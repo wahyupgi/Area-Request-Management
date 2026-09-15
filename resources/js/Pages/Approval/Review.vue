@@ -192,7 +192,6 @@ const formatDate = (dateString) => {
                                 @click="showApproveConfirm = true"
                                 class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-emerald-600/20"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"/></svg>
                                 <span>Setujui & Tanda Tangani Memo</span>
                             </button>
 
@@ -200,7 +199,6 @@ const formatDate = (dateString) => {
                                 @click="showRejectModal = true"
                                 class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-semibold rounded-xl transition-all"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                 <span>Tolak / Minta Revisi Cabang</span>
                             </button>
 

@@ -81,7 +81,26 @@ const toggleNotifications = () => {
     if (showNotifications.value) fetchNotifications();
 };
 
+const activePendingRoute = ref(null);
+const isNavigating = ref(false);
+
+router.on('start', () => {
+    isNavigating.value = true;
+});
+
+router.on('finish', () => {
+    isNavigating.value = false;
+    activePendingRoute.value = null;
+});
+
+const onNavClick = (routeName) => {
+    activePendingRoute.value = routeName;
+};
+
 const isActive = (routeName) => {
+    if (activePendingRoute.value) {
+        return activePendingRoute.value === routeName;
+    }
     try { return route().current(routeName); } catch { return false; }
 };
 </script>
@@ -109,12 +128,14 @@ const isActive = (routeName) => {
                         v-for="item in navItems"
                         :key="item.route"
                         :href="route(item.route)"
+                        prefetch
+                        @click="onNavClick(item.route)"
                         :class="[
                             isActive(item.route)
                                 ? 'sidebar-nav-active'
                                 : 'sidebar-nav-inactive',
                             sidebarCollapsed ? 'justify-center px-2' : 'px-3.5',
-                            'sidebar-nav-item group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border'
+                            'sidebar-nav-item group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border active:scale-[0.98]'
                         ]"
                         :title="sidebarCollapsed ? item.name : undefined"
                     >
@@ -221,7 +242,7 @@ const isActive = (routeName) => {
             </div>
 
             <!-- Main Content -->
-            <main class="p-6 print:p-0">
+            <main :class="['p-6 print:p-0 transition-opacity duration-150', isNavigating ? 'opacity-40 pointer-events-none' : 'opacity-100']">
                 <slot />
             </main>
         </div>

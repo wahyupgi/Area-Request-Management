@@ -158,7 +158,7 @@ const remove = (user) => {
                             <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Email</th>
                             <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Role</th>
                             <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Cabang / Area</th>
-                            <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Aksi</th>
+                            <th class="text-center text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -169,7 +169,7 @@ const remove = (user) => {
                             <td class="px-6 py-4 text-sm text-slate-300">{{ roleConfig[u.role]?.label || u.role }}</td>
                             <td class="px-6 py-4 text-sm text-slate-400">{{ u.branch?.name || u.area?.name || '-' }}</td>
                             <td class="px-6 py-4">
-                                <div class="flex items-center justify-end gap-2">
+                                <div class="flex items-center justify-center gap-2">
                                     <button type="button" title="Edit user" class="p-2 text-sky-400 hover:text-sky-300 hover:bg-sky-500/10" @click="openEdit(u)">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.213 3 20.5l1.287-4.5L16.862 3.487z" /></svg>
                                     </button>

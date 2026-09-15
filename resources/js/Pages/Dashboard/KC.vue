@@ -69,23 +69,19 @@ const formattedTime = computed(() => {
 const statusConfig = {
     draft: { 
         label: 'Draft', 
-        badgeClass: 'bg-slate-700/40 text-slate-300 border-slate-600/30',
-        dotClass: 'bg-slate-400' 
+        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
     },
     submitted: { 
         label: 'Menunggu AM', 
-        badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-        dotClass: 'bg-amber-400 animate-pulse' 
+        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
     },
     approved: { 
         label: 'Disetujui', 
-        badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-        dotClass: 'bg-emerald-400' 
+        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
     },
     rejected: { 
         label: 'Ditolak', 
-        badgeClass: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-        dotClass: 'bg-rose-400' 
+        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
     },
 };
 
@@ -299,7 +295,7 @@ const filteredMemos = computed(() => {
                             <th class="px-6 py-3.5">Tanggal Dibuat</th>
                             <th class="px-6 py-3.5">Status</th>
                             <th class="px-6 py-3.5">TTD Digital</th>
-                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                            <th class="px-6 py-3.5 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
@@ -328,8 +324,7 @@ const filteredMemos = computed(() => {
                                 <span class="text-slate-600 block text-[11px]">{{ formatTime(memo.created_at) }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border" :class="statusConfig[memo.status]?.badgeClass || 'bg-slate-700 text-slate-300 border-slate-600'">
-                                    <span class="w-1.5 h-1.5 rounded-full" :class="statusConfig[memo.status]?.dotClass || 'bg-slate-400'"></span>
+                                <div class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap" :class="statusConfig[memo.status]?.badgeClass || 'bg-slate-500/15 text-slate-300 border-slate-500/30'">
                                     <span>{{ statusConfig[memo.status]?.label || memo.status }}</span>
                                 </div>
                             </td>
@@ -344,8 +339,8 @@ const filteredMemos = computed(() => {
                                 </div>
                                 <span v-else class="text-[11px] text-slate-500">Belum ditandatangani</span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <div class="flex items-center justify-end gap-2">
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center gap-2">
                                     <Link
                                         v-if="memo.status === 'draft' || memo.status === 'rejected'"
                                         :href="route('memos.edit', memo.id)"

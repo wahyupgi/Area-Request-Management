@@ -8,10 +8,10 @@ const props = defineProps({
 });
 
 const statusConfig = {
-    draft: { label: 'Draft', class: 'bg-slate-500/20 text-slate-400' },
-    submitted: { label: 'Submitted', class: 'bg-amber-500/20 text-amber-400' },
-    approved: { label: 'Approved', class: 'bg-emerald-500/20 text-emerald-400' },
-    rejected: { label: 'Rejected', class: 'bg-red-500/20 text-red-400' },
+    draft: { label: 'Draft', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
+    submitted: { label: 'Submitted', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
+    approved: { label: 'Approved', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
+    rejected: { label: 'Rejected', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
 };
 </script>
 
@@ -45,7 +45,7 @@ const statusConfig = {
                         <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Template</th>
                         <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Status</th>
                         <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Tanggal</th>
-                        <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Aksi</th>
+                        <th class="text-center text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,10 +54,10 @@ const statusConfig = {
                         <td class="px-6 py-4 text-sm text-white font-medium">{{ memo.title }}</td>
                         <td class="px-6 py-4 text-sm text-slate-400">{{ memo.template?.name }}</td>
                         <td class="px-6 py-4">
-                            <span :class="[statusConfig[memo.status]?.class, 'text-xs font-semibold px-3 py-1 rounded-full']">{{ statusConfig[memo.status]?.label }}</span>
+                            <span :class="[statusConfig[memo.status]?.class, 'inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap']">{{ statusConfig[memo.status]?.label }}</span>
                         </td>
                         <td class="px-6 py-4 text-sm text-slate-400">{{ new Date(memo.created_at).toLocaleDateString('id-ID') }}</td>
-                        <td class="px-6 py-4 text-right space-x-3">
+                        <td class="px-6 py-4 text-center space-x-3">
                             <Link v-if="['draft','rejected'].includes(memo.status)" :href="route('memos.edit', memo.id)" class="text-indigo-400 hover:text-indigo-300 text-sm">Edit</Link>
                             <Link :href="route('memos.show', memo.id)" class="text-slate-400 hover:text-white text-sm">Detail</Link>
                         </td>

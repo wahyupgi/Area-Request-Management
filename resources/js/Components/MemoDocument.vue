@@ -64,7 +64,7 @@ const handleImgError = (event) => {
 </script>
 
 <template>
-    <div id="printable-memo" class="memo-document bg-white text-black pt-[3.4cm] pl-[2.54cm] pr-[2cm] pb-[2cm] print:p-0 rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] min-h-[297mm] mx-auto print:max-w-full print:min-h-0 flex flex-col text-xs leading-normal border border-slate-200 print:border-none transition-all">
+    <div id="printable-memo" class="memo-document bg-white text-black pt-[3.4cm] pl-[2.54cm] pr-[2cm] pb-[2cm] print:p-0 rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] mx-auto print:max-w-full print:min-h-0 text-xs leading-normal border border-slate-200 print:border-none transition-all">
         <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
                 <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-14 h-14 object-contain" />
@@ -104,9 +104,11 @@ const handleImgError = (event) => {
             <p v-if="isCashOut" class="mt-2">Dengan data sebagai berikut :</p>
         </div>
 
-        <KipasMemo v-if="isKipas" :memo="memo" :items="memoItems" :document-signatures="documentSignatures" />
-        <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" />
-        <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
+        <div class="mb-10">
+            <KipasMemo v-if="isKipas" :memo="memo" :items="memoItems" :document-signatures="documentSignatures" />
+            <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" />
+            <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
+        </div>
 
         <div class="flex justify-end gap-2 mt-4 pt-2 mb-1">
             <template v-if="parafSignatures.length">

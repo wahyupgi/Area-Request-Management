@@ -235,7 +235,7 @@ const formatTime = (dateString) => {
                             <th class="px-6 py-3.5">Perihal</th>
                             <th class="px-6 py-3.5">Asal Cabang</th>
                             <th class="px-6 py-3.5">Keputusan</th>
-                            <th class="px-6 py-3.5 text-right">Detail</th>
+                            <th class="px-6 py-3.5 text-center">Detail</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
@@ -253,17 +253,11 @@ const formatTime = (dateString) => {
                                 <p class="text-[11px] text-slate-500 mt-0.5">{{ memo.branch?.name }}</p>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="[
-                                    memo.status === 'approved'
-                                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                                        : 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-                                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border'
-                                ]">
-                                    <span class="w-1.5 h-1.5 rounded-full" :class="memo.status === 'approved' ? 'bg-emerald-400' : 'bg-rose-400'"></span>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap bg-slate-500/15 text-slate-300 border-slate-500/30">
                                     <span>{{ memo.status === 'approved' ? 'Disetujui' : 'Ditolak' }}</span>
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <Link
                                     :href="route('memos.show', memo.id)"
                                     class="btn-secondary-anim inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white text-xs font-medium border border-white/5"

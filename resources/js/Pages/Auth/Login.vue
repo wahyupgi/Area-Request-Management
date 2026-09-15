@@ -71,8 +71,6 @@ const submit = () => {
         <div class="relative z-10 w-full max-w-5xl bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden flex shadow-2xl shadow-black/50">
             <!-- Left Side / Branding -->
             <div class="hidden md:flex flex-col items-center justify-center w-1/2 p-12 bg-white/5 relative overflow-hidden">
-                <div class="absolute inset-0 bg-indigo-500/10 backdrop-blur-3xl"></div>
-                
                 <div class="relative z-10 flex flex-col items-center text-center">
                     <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-28 h-28 mb-8 rounded-2xl shadow-2xl shadow-indigo-500/20 object-contain bg-white p-2" />
                     <h1 class="text-3xl font-bold text-white mb-2 leading-tight">SISTEM LAYANAN PENGAJUAN</h1>
@@ -81,10 +79,6 @@ const submit = () => {
                         Kelola seluruh pengajuan memo antar area dan cabang dengan lebih mudah, aman, dan terintegrasi secara digital.
                     </p>
                 </div>
-                
-                <!-- Decorative Elements -->
-                <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
-                <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-purple-500/20 blur-3xl"></div>
             </div>
 
             <!-- Right Side / Form -->
@@ -117,13 +111,6 @@ const submit = () => {
                             </button>
                         </div>
                         <p v-if="form.errors.password" class="text-red-400 text-sm mt-2">{{ form.errors.password }}</p>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-2">
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" v-model="form.remember" class="w-5 h-5 rounded bg-slate-800 border-white/10 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900 transition-colors" />
-                            <span class="text-sm text-slate-400">Ingat Saya</span>
-                        </label>
                     </div>
 
                     <button type="submit" :disabled="form.processing" class="w-full py-4 mt-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex justify-center items-center gap-2">
