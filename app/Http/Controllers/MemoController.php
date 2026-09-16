@@ -273,11 +273,7 @@ class MemoController extends Controller
 
         $memo->loadMissing(['creator', 'areaManager', 'branch', 'template']);
         if ($memo->areaManager?->email) {
-            try {
-                Mail::to($memo->areaManager->email)->send(new MemoSubmitted($memo));
-            } catch (\Throwable $e) {
-                \Log::warning('Gagal mengirim email MemoSubmitted: ' . $e->getMessage());
-            }
+            Mail::to($memo->areaManager->email)->send(new MemoSubmitted($memo));
         }
 
         return redirect()->route('memos.show', $memo->id)
