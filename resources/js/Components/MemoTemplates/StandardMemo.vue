@@ -72,7 +72,7 @@ const handleImgError = (event) => {
 
     <div v-if="documentSignatures.length" class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] justify-center gap-6 items-start text-xs w-full max-w-3xl mx-auto px-4 mb-4">
         <div v-for="slot in documentSignatures" :key="slot.name + slot.role" class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1 font-semibold">{{ slot.location === 'bottom_right' ? 'Paraf' : 'Disetujui Oleh,' }}</p>
+            <p class="mb-1 font-semibold">{{ slot.label || (slot.location === 'bottom_right' ? 'Paraf' : 'Disetujui Oleh,') }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>

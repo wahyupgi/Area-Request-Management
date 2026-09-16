@@ -32,6 +32,7 @@ class MemoService
             ->first();
 
         $memo = Memo::create([
+            'code' => $request->code,
             'template_id' => $request->template_id,
             'title' => $request->title,
             'field_values' => $request->field_values ?? [],

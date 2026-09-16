@@ -49,6 +49,7 @@ const signersForm = useForm({
 
 const existingMeta = props.memo.field_values?.meta || {};
 const metaForm = useForm({
+    code: props.memo.code || '',
     direktorat: existingMeta.direktorat || '',
     divisi: existingMeta.divisi || '',
     perihal: existingMeta.perihal || '',
@@ -518,6 +519,10 @@ const formatDate = (dateString) => {
                 <p class="text-xs text-slate-400 mb-4">Nilai ini akan tampil di header dokumen cetak. Kosongkan untuk menggunakan nilai default.</p>
 
                 <div class="space-y-3 mb-6">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Nomor Memo</label>
+                        <input v-model="metaForm.code" type="text" placeholder="Masukkan nomor memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                    </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1.5">Direktorat</label>
                         <input v-model="metaForm.direktorat" type="text" placeholder="contoh: Operasional" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />

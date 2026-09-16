@@ -168,41 +168,48 @@ const filteredMemos = computed(() => {
         </div>
 
         <!-- Stats Cards Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+            <!-- Memo Masuk -->
+            <Link :href="route('memos.index', { status: 'submitted' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block transition-all">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Memo Masuk</span>
+                <p class="text-2xl font-bold text-indigo-400 mt-1">{{ stats.submitted ?? 0 }}</p>
+                <p class="text-[11px] text-slate-500 mt-2">Menunggu Persetujuan AM</p>
+            </Link>
+
             <!-- Total -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm">
+            <Link :href="route('memos.index')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block transition-all">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Memo</span>
                 <p class="text-2xl font-bold text-white mt-1">{{ stats.total ?? 0 }}</p>
                 <p class="text-[11px] text-slate-500 mt-2">Semua riwayat</p>
-            </div>
+            </Link>
 
             <!-- Draft -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-slate-500/20 shadow-sm">
+            <Link :href="route('memos.index', { status: 'draft' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-slate-500/20 shadow-sm block transition-all">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Draft Tersimpan</span>
                 <p class="text-2xl font-bold text-slate-300 mt-1">{{ stats.draft ?? 0 }}</p>
                 <p class="text-[11px] text-slate-500 mt-2">Belum diajukan</p>
-            </div>
+            </Link>
 
             <!-- Submitted / Pending -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-amber-500/20 shadow-sm">
+            <Link :href="route('memos.index', { status: 'submitted' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-amber-500/20 shadow-sm block transition-all">
                 <span class="text-xs font-semibold text-amber-400/90 uppercase tracking-wider">Menunggu AM</span>
                 <p class="text-2xl font-bold text-amber-300 mt-1">{{ stats.submitted ?? 0 }}</p>
                 <p class="text-[11px] text-amber-400/70 mt-2">Dalam proses verifikasi</p>
-            </div>
+            </Link>
 
             <!-- Approved -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 shadow-sm">
+            <Link :href="route('memos.index', { status: 'approved' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 shadow-sm block transition-all">
                 <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Disetujui</span>
                 <p class="text-2xl font-bold text-emerald-400 mt-1">{{ stats.approved ?? 0 }}</p>
                 <p class="text-[11px] text-emerald-500/70 mt-2">Selesai & resmi</p>
-            </div>
+            </Link>
 
             <!-- Rejected -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-rose-500/20 shadow-sm">
+            <Link :href="route('memos.index', { status: 'rejected' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-rose-500/20 shadow-sm block transition-all">
                 <span class="text-xs font-semibold text-rose-400 uppercase tracking-wider">Perlu Revisi</span>
                 <p class="text-2xl font-bold text-rose-400 mt-1">{{ stats.rejected ?? 0 }}</p>
                 <p class="text-[11px] text-rose-500/70 mt-2">Ditolak Area Manager</p>
-            </div>
+            </Link>
         </div>
 
         <!-- Memos Table Section -->

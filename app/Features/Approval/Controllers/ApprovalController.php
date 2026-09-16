@@ -13,20 +13,21 @@ class ApprovalController extends Controller
     public function __construct(protected ApprovalService $service) {}
 
     /**
-     * List pending memos for AM.
+     * List pending memos for AM (also includes processed memos for history tab).
      */
-    public function pending()
+    public function pending(Request $request)
     {
         $user = auth()->user();
 
-        $memos = Memo::with(['template', 'branch.area', 'creator', 'attachments'])
+        $allMemos = Memo::with(['template', 'branch.area', 'creator', 'attachments', 'approvals'])
             ->where('area_manager_id', $user->id)
-            ->where('status', 'submitted')
-            ->orderBy('submitted_at', 'desc')
+            ->whereIn('status', ['submitted', 'approved', 'rejected'])
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         return Inertia::render('Approval/Pending', [
-            'memos' => $memos,
+            'allMemos'   => $allMemos,
+            'defaultTab' => $request->query('tab', 'masuk'),
         ]);
     }
 
@@ -163,11 +164,17 @@ class ApprovalController extends Controller
         }
 
         $validated = $request->validate([
+            'code'       => ['nullable', 'string', 'max:255'],
             'direktorat' => ['nullable', 'string', 'max:255'],
             'divisi'     => ['nullable', 'string', 'max:255'],
             'perihal'    => ['nullable', 'string', 'max:500'],
             'lampiran'   => ['nullable', 'string', 'max:255'],
         ]);
+
+        if (isset($validated['code'])) {
+            $memo->code = $validated['code'];
+            unset($validated['code']);
+        }
 
         $fieldValues = $memo->field_values ?? [];
         $fieldValues['meta'] = $validated;

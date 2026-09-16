@@ -7,7 +7,15 @@ const props = defineProps({
     templates: Array,
 });
 
+const generateMemoNumber = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const months = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    return `INT/RBO/BRL/PGI/040/${months[d.getMonth()]}/${year}`;
+};
+
 const form = useForm({
+    code: generateMemoNumber(),
     template_id: '',
     title: '',
     field_values: {
@@ -112,7 +120,7 @@ const submitAndSign = () => {
         <div class="w-full max-w-none">
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Template Selection -->
-                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 lg:col-span-2">
+                <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 lg:col-span-2">
                     <h2 class="text-lg font-semibold text-white mb-2">Pilih Template Memo</h2>
                     <p class="text-xs text-slate-400 mb-4">Pilih jenis memo sesuai kebutuhan cabang pada Divisi GA atau Ma-Link (FIN dan HRD).</p>
                     <select v-model="form.template_id" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
@@ -128,20 +136,27 @@ const submitAndSign = () => {
 
                 <div v-if="selectedTemplate" class="grid grid-cols-1 lg:grid-cols-[minmax(260px,0.7fr)_minmax(0,1.3fr)] gap-4 items-start">
                     <div class="flex flex-col gap-4 self-start">
+                        <!-- Nomor Memo -->
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Memo</label>
+                            <input v-model="form.code" type="text" placeholder="Masukkan nomor memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <p v-if="form.errors.code" class="text-red-400 text-sm mt-2">{{ form.errors.code }}</p>
+                        </div>
+
                         <!-- Title -->
-                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
                             <input v-model="form.title" type="text" placeholder="Masukkan judul memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
                             <p v-if="form.errors.title" class="text-red-400 text-sm mt-2">{{ form.errors.title }}</p>
                         </div>
 
-                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <label class="block text-sm font-medium text-slate-300 mb-2">Isi Memo</label>
                             <textarea v-model="form.field_values.pengantar" rows="5" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-y"></textarea>
                             <p class="text-xs text-slate-500 mt-2">Teks ini akan tampil pada bagian “Sehubungan dengan” dan dapat diubah sesuai kebutuhan pengajuan.</p>
                         </div>
 
-                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <h2 class="text-sm font-semibold text-white mb-1">Informasi Dokumen</h2>
                             <p class="text-xs text-slate-400 mb-4">Detail header yang tampil di dokumen cetak.</p>
                             <div class="space-y-3">
@@ -164,7 +179,7 @@ const submitAndSign = () => {
                             </div>
                         </div>
 
-                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <h2 class="text-lg font-semibold text-white mb-4">Lampiran</h2>
                             <input type="file" @change="selectAttachment" class="max-w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer" />
                             <p class="text-xs text-slate-500 mt-2">Maksimal 10MB. Lampiran akan tersimpan bersama draft memo.</p>
@@ -173,7 +188,7 @@ const submitAndSign = () => {
                     </div>
 
                     <!-- Dynamic Fields -->
-                    <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 min-w-0 self-start">
+                    <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 min-w-0 self-start">
                         <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-white/10 p-4 space-y-4 mb-4 last:mb-0">
                         <div class="flex items-center justify-between border-b border-white/10 pb-3">
                             <h3 class="text-sm font-semibold text-white">Item {{ itemIndex + 1 }}</h3>

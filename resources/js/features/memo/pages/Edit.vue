@@ -15,6 +15,8 @@ const initialItems = Array.isArray(props.memo.field_values?.items)
     : [props.memo.field_values || {}];
 
 const form = useForm({
+    code: props.memo.code || '',
+    template_id: props.memo.template_id,
     title: props.memo.title || '',
     field_values: {
         ...(props.memo.field_values || {}),
@@ -169,17 +171,27 @@ const deleteMemo = () => {
             <form @submit.prevent="save" class="space-y-4">
                 <div class="grid w-full grid-cols-1 lg:grid-cols-[minmax(260px,0.7fr)_minmax(0,1.3fr)] gap-4 items-start">
                     <div class="flex flex-col gap-4 self-start">
-                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
-                            <input v-model="form.title" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                        <!-- Nomor Memo -->
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Memo</label>
+                            <input v-model="form.code" type="text" placeholder="Masukkan nomor memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <p v-if="form.errors.code" class="text-red-400 text-sm mt-2">{{ form.errors.code }}</p>
                         </div>
-                        <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+
+                        <!-- Title -->
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
+                            <input v-model="form.title" type="text" placeholder="Masukkan judul memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <p v-if="form.errors.title" class="text-red-400 text-sm mt-2">{{ form.errors.title }}</p>
+                        </div>
+
+                        <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <label class="block text-sm font-medium text-slate-300 mb-2">Isi Memo</label>
                             <textarea v-model="form.field_values.pengantar" rows="5" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-y"></textarea>
                             <p class="text-xs text-slate-500 mt-2">Teks ini akan tampil pada bagian “Sehubungan dengan” dan dapat diubah sesuai kebutuhan pengajuan.</p>
                         </div>
 
-                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <h2 class="text-sm font-semibold text-white mb-1">Informasi Dokumen</h2>
                             <p class="text-xs text-slate-400 mb-4">Detail header yang tampil di dokumen cetak.</p>
                             <div class="space-y-3">
@@ -202,7 +214,7 @@ const deleteMemo = () => {
                             </div>
                         </div>
 
-                        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
+                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <h2 class="text-lg font-semibold text-white mb-4">Lampiran</h2>
                             <div v-if="memo.attachments?.length > 0" class="space-y-2 mb-4">
                                 <div v-for="att in memo.attachments" :key="att.id" class="flex items-center justify-between bg-slate-700/30 rounded-xl px-4 py-3">
@@ -220,7 +232,7 @@ const deleteMemo = () => {
                         </div>
                     </div>
 
-                    <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 min-w-0 self-start">
+                    <div v-if="memo.template" class="bg-slate-800/50 border border-white/5 rounded-xl p-4 min-w-0 self-start">
                         <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-white/10 p-4 space-y-4 mb-4 last:mb-0">
                             <div class="flex items-center justify-between border-b border-white/10 pb-3">
                                 <h3 class="text-sm font-semibold text-white">Item {{ itemIndex + 1 }}</h3>

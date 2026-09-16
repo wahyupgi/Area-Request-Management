@@ -35,28 +35,28 @@ const signatures = computed(() => {
         const slot1 = props.documentSignatures[0] ? {
             displayName: props.documentSignatures[0].name || creatorSig.displayName,
             displayRole: props.documentSignatures[0].role || creatorSig.displayRole,
-            signature: props.documentSignatures[0].signature || creatorSig.signature,
+            signature: props.documentSignatures[0].user?.digital_signature?.signature_image || creatorSig.signature,
             label: props.documentSignatures[0].label || 'Dibuat oleh',
         } : creatorSig;
 
         const slot2 = props.documentSignatures[1] ? {
             displayName: props.documentSignatures[1].name || amSig.displayName,
             displayRole: props.documentSignatures[1].role || amSig.displayRole,
-            signature: props.documentSignatures[1].signature || amSig.signature,
+            signature: props.documentSignatures[1].user?.digital_signature?.signature_image || amSig.signature,
             label: props.documentSignatures[1].label || 'Disetujui oleh',
         } : amSig;
 
         const slot3 = props.documentSignatures[2] ? {
             displayName: props.documentSignatures[2].name || '',
             displayRole: props.documentSignatures[2].role || '',
-            signature: props.documentSignatures[2].signature || '',
+            signature: props.documentSignatures[2].user?.digital_signature?.signature_image || '',
             label: props.documentSignatures[2].label || 'Disetujui oleh',
         } : { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 3' };
 
         const slot4 = props.documentSignatures[3] ? {
             displayName: props.documentSignatures[3].name || '',
             displayRole: props.documentSignatures[3].role || '',
-            signature: props.documentSignatures[3].signature || '',
+            signature: props.documentSignatures[3].user?.digital_signature?.signature_image || '',
             label: props.documentSignatures[3].label || 'Disetujui oleh',
         } : { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 4' };
 
@@ -139,7 +139,7 @@ const handleImgError = (event) => {
 
     <div class="grid grid-cols-4 gap-2 items-start text-xs w-full mb-4">
         <div v-for="(slot, index) in signatures" :key="'kipas-signature-' + index" class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1 font-semibold">{{ index === 0 ? 'Dibuat oleh,' : 'Disetujui oleh,' }}</p>
+            <p class="mb-1 font-semibold">{{ slot.label }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label || slot.displayName" @error="handleImgError" class="max-w-full h-14 object-contain absolute bottom-0" />
             </div>

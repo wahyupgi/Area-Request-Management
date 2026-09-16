@@ -6,6 +6,7 @@ const theme = ref('dark');
 const applyTheme = (value) => {
     theme.value = value;
     document.documentElement.classList.toggle('theme-light', value === 'light');
+    document.documentElement.classList.toggle('dark', value === 'dark');
     document.documentElement.dataset.theme = value;
     localStorage.setItem(storageKey, value);
 };

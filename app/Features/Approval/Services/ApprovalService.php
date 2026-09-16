@@ -8,6 +8,7 @@ use App\Models\MemoApproval;
 use App\Models\Notification;
 use App\Models\User;
 use App\Mail\MemoApproved;
+use App\Mail\MemoRejected;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -119,5 +120,14 @@ class ApprovalService
                 'message' => 'Memo "' . $memo->title . '" telah DITOLAK oleh ' . $user->name . '. Alasan: ' . $notes,
             ]);
         });
+
+        $memo->loadMissing(['creator', 'areaManager', 'branch', 'template']);
+        if ($memo->creator?->email) {
+            try {
+                Mail::to($memo->creator->email)->send(new MemoRejected($memo, $notes));
+            } catch (\Throwable $e) {
+                \Log::warning('Gagal mengirim email MemoRejected: ' . $e->getMessage());
+            }
+        }
     }
 }

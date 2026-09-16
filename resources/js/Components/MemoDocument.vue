@@ -38,20 +38,42 @@ const memoMeta = computed(() => props.memo.field_values?.meta || {});
 const configuredSignatures = computed(() => {
     const custom = props.memo.field_values?.custom_signers;
     if (Array.isArray(custom) && custom.length > 0) {
-        return custom.map((slot) => ({
-            ...slot,
-            name: slot.name || '',
-            role: slot.role || '',
-            location: slot.location || 'document',
-        }));
+        return custom.map((slot) => {
+            let user = null;
+            if (slot.role === 'Kepala Cabang') user = props.memo.creator;
+            else if (slot.role === 'Area Manager') user = props.showAmSignature ? props.memo.area_manager : null;
+            
+            return {
+                ...slot,
+                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (slot.role === 'Area Manager' ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
+                name: slot.name || '',
+                role: slot.role || '',
+                location: slot.location || 'document',
+                user: user,
+            };
+        });
     }
 
     return (props.memo.template?.signature_schema || [])
-        .map((slot) => ({
-            ...slot,
-            name: slot.name || slot.label || slot.user?.name || 'Penandatangan',
-            user: slot.user || props.memo.template?.signature_people?.[slot.user_id],
-        }))
+        .map((slot) => {
+            let user = slot.user || props.memo.template?.signature_people?.[slot.user_id];
+            let name = slot.name || slot.user?.name || 'Penandatangan';
+            
+            if (slot.role === 'Kepala Cabang') {
+                user = props.memo.creator;
+                name = user?.name || name;
+            } else if (slot.role === 'Area Manager') {
+                user = props.showAmSignature ? props.memo.area_manager : null;
+                name = props.memo.area_manager?.name || name;
+            }
+
+            return {
+                ...slot,
+                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (slot.role === 'Area Manager' ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
+                name: name,
+                user: user,
+            };
+        })
         .filter((slot) => slot.name && slot.role);
 });
 

@@ -61,6 +61,7 @@ class MemoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'code' => 'nullable|string|max:255|unique:memos,code',
             'template_id' => 'required|exists:memo_templates,id',
             'title' => 'required|string|max:255',
             'field_values' => 'nullable|array',
@@ -138,11 +139,13 @@ class MemoController extends Controller
         }
 
         $request->validate([
+            'code' => 'nullable|string|max:255|unique:memos,code,' . $memo->id,
             'title' => 'required|string|max:255',
             'field_values' => 'nullable|array',
         ]);
 
         $memo->update([
+            'code' => $request->code ?? $memo->code,
             'title' => $request->title,
             'field_values' => $request->field_values ?? [],
             'status' => 'draft',

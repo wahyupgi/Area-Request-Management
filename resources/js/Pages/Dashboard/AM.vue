@@ -127,9 +127,23 @@ const getUrgency = (submittedAt) => {
         <!-- ═══════════════════════════════════════════════════════
              STATS ROW
         ════════════════════════════════════════════════════════ -->
-        <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <!-- Memo Masuk -->
+            <Link :href="route('approvals.pending', { tab: 'masuk' })" class="am-stat-card am-stat-card--indigo">
+                <div class="am-stat-icon am-stat-icon--indigo">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="am-stat-body">
+                    <span class="am-stat-value text-indigo-300">{{ stats.pending ?? 0 }}</span>
+                    <span class="am-stat-label">Memo Masuk</span>
+                </div>
+                <div class="am-stat-pulse" v-if="(stats.pending ?? 0) > 0"></div>
+            </Link>
+
             <!-- Pending -->
-            <div class="am-stat-card am-stat-card--amber">
+            <Link :href="route('approvals.pending', { tab: 'masuk' })" class="am-stat-card am-stat-card--amber">
                 <div class="am-stat-icon am-stat-icon--amber">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -139,11 +153,10 @@ const getUrgency = (submittedAt) => {
                     <span class="am-stat-value text-amber-300">{{ stats.pending ?? 0 }}</span>
                     <span class="am-stat-label">Perlu Disetujui</span>
                 </div>
-                <div class="am-stat-pulse" v-if="(stats.pending ?? 0) > 0"></div>
-            </div>
+            </Link>
 
             <!-- Approved -->
-            <div class="am-stat-card am-stat-card--emerald">
+            <Link :href="route('approvals.pending', { tab: 'approved' })" class="am-stat-card am-stat-card--emerald">
                 <div class="am-stat-icon am-stat-icon--emerald">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -153,10 +166,10 @@ const getUrgency = (submittedAt) => {
                     <span class="am-stat-value text-white">{{ stats.approved ?? 0 }}</span>
                     <span class="am-stat-label">Telah Disetujui</span>
                 </div>
-            </div>
+            </Link>
 
             <!-- Rejected -->
-            <div class="am-stat-card am-stat-card--rose">
+            <Link :href="route('approvals.pending', { tab: 'rejected' })" class="am-stat-card am-stat-card--rose">
                 <div class="am-stat-icon am-stat-icon--rose">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -166,7 +179,7 @@ const getUrgency = (submittedAt) => {
                     <span class="am-stat-value text-white">{{ stats.rejected ?? 0 }}</span>
                     <span class="am-stat-label">Ditolak / Revisi</span>
                 </div>
-            </div>
+            </Link>
         </div>
 
         <!-- ═══════════════════════════════════════════════════════
@@ -443,6 +456,7 @@ const getUrgency = (submittedAt) => {
 .am-stat-card--amber:hover { border-color: rgba(245,158,11,0.2); }
 .am-stat-card--emerald:hover { border-color: rgba(16,185,129,0.2); }
 .am-stat-card--rose:hover { border-color: rgba(244,63,94,0.2); }
+.am-stat-card--indigo:hover { border-color: rgba(99,102,241,0.2); }
 
 .am-stat-icon {
     width: 44px; height: 44px;
@@ -453,6 +467,7 @@ const getUrgency = (submittedAt) => {
 .am-stat-icon--amber { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: #fbbf24; }
 .am-stat-icon--emerald { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #34d399; }
 .am-stat-icon--rose { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.2); color: #fb7185; }
+.am-stat-icon--indigo { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); color: #818cf8; }
 
 .am-stat-body { display: flex; flex-direction: column; gap: 2px; }
 .am-stat-value { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
@@ -598,10 +613,12 @@ html.theme-light .am-stat-card {
 html.theme-light .am-stat-card--amber:hover { border-color: rgba(245,158,11,0.35); }
 html.theme-light .am-stat-card--emerald:hover { border-color: rgba(16,185,129,0.35); }
 html.theme-light .am-stat-card--rose:hover { border-color: rgba(244,63,94,0.35); }
+html.theme-light .am-stat-card--indigo:hover { border-color: rgba(99,102,241,0.35); }
 
 html.theme-light .am-stat-icon--amber { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25); }
 html.theme-light .am-stat-icon--emerald { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25); }
 html.theme-light .am-stat-icon--rose { background: rgba(244,63,94,0.08); border-color: rgba(244,63,94,0.25); }
+html.theme-light .am-stat-icon--indigo { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.25); }
 
 html.theme-light .am-stat-label { color: #94a3b8; }
 
@@ -639,8 +656,7 @@ html.theme-light .am-recent-item:hover {
 html.theme-light .am-recent-item .text-slate-200 { color: #1e293b !important; }
 html.theme-light .am-recent-item .text-slate-500 { color: #64748b !important; }
 html.theme-light .am-recent-item .text-slate-600 { color: #94a3b8 !important; }
-html.theme-light .am-recent-item .text-slate-600 { color: #cbd5e1 !important; }
-html.theme-light .am-recent-item svg { color: #cbd5e1 !important; }
+html.theme-light .am-recent-item svg { color: #94a3b8 !important; }
 html.theme-light .am-recent-item:hover svg { color: #6366f1 !important; }
 
 /* Empty State */
@@ -665,4 +681,23 @@ html.theme-light .am-hero p { color: #0f172a; }
 html.theme-light .am-hero .text-indigo-300 { color: #4f46e5 !important; }
 html.theme-light .am-hero .text-slate-400 { color: #64748b !important; }
 html.theme-light .am-hero .text-indigo-300\/60 { color: rgba(79,70,229,0.7) !important; }
+
+/* Section headings outside cards */
+html.theme-light .text-white:not([class*="bg-"]):not(.am-memo-card *):not(.am-stat-card *) {
+    color: #0f172a;
+}
+
+/* Stat card text colors */
+html.theme-light .am-stat-card .text-white { color: #0f172a !important; }
+html.theme-light .am-stat-card .text-amber-300 { color: #b45309 !important; }
+html.theme-light .am-stat-card .am-stat-value { color: #0f172a !important; }
+html.theme-light .am-stat-card .am-stat-label { color: #64748b !important; }
+
+/* Generic page-level section headings (h2 outside components) */
+html.theme-light h2.text-white,
+html.theme-light h3.text-white { color: #0f172a !important; }
+html.theme-light span.text-slate-500 { color: #64748b; }
+
+/* Separator dots in recent items */
+html.theme-light .am-recent-item .text-slate-600 { color: #94a3b8 !important; }
 </style>

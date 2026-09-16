@@ -156,9 +156,25 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
         </div>
 
         <!-- KPI Metric Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <!-- Memo Masuk -->
+            <Link href="#" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-indigo-500/20 shadow-sm flex flex-col justify-between block transition-all">
+                <div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Memo Masuk</span>
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-white tracking-tight">{{ stats.pending_approvals ?? 0 }}</span>
+                        <span class="text-xs font-medium text-slate-400">Baru</span>
+                    </div>
+                </div>
+            </Link>
+
             <!-- Card 1: Total Memo -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-indigo-500/20 shadow-sm flex flex-col justify-between">
+            <Link href="#" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-indigo-500/20 shadow-sm flex flex-col justify-between block transition-all">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Memo</span>
@@ -175,13 +191,13 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                     <span>{{ stats.approved_memos ?? 0 }} Disetujui</span>
                     <span>{{ stats.draft_memos ?? 0 }} Draft</span>
                 </div>
-            </div>
+            </Link>
 
             <!-- Card 2: Menunggu Persetujuan AM -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-amber-500/20 shadow-sm flex flex-col justify-between">
+            <Link href="#" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-amber-500/20 shadow-sm flex flex-col justify-between block transition-all">
                 <div>
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-amber-400/90 uppercase tracking-wider">Menunggu Persetujuan</span>
+                        <span class="text-xs font-semibold text-amber-400/90 uppercase tracking-wider">Menunggu AM</span>
                         <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
@@ -193,15 +209,15 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center text-xs text-amber-400/75 gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span>Menunggu Verifikasi Area Manager</span>
+                    <span>Menunggu Verifikasi</span>
                 </div>
-            </div>
+            </Link>
 
             <!-- Card 3: Template Memo -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-emerald-500/20 shadow-sm flex flex-col justify-between">
+            <Link :href="route('admin.templates.index')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-emerald-500/20 shadow-sm flex flex-col justify-between block transition-all">
                 <div>
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Template Formulir</span>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Template Form</span>
                         <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm10 0a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>
                         </div>
@@ -213,12 +229,11 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
                     <span class="text-emerald-400">Format standar cabang</span>
-                    <Link :href="route('admin.templates.index')" class="text-indigo-400 hover:text-indigo-300 font-medium">Atur</Link>
                 </div>
-            </div>
+            </Link>
 
             <!-- Card 4: Pengguna & Jaringan Cabang -->
-            <div class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-cyan-500/20 shadow-sm flex flex-col justify-between">
+            <Link :href="route('admin.users.index')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-cyan-500/20 shadow-sm flex flex-col justify-between block transition-all">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengguna</span>
@@ -235,7 +250,7 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                     <span>{{ stats.total_branches ?? 0 }} Cabang</span>
                     <span>{{ stats.total_areas ?? 0 }} Area</span>
                 </div>
-            </div>
+            </Link>
         </div>
 
         <!-- 2-Column Main Workspace -->
