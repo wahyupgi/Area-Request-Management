@@ -2,12 +2,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 
 const props = defineProps({ areas: Array });
 
 const showForm = ref(false);
 const editingId = ref(null);
 const form = useForm({ name: '' });
+const { confirm } = useSweetAlert();
 
 const openCreate = () => { form.reset(); editingId.value = null; showForm.value = true; };
 const openEdit = (area) => { form.name = area.name; editingId.value = area.id; showForm.value = true; };
@@ -20,8 +22,8 @@ const save = () => {
     }
 };
 
-const deleteArea = (area) => {
-    if (confirm('Hapus area ' + area.name + '?')) {
+const deleteArea = async (area) => {
+    if (await confirm('Hapus area ' + area.name + '?', 'Area yang dihapus tidak dapat dipulihkan.')) {
         router.delete(route('admin.areas.destroy', area.id));
     }
 };

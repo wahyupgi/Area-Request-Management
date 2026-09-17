@@ -2,19 +2,25 @@
 
 namespace App\Features\Memo\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Features\Memo\Repositories\MemoRepository;
+use App\Features\Memo\Requests\StoreMemoRequest;
+use App\Features\Memo\Requests\SubmitMemoRequest;
+use App\Features\Memo\Requests\UpdateMemoRequest;
+use App\Features\Memo\Requests\UploadAttachmentRequest;
 use App\Features\Memo\Services\MemoService;
+use App\Http\Controllers\Controller;
 use App\Models\Memo;
 use App\Models\MemoAttachment;
 use App\Models\MemoTemplate;
-use App\Models\DigitalSignature;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class MemoController extends Controller
 {
-    public function __construct(protected MemoService $service) {}
+    public function __construct(
+        protected MemoService $service,
+        protected MemoRepository $memoRepository,
+    ) {}
 
     /**
      * List memos for KC user.
@@ -23,19 +29,11 @@ class MemoController extends Controller
     {
         $user = auth()->user();
 
-        $query = Memo::with(['template', 'branch', 'areaManager', 'latestApproval', 'attachments']);
-
-        if ($user->isKC()) {
-            $query->where('created_by', $user->id);
-        } elseif ($user->isAM()) {
-            $query->where('area_manager_id', $user->id);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $memos = $query->orderBy('updated_at', 'desc')->get();
+        $memos = $this->memoRepository->listForUser(
+            $user,
+            $request->input('status'),
+            $request->input('per_page', 15),
+        );
 
         return Inertia::render('Memo/Index', [
             'memos' => $memos,
@@ -48,7 +46,9 @@ class MemoController extends Controller
      */
     public function create()
     {
-        $templates = MemoTemplate::where('is_active', true)->get();
+        $templates = \Illuminate\Support\Facades\Cache::remember('active_memo_templates', now()->addHour(), function () {
+            return MemoTemplate::where('is_active', true)->get();
+        });
 
         return Inertia::render('Memo/Create', [
             'templates' => $templates,
@@ -58,16 +58,8 @@ class MemoController extends Controller
     /**
      * Store a new memo (as draft).
      */
-    public function store(Request $request)
+    public function store(StoreMemoRequest $request)
     {
-        $request->validate([
-            'code' => 'nullable|string|max:255|unique:memos,code',
-            'template_id' => 'required|exists:memo_templates,id',
-            'title' => 'required|string|max:255',
-            'field_values' => 'nullable|array',
-            'attachment' => 'nullable|file|max:10240',
-        ]);
-
         $memo = $this->service->createDraft($request);
 
         $routeParameters = ['memo' => $memo->id];
@@ -113,7 +105,9 @@ class MemoController extends Controller
         }
 
         $memo->load(['template', 'attachments', 'approvals.approver', 'creator.digitalSignature']);
-        $templates = MemoTemplate::where('is_active', true)->get();
+        $templates = \Illuminate\Support\Facades\Cache::remember('active_memo_templates', now()->addHour(), function () {
+            return MemoTemplate::where('is_active', true)->get();
+        });
 
         return Inertia::render('Memo/Edit', [
             'memo' => $memo,
@@ -126,7 +120,7 @@ class MemoController extends Controller
     /**
      * Update memo (only draft/rejected).
      */
-    public function update(Request $request, Memo $memo)
+    public function update(UpdateMemoRequest $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -137,12 +131,6 @@ class MemoController extends Controller
         if (!in_array($memo->status, ['draft', 'rejected'])) {
             return back()->withErrors(['status' => 'Memo tidak bisa diedit.']);
         }
-
-        $request->validate([
-            'code' => 'nullable|string|max:255|unique:memos,code,' . $memo->id,
-            'title' => 'required|string|max:255',
-            'field_values' => 'nullable|array',
-        ]);
 
         $memo->update([
             'code' => $request->code ?? $memo->code,
@@ -158,7 +146,7 @@ class MemoController extends Controller
     /**
      * Submit memo to AM.
      */
-    public function submit(Request $request, Memo $memo)
+    public function submit(SubmitMemoRequest $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -179,10 +167,6 @@ class MemoController extends Controller
             return back()->withErrors(['area_manager' => 'Area Manager belum tersedia untuk area ini.']);
         }
 
-        $request->validate([
-            'signature_image' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
-        ]);
-
         $signature = $this->service->resolveSignature($request, $user);
 
         if (!$signature) {
@@ -198,7 +182,7 @@ class MemoController extends Controller
     /**
      * Upload attachment to memo.
      */
-    public function uploadAttachment(Request $request, Memo $memo)
+    public function uploadAttachment(UploadAttachmentRequest $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -209,10 +193,6 @@ class MemoController extends Controller
         if (!in_array($memo->status, ['draft', 'rejected'])) {
             return back()->withErrors(['status' => 'Tidak bisa menambah lampiran pada memo yang sudah dikirim.']);
         }
-
-        $request->validate([
-            'file' => 'required|file|max:10240',
-        ]);
 
         $file = $request->file('file');
         $path = $file->store('attachments/' . $memo->id, 'public');

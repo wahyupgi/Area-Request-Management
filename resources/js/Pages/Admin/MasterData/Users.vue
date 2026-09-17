@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 
 const props = defineProps({
     users: Array,
@@ -20,6 +21,7 @@ const form = useForm({
     branch_id: '',
     area_id: '',
 });
+const { confirm } = useSweetAlert();
 
 const roleConfig = {
     KC: { label: 'Kepala Cabang' },
@@ -73,8 +75,8 @@ const save = () => {
     });
 };
 
-const remove = (user) => {
-    if (!window.confirm(`Hapus user ${user.username}?`)) return;
+const remove = async (user) => {
+    if (!await confirm(`Hapus user ${user.username}?`, 'User yang dihapus tidak dapat dipulihkan.')) return;
 
     form.delete(route('admin.users.destroy', user.id), {
         preserveScroll: true,

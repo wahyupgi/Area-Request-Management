@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 
 const props = defineProps({
     memo: Object,
@@ -37,6 +38,7 @@ const showSignatureDialog = ref(props.openSignature);
 const signatureFile = ref(null);
 const signaturePreview = ref(null);
 const submittingMemo = ref(false);
+const { confirm } = useSweetAlert();
 
 const save = () => {
     form.put(route('memos.update', props.memo.id));
@@ -124,14 +126,14 @@ const uploadFile = () => {
     });
 };
 
-const deleteAttachment = (attachment) => {
-    if (confirm('Hapus lampiran ini?')) {
+const deleteAttachment = async (attachment) => {
+    if (await confirm('Hapus lampiran ini?', 'Lampiran akan dihapus dari memo.')) {
         router.delete(route('memos.attachments.delete', [props.memo.id, attachment.id]));
     }
 };
 
-const deleteMemo = () => {
-    if (confirm('Hapus memo ini? Tindakan ini tidak bisa dibatalkan.')) {
+const deleteMemo = async () => {
+    if (await confirm('Hapus memo ini?')) {
         router.delete(route('memos.destroy', props.memo.id));
     }
 };

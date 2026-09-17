@@ -2,9 +2,11 @@
 
 namespace App\Features\Admin\Templates\Controllers;
 
+use App\Features\Admin\Templates\Requests\StoreTemplateRequest;
+use App\Features\Admin\Templates\Requests\UpdateTemplateRequest;
 use App\Http\Controllers\Controller;
 use App\Models\MemoTemplate;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class TemplateController extends Controller
@@ -25,25 +27,17 @@ class TemplateController extends Controller
         return Inertia::render('Admin/Templates/Create');
     }
 
-    public function store(Request $request)
+    public function store(StoreTemplateRequest $request)
     {
-        $request->validate([
-            'name'                    => 'required|string|max:255',
-            'category'                => 'nullable|string|max:100',
-            'field_schema'            => 'required|array|min:1',
-            'field_schema.*.key'      => 'required|string',
-            'field_schema.*.label'    => 'required|string',
-            'field_schema.*.type'     => 'required|in:text,textarea,number,date,select',
-            'field_schema.*.required' => 'required|boolean',
-        ]);
-
         MemoTemplate::create([
-            'name'       => $request->name,
-            'category'   => $request->category,
+            'name' => $request->name,
+            'category' => $request->category,
             'field_schema' => $request->field_schema,
-            'is_active'  => true,
+            'is_active' => true,
             'created_by' => auth()->id(),
         ]);
+
+        Cache::forget('active_memo_templates');
 
         return redirect()->route('admin.templates.index')
             ->with('success', 'Template berhasil dibuat.');
@@ -56,23 +50,15 @@ class TemplateController extends Controller
         ]);
     }
 
-    public function update(Request $request, MemoTemplate $template)
+    public function update(UpdateTemplateRequest $request, MemoTemplate $template)
     {
-        $request->validate([
-            'name'                    => 'required|string|max:255',
-            'category'                => 'nullable|string|max:100',
-            'field_schema'            => 'required|array|min:1',
-            'field_schema.*.key'      => 'required|string',
-            'field_schema.*.label'    => 'required|string',
-            'field_schema.*.type'     => 'required|in:text,textarea,number,date,select',
-            'field_schema.*.required' => 'required|boolean',
-        ]);
-
         $template->update([
-            'name'         => $request->name,
-            'category'     => $request->category,
+            'name' => $request->name,
+            'category' => $request->category,
             'field_schema' => $request->field_schema,
         ]);
+
+        Cache::forget('active_memo_templates');
 
         return redirect()->route('admin.templates.index')
             ->with('success', 'Template berhasil diperbarui.');
@@ -81,6 +67,8 @@ class TemplateController extends Controller
     public function toggleActive(MemoTemplate $template)
     {
         $template->update(['is_active' => !$template->is_active]);
+
+        Cache::forget('active_memo_templates');
 
         return back()->with('success', 'Status template berhasil diubah.');
     }

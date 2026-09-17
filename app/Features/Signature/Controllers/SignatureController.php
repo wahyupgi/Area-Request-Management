@@ -2,10 +2,11 @@
 
 namespace App\Features\Signature\Controllers;
 
+use App\Features\Signature\Requests\StoreSignatureRequest;
+use App\Features\Signature\Requests\UpdateSignatureSettingsRequest;
 use App\Http\Controllers\Controller;
 use App\Models\DigitalSignature;
 use App\Models\MemoTemplate;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -26,13 +27,8 @@ class SignatureController extends Controller
     /**
      * Upload / replace digital signature.
      */
-    public function store(Request $request)
+    public function store(StoreSignatureRequest $request)
     {
-        $request->validate([
-            'signature_image' => 'required|file|mimes:png,jpg,jpeg|max:2048',
-            'certificate_no'  => 'nullable|string|max:100',
-        ]);
-
         $existing = DigitalSignature::where('user_id', auth()->id())->first();
 
         if ($existing) {
@@ -84,22 +80,17 @@ class SignatureController extends Controller
     /**
      * Update signature schema for a template.
      */
-    public function updateSettings(Request $request, MemoTemplate $template)
+    public function updateSettings(UpdateSignatureSettingsRequest $request, MemoTemplate $template)
     {
         abort_unless(auth()->user()->isAM(), 403);
 
-        $validated = $request->validate([
-            'signature_schema'          => ['nullable', 'array', 'max:6'],
-            'signature_schema.*.name'   => ['required', 'string', 'max:255'],
-            'signature_schema.*.role'   => ['required', 'string', 'max:100'],
-            'signature_schema.*.location' => ['required', 'in:document,bottom_right'],
-        ]);
+        $validated = $request->validated();
 
         $template->update([
             'signature_schema' => collect($validated['signature_schema'] ?? [])
                 ->map(fn ($slot) => [
-                    'name'     => $slot['name'],
-                    'role'     => $slot['role'],
+                    'name' => $slot['name'],
+                    'role' => $slot['role'],
                     'location' => $slot['location'],
                 ])->values()->all(),
         ]);

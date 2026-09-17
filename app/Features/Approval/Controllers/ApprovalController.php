@@ -2,15 +2,23 @@
 
 namespace App\Features\Approval\Controllers;
 
+use App\Features\Approval\Requests\ApproveMemoRequest;
+use App\Features\Approval\Requests\RejectMemoRequest;
+use App\Features\Approval\Requests\UpdateMemoMetaRequest;
+use App\Features\Approval\Requests\UpdateSignersRequest;
 use App\Http\Controllers\Controller;
 use App\Features\Approval\Services\ApprovalService;
+use App\Features\Memo\Repositories\MemoRepository;
 use App\Models\Memo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ApprovalController extends Controller
 {
-    public function __construct(protected ApprovalService $service) {}
+    public function __construct(
+        protected ApprovalService $service,
+        protected MemoRepository $memoRepository,
+    ) {}
 
     /**
      * List pending memos for AM (also includes processed memos for history tab).
@@ -19,11 +27,10 @@ class ApprovalController extends Controller
     {
         $user = auth()->user();
 
-        $allMemos = Memo::with(['template', 'branch.area', 'creator', 'attachments', 'approvals'])
-            ->where('area_manager_id', $user->id)
-            ->whereIn('status', ['submitted', 'approved', 'rejected'])
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $allMemos = $this->memoRepository->listForApprovalInbox(
+            $user,
+            $request->input('per_page', 12),
+        );
 
         return Inertia::render('Approval/Pending', [
             'allMemos'   => $allMemos,
@@ -58,7 +65,7 @@ class ApprovalController extends Controller
     /**
      * Approve memo.
      */
-    public function approve(Request $request, Memo $memo)
+    public function approve(ApproveMemoRequest $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -85,7 +92,7 @@ class ApprovalController extends Controller
     /**
      * Reject memo.
      */
-    public function reject(Request $request, Memo $memo)
+    public function reject(RejectMemoRequest $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -97,13 +104,6 @@ class ApprovalController extends Controller
             return back()->withErrors(['status' => 'Memo ini tidak dalam status submitted.']);
         }
 
-        $request->validate([
-            'notes' => 'required|string|min:5',
-        ], [
-            'notes.required' => 'Catatan alasan penolakan wajib diisi.',
-            'notes.min' => 'Catatan minimal 5 karakter.',
-        ]);
-
         $this->service->rejectMemo($memo, $user, $request->notes);
 
         return redirect()->route('approvals.pending')
@@ -113,7 +113,7 @@ class ApprovalController extends Controller
     /**
      * Update custom signers for a memo by AM.
      */
-    public function updateSigners(Request $request, Memo $memo)
+    public function updateSigners(UpdateSignersRequest $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -121,12 +121,7 @@ class ApprovalController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'signers' => 'nullable|array',
-            'signers.*.name' => 'nullable|string|max:255',
-            'signers.*.role' => 'nullable|string|max:100',
-            'signers.*.location' => 'nullable|string|in:document,bottom_right',
-        ]);
+        $validated = $request->validated();
 
         $fieldValues = $memo->field_values ?? [];
         $fieldValues['custom_signers'] = $validated['signers'] ?? [];
@@ -155,7 +150,7 @@ class ApprovalController extends Controller
     /**
      * Update editable header meta fields.
      */
-    public function updateMeta(Request $request, Memo $memo)
+    public function updateMeta(UpdateMemoMetaRequest $request, Memo $memo)
     {
         $user = auth()->user();
 
@@ -163,13 +158,7 @@ class ApprovalController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'code'       => ['nullable', 'string', 'max:255'],
-            'direktorat' => ['nullable', 'string', 'max:255'],
-            'divisi'     => ['nullable', 'string', 'max:255'],
-            'perihal'    => ['nullable', 'string', 'max:500'],
-            'lampiran'   => ['nullable', 'string', 'max:255'],
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['code'])) {
             $memo->code = $validated['code'];

@@ -13,6 +13,16 @@ class Notification extends Model
 
     protected $fillable = ['user_id', 'memo_id', 'message', 'is_read'];
 
+    public function scopeForUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeUnread($query)
+    {
+        return $query->where('is_read', false);
+    }
+
     protected $casts = [
         'is_read' => 'boolean',
     ];

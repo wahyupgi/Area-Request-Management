@@ -1,11 +1,15 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
-    memos: Array,
+    memos: Object,
     filters: Object,
 });
+
+const memoList = computed(() => props.memos?.data ?? []);
+const paginationLinks = computed(() => props.memos?.links ?? []);
 
 const statusConfig = {
     draft: { label: 'Draft', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
@@ -34,7 +38,7 @@ const statusConfig = {
         </div>
 
         <div class="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
-            <div v-if="memos.length === 0" class="px-6 py-16 text-center">
+            <div v-if="memoList.length === 0" class="px-6 py-16 text-center">
                 <p class="text-slate-500">Tidak ada memo ditemukan.</p>
             </div>
             <table v-else class="w-full table-head-pgi">
@@ -49,7 +53,7 @@ const statusConfig = {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="memo in memos" :key="memo.id" class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                    <tr v-for="memo in memoList" :key="memo.id" class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                         <td class="px-6 py-4 text-sm text-slate-300 font-mono">{{ memo.code }}</td>
                         <td class="px-6 py-4 text-sm text-white font-medium">{{ memo.title }}</td>
                         <td class="px-6 py-4 text-sm text-slate-400">{{ memo.template?.name }}</td>
@@ -64,6 +68,17 @@ const statusConfig = {
                     </tr>
                 </tbody>
             </table>
+
+            <div v-if="paginationLinks.length > 3" class="flex flex-wrap items-center justify-center gap-2 border-t border-white/5 px-6 py-4">
+                <template v-for="(page, index) in paginationLinks" :key="index">
+                    <Link
+                        v-if="page.url"
+                        :href="page.url"
+                        :class="['px-3 py-1.5 rounded-lg text-sm', page.active ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white']"
+                        v-html="page.label"
+                    />
+                </template>
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

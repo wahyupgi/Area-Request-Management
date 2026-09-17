@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 
 const props = defineProps({ signature: Object });
 
@@ -11,6 +12,7 @@ const form = useForm({
 });
 
 const preview = ref(null);
+const { confirm } = useSweetAlert();
 
 const onFileChange = (e) => {
     const file = e.target.files[0];
@@ -28,8 +30,8 @@ const save = () => {
     });
 };
 
-const remove = () => {
-    if (confirm('Hapus tanda tangan digital Anda?')) {
+const remove = async () => {
+    if (await confirm('Hapus tanda tangan digital Anda?', 'Tanda tangan digital akan dihapus dari akun Anda.')) {
         router.delete(route('signature.destroy'));
     }
 };

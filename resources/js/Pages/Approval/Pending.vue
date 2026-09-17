@@ -4,16 +4,18 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
-    allMemos: Array,
+    allMemos: Object,
     defaultTab: String,
 });
 
 const activeTab = ref(props.defaultTab || 'masuk');
 
-const memos = computed(() => props.allMemos.filter(m => m.status === 'submitted'));
-const approvedMemos = computed(() => props.allMemos.filter(m => m.status === 'approved'));
-const rejectedMemos = computed(() => props.allMemos.filter(m => m.status === 'rejected'));
-const history = computed(() => props.allMemos);
+const memoList = computed(() => props.allMemos?.data ?? []);
+const memos = computed(() => memoList.value.filter(m => m.status === 'submitted'));
+const approvedMemos = computed(() => memoList.value.filter(m => m.status === 'approved'));
+const rejectedMemos = computed(() => memoList.value.filter(m => m.status === 'rejected'));
+const history = computed(() => memoList.value);
+const paginationLinks = computed(() => props.allMemos?.links ?? []);
 
 const historyStatusConfig = {
     submitted: {

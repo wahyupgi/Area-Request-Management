@@ -20,28 +20,28 @@ class DatabaseSeeder extends Seeder
 
 
         $admin = User::create([
-            'name' => 'Admin System',
+            'name' => 'SysAdmin',
             'username' => 'admin',
-            'email' => 'admin@arm.test',
-            'password' => 'pgiadmin',
+            'email' => 'adminpgi@gmail.com',
+            'password' => bcrypt('pgiadmin'),
             'role' => 'ADMIN',
         ]);
 
         $am1 = User::create([
-            'name' => 'Fathurrahman (Area Manager)',
+            'name' => 'Fathurrahman',
             'username' => 'fathurrahman',
-            'email' => 'am.fathurrahman@arm.test',
-            'password' => 'password',
+            'email' => 'wahyupgi1@gmail.com',
+            'password' => bcrypt('amfathur'),
             'role' => 'AM',
             'area_id' => $area1->id,
         ]);
 
       
         $kc1 = User::create([
-            'name' => 'Gibran (KC Surakarta)',
+            'name' => 'Gibran',
             'username' => 'gibran',
-            'email' => 'kc.surakarta@arm.test',
-            'password' => 'gibran123',
+            'email' => 'devopss077@gmail.com',
+            'password' => bcrypt('gibran123'),
             'role' => 'KC',
         ]);
         $branch1 = Branch::create([
@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
         $kc1->update(['branch_id' => $branch1->id]);
 
         $kc2 = User::create([
-            'name' => 'Dewi Lestari (KC Klaten)',
+            'name' => 'Dewi Lestari',
             'username' => 'dewi',
             'email' => 'kc.klaten@arm.test',
             'password' => 'dewi123',
@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
         $kc2->update(['branch_id' => $branch2->id]);
 
         $kc3 = User::create([
-            'name' => 'Budi (KC Sragen)',
+            'name' => 'Budi',
             'username' => 'budi',
             'email' => 'kc.sragen@arm.test',
             'password' => 'budi123',

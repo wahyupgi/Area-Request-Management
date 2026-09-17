@@ -1,17 +1,35 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const unreadCount = computed(() => page.props.unreadNotificationsCount || 0);
+const { success, error } = useSweetAlert();
+
+watch(() => page.props.flash?.success, (message) => {
+    if (message) success(message);
+});
+
+watch(() => page.props.flash?.error, (message) => {
+    if (message) error(message);
+});
 
 const showingNavDropdown = ref(false);
 const showNotifications = ref(false);
 const showUserMenu = ref(false);
 const notifications = ref([]);
-const sidebarCollapsed = ref(false);
+const sidebarStateKey = 'arm-sidebar-collapsed';
+const sidebarCollapsed = ref(
+    typeof window !== 'undefined' && window.localStorage.getItem(sidebarStateKey) === 'true'
+);
+
+const toggleSidebar = () => {
+    sidebarCollapsed.value = !sidebarCollapsed.value;
+    localStorage.setItem(sidebarStateKey, String(sidebarCollapsed.value));
+};
 
 const roleLabel = computed(() => {
     const labels = { KC: 'Kepala Cabang', AM: 'Area Manager', ADMIN: 'Administrator' };
@@ -77,8 +95,14 @@ const markAllRead = async () => {
 };
 
 const toggleNotifications = () => {
+    showUserMenu.value = false;
     showNotifications.value = !showNotifications.value;
     if (showNotifications.value) fetchNotifications();
+};
+
+const toggleUserMenu = () => {
+    showNotifications.value = false;
+    showUserMenu.value = !showUserMenu.value;
 };
 
 const activePendingRoute = ref(null);
@@ -163,7 +187,13 @@ const isActive = (routeName) => {
             <!-- Top Bar -->
             <header class="app-header-pgi sticky top-0 z-20 h-16 flex items-center justify-between px-6 backdrop-blur-xl print:hidden">
                 <div class="flex items-center gap-4">
-                    <button @click="sidebarCollapsed = !sidebarCollapsed" class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <button
+                        type="button"
+                        :aria-label="sidebarCollapsed ? 'Tampilkan menu' : 'Sembunyikan menu'"
+                        :title="sidebarCollapsed ? 'Tampilkan menu' : 'Sembunyikan menu'"
+                        @click="toggleSidebar"
+                        class="app-header-control p-2 rounded-lg transition-colors"
+                    >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
                     <div>
@@ -183,7 +213,7 @@ const isActive = (routeName) => {
                         </button>
 
                         <!-- Notification Dropdown -->
-                        <div v-if="showNotifications" class="absolute right-0 mt-2 w-96 bg-slate-800 border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+                        <div v-if="showNotifications" class="notification-popover fixed top-[4.25rem] right-32 w-96 bg-slate-800 border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-50">
                             <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
                                 <h3 class="text-sm font-semibold text-white">Notifikasi</h3>
                                 <button @click="markAllRead" class="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">Tandai semua dibaca</button>
@@ -205,12 +235,19 @@ const isActive = (routeName) => {
 
                     <!-- User Dropdown -->
                     <div class="relative">
-                        <button @click="showUserMenu = !showUserMenu" class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-colors">
+                        <button
+                            type="button"
+                            :aria-expanded="showUserMenu"
+                            aria-controls="user-menu"
+                            @click="toggleUserMenu"
+                            class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-colors text-left"
+                        >
                             <span class="text-sm font-medium text-slate-300">{{ user?.name }}</span>
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            <svg v-if="showUserMenu" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 9l7 7 7-7"/></svg>
+                            <svg v-else class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </button>
                         
-                        <div v-if="showUserMenu" class="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50 py-1">
+                        <div v-if="showUserMenu" id="user-menu" class="user-menu-popover absolute right-0 top-full mt-2 w-44 max-w-[calc(100vw-1rem)] bg-slate-800 border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50 py-1 text-left">
                             <div class="px-4 py-2 border-b border-white/10 mb-1">
                                 <p class="text-sm font-medium text-white truncate">{{ user?.name }}</p>
                                 <p class="text-xs text-slate-400 truncate">{{ roleLabel }}</p>
@@ -227,20 +264,6 @@ const isActive = (routeName) => {
                     </div>
                 </div>
             </header>
-
-            <!-- Flash Messages -->
-            <div v-if="$page.props.flash?.success" class="mx-6 mt-4 print:hidden">
-                <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    {{ $page.props.flash.success }}
-                </div>
-            </div>
-            <div v-if="$page.props.flash?.error" class="mx-6 mt-4 print:hidden">
-                <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    {{ $page.props.flash.error }}
-                </div>
-            </div>
 
             <!-- Main Content -->
             <main :class="['p-6 print:p-0 transition-opacity duration-150', isNavigating ? 'opacity-40 pointer-events-none' : 'opacity-100']">

@@ -82,14 +82,8 @@ const toggleNotifications = () => {
 };
 
 const activePendingRoute = ref(null);
-const isNavigating = ref(false);
-
-router.on('start', () => {
-    isNavigating.value = true;
-});
 
 router.on('finish', () => {
-    isNavigating.value = false;
     activePendingRoute.value = null;
 });
 
@@ -108,7 +102,7 @@ const isActive = (routeName) => {
 <template>
     <div class="app-shell min-h-screen">
         <!-- Sidebar -->
-        <aside :class="[sidebarCollapsed ? 'w-20' : 'w-72', 'fixed inset-y-0 left-0 z-30 flex flex-col transition-all duration-300 ease-in-out print:hidden']">
+        <aside :class="[sidebarCollapsed ? 'w-20' : 'w-72', 'fixed inset-y-0 left-0 z-30 flex flex-col transition-all duration-150 ease-in-out print:hidden']">
             <div class="sidebar-pgi flex flex-col h-full backdrop-blur-xl">
                 <!-- Logo -->
                 <div class="flex items-center gap-3 px-5 py-5 sidebar-divider border-b">
@@ -128,14 +122,13 @@ const isActive = (routeName) => {
                         v-for="item in navItems"
                         :key="item.route"
                         :href="route(item.route)"
-                        prefetch
                         @click="onNavClick(item.route)"
                         :class="[
                             isActive(item.route)
                                 ? 'sidebar-nav-active'
                                 : 'sidebar-nav-inactive',
                             sidebarCollapsed ? 'justify-center px-2' : 'px-3.5',
-                            'sidebar-nav-item group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border active:scale-[0.98]'
+                            'sidebar-nav-item group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-100 border'
                         ]"
                         :title="sidebarCollapsed ? item.name : undefined"
                     >
@@ -158,7 +151,7 @@ const isActive = (routeName) => {
         </aside>
 
         <!-- Main Content -->
-        <div :class="[sidebarCollapsed ? 'pl-20' : 'pl-72', 'print:pl-0', 'transition-all duration-300']">
+        <div :class="[sidebarCollapsed ? 'pl-20' : 'pl-72', 'print:pl-0', 'transition-all duration-150']">
             <!-- Top Bar -->
             <header class="app-header-pgi sticky top-0 z-20 h-16 flex items-center justify-between px-6 backdrop-blur-xl print:hidden">
                 <div class="flex items-center gap-4">
@@ -242,7 +235,7 @@ const isActive = (routeName) => {
             </div>
 
             <!-- Main Content -->
-            <main :class="['p-6 print:p-0 transition-opacity duration-150', isNavigating ? 'opacity-40 pointer-events-none' : 'opacity-100']">
+            <main class="p-6 print:p-0">
                 <slot />
             </main>
         </div>

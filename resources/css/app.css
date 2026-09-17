@@ -129,6 +129,45 @@ html.theme-light .text-white {
     color: #0f172a;
 }
 
+html.theme-light .bg-pgi-blue,
+html.theme-light .bg-pgi-blue.text-white,
+html.theme-light .bg-pgi-blue * {
+    color: #ffffff !important;
+}
+
+html.theme-light .bg-pgi-blue-dark,
+html.theme-light .bg-pgi-blue-dark.text-white,
+html.theme-light .bg-pgi-blue-dark * {
+    color: #ffffff !important;
+}
+
+html.theme-light a.bg-indigo-600,
+html.theme-light button.bg-indigo-600,
+html.theme-light a.bg-blue-600,
+html.theme-light button.bg-blue-600,
+html.theme-light a.bg-sky-600,
+html.theme-light button.bg-sky-600,
+html.theme-light a.bg-indigo-500,
+html.theme-light button.bg-indigo-500,
+html.theme-light a.bg-blue-500,
+html.theme-light button.bg-blue-500,
+html.theme-light a.bg-sky-500,
+html.theme-light button.bg-sky-500,
+html.theme-light a.bg-indigo-600 *,
+html.theme-light button.bg-indigo-600 *,
+html.theme-light a.bg-blue-600 *,
+html.theme-light button.bg-blue-600 *,
+html.theme-light a.bg-sky-600 *,
+html.theme-light button.bg-sky-600 *,
+html.theme-light a.bg-indigo-500 *,
+html.theme-light button.bg-indigo-500 *,
+html.theme-light a.bg-blue-500 *,
+html.theme-light button.bg-blue-500 *,
+html.theme-light a.bg-sky-500 *,
+html.theme-light button.bg-sky-500 * {
+    color: #ffffff !important;
+}
+
 html.theme-light .text-slate-100,
 html.theme-light .text-slate-200 {
     color: #1e293b !important;
@@ -194,47 +233,47 @@ html.theme-light [class*="bg-[#0284c7]"] {
     /* solid container context */
 }
 
-html.theme-light .bg-indigo-600.text-white,
-html.theme-light .bg-indigo-500.text-white,
-html.theme-light .bg-blue-600.text-white,
-html.theme-light .bg-blue-500.text-white,
-html.theme-light .bg-sky-600.text-white,
-html.theme-light .bg-sky-500.text-white,
-html.theme-light .bg-emerald-600.text-white,
-html.theme-light .bg-emerald-500.text-white,
-html.theme-light .bg-green-600.text-white,
-html.theme-light .bg-green-500.text-white,
-html.theme-light .bg-red-600.text-white,
-html.theme-light .bg-red-500.text-white,
-html.theme-light .bg-rose-600.text-white,
-html.theme-light .bg-rose-500.text-white,
-html.theme-light .bg-amber-600.text-white,
-html.theme-light .bg-amber-500.text-white,
-html.theme-light .bg-purple-600.text-white,
-html.theme-light .bg-purple-500.text-white,
-html.theme-light .bg-gray-800.text-white,
-html.theme-light .bg-gray-900.text-white,
-html.theme-light .bg-gradient-to-br.text-white,
-html.theme-light .bg-indigo-600 .text-white,
-html.theme-light .bg-indigo-500 .text-white,
-html.theme-light .bg-blue-600 .text-white,
-html.theme-light .bg-blue-500 .text-white,
-html.theme-light .bg-sky-600 .text-white,
-html.theme-light .bg-sky-500 .text-white,
-html.theme-light .bg-emerald-600 .text-white,
-html.theme-light .bg-emerald-500 .text-white,
-html.theme-light .bg-green-600 .text-white,
-html.theme-light .bg-green-500 .text-white,
-html.theme-light .bg-red-600 .text-white,
-html.theme-light .bg-red-500 .text-white,
-html.theme-light .bg-rose-600 .text-white,
-html.theme-light .bg-rose-500 .text-white,
-html.theme-light .bg-amber-600 .text-white,
-html.theme-light .bg-amber-500 .text-white,
-html.theme-light .bg-purple-600 .text-white,
-html.theme-light .bg-purple-500 .text-white,
-html.theme-light .bg-gray-800 .text-white,
-html.theme-light .bg-gray-900 .text-white,
+html.theme-light .bg-indigo-600,
+html.theme-light .bg-indigo-500,
+html.theme-light .bg-blue-600,
+html.theme-light .bg-blue-500,
+html.theme-light .bg-sky-600,
+html.theme-light .bg-sky-500,
+html.theme-light .bg-emerald-600,
+html.theme-light .bg-emerald-500,
+html.theme-light .bg-green-600,
+html.theme-light .bg-green-500,
+html.theme-light .bg-red-600,
+html.theme-light .bg-red-500,
+html.theme-light .bg-rose-600,
+html.theme-light .bg-rose-500,
+html.theme-light .bg-amber-600,
+html.theme-light .bg-amber-500,
+html.theme-light .bg-purple-600,
+html.theme-light .bg-purple-500,
+html.theme-light .bg-gray-800,
+html.theme-light .bg-gray-900,
+html.theme-light .bg-gradient-to-br,
+html.theme-light .bg-indigo-600 *,
+html.theme-light .bg-indigo-500 *,
+html.theme-light .bg-blue-600 *,
+html.theme-light .bg-blue-500 *,
+html.theme-light .bg-sky-600 *,
+html.theme-light .bg-sky-500 *,
+html.theme-light .bg-emerald-600 *,
+html.theme-light .bg-emerald-500 *,
+html.theme-light .bg-green-600 *,
+html.theme-light .bg-green-500 *,
+html.theme-light .bg-red-600 *,
+html.theme-light .bg-red-500 *,
+html.theme-light .bg-rose-600 *,
+html.theme-light .bg-rose-500 *,
+html.theme-light .bg-amber-600 *,
+html.theme-light .bg-amber-500 *,
+html.theme-light .bg-purple-600 *,
+html.theme-light .bg-purple-500 *,
+html.theme-light .bg-gray-800 *,
+html.theme-light .bg-gray-900 *,
 html.theme-light .btn-primary-anim,
 html.theme-light .btn-primary-anim *,
 html.theme-light .btn-primary,
@@ -395,6 +434,74 @@ html.theme-light a.bg-slate-800:hover {
     box-shadow: none;
 }
 
+.bg-pgi-blue { background-color: #1f69a8 !important; }
+.bg-pgi-blue-dark { background-color: #18598f !important; }
+
+.swal2-popup {
+    border-radius: 16px !important;
+    font-family: inherit !important;
+}
+
+.swal-confirm-button,
+.swal-cancel-button {
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 16px;
+}
+
+.swal-confirm-button {
+    background: #1f69a8;
+    color: #ffffff;
+}
+
+.swal-confirm-button:hover { background: #18598f; }
+
+.swal-cancel-button {
+    background: #e2e8f0;
+    color: #334155;
+    margin-right: 8px;
+}
+
+.swal-cancel-button:hover { background: #cbd5e1; }
+
+.swal2-icon.swal2-success {
+    border-color: #1f69a8 !important;
+    color: #1f69a8 !important;
+}
+
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+    background-color: #1f69a8 !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(31, 105, 168, 0.3) !important;
+}
+
+.swal2-timer-progress-bar {
+    background: #1f69a8 !important;
+}
+
+/* Keep primary actions aligned with the sidebar palette. */
+button.bg-indigo-600,
+a.bg-indigo-600,
+button.bg-blue-600,
+a.bg-blue-600,
+input[type="file"]::file-selector-button {
+    background-color: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+button.bg-indigo-600:hover,
+a.bg-indigo-600:hover,
+button.bg-blue-600:hover,
+a.bg-blue-600:hover,
+input[type="file"]:hover::file-selector-button {
+    background-color: #18598f !important;
+}
+
 html.theme-light .sidebar-pgi {
     background-color: #1f69a8 !important;
     border-right-color: #18598f !important;
@@ -417,15 +524,15 @@ html.theme-light .sidebar-pgi .sidebar-brand-subtitle {
 .sidebar-pgi .sidebar-nav-inactive,
 html.theme-light .sidebar-pgi .sidebar-nav-inactive {
     color: #ffffff !important;
-    background-color: transparent !important;
-    border-color: transparent !important;
+    background-color: #2b78b8 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .sidebar-pgi .sidebar-nav-inactive:hover,
 html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover {
     color: #ffffff !important;
-    background-color: #1b5f99 !important;
-    border-color: transparent !important;
+    background-color: #246aa5 !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
 .sidebar-pgi .sidebar-nav-inactive svg,
@@ -449,10 +556,10 @@ html.theme-light .sidebar-pgi .sidebar-nav-item {
 
 .sidebar-pgi .sidebar-nav-active,
 html.theme-light .sidebar-pgi .sidebar-nav-active {
-    background-color: #29b8d5 !important;
+    background-color: #0d4f87 !important;
     color: #ffffff !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    box-shadow: inset 3px 0 0 #8ed8ff !important;
 }
 
 .sidebar-pgi .sidebar-nav-active svg,
@@ -494,6 +601,59 @@ html.theme-light .app-header-pgi {
 .app-header-pgi button,
 .app-header-pgi a {
     color: inherit;
+}
+
+.app-header-pgi .app-header-control {
+    background-color: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+.app-header-pgi .app-header-control:hover {
+    background-color: #18598f !important;
+    color: #ffffff !important;
+}
+
+.user-menu-popover {
+    left: auto !important;
+    right: 0 !important;
+    top: calc(100% + 0.5rem) !important;
+    margin-top: 0 !important;
+    text-align: left;
+    max-height: calc(100vh - 5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.user-menu-popover > div,
+.user-menu-popover > a,
+.user-menu-popover > button {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.user-menu-popover > div:first-child {
+    align-items: flex-start;
+}
+
+.user-menu-popover > a,
+.user-menu-popover > button {
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .user-menu-popover { right: 0 !important; }
+}
+
+.notification-popover {
+    max-height: calc(100vh - 5.25rem);
+}
+
+@media (max-width: 640px) {
+    .notification-popover {
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+    }
 }
 
 .app-header-pgi button:hover,
@@ -696,7 +856,7 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
 
 .btn-primary-anim:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.45);
+    box-shadow: 0 8px 24px -4px rgba(31, 105, 168, 0.45);
 }
 
 .btn-primary-anim:active {

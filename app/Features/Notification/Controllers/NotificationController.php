@@ -2,22 +2,20 @@
 
 namespace App\Features\Notification\Controllers;
 
+use App\Features\Notification\Services\NotificationService;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
-use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    public function __construct(protected NotificationService $notificationService) {}
+
     /**
      * Get all notifications for the authenticated user.
      */
     public function index()
     {
-        $notifications = Notification::where('user_id', auth()->id())
-            ->with('memo')
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
+        $notifications = $this->notificationService->getForUser(auth()->id());
 
         return response()->json($notifications);
     }
@@ -27,11 +25,7 @@ class NotificationController extends Controller
      */
     public function markAsRead(Notification $notification)
     {
-        if ($notification->user_id !== auth()->id()) {
-            abort(403);
-        }
-
-        $notification->update(['is_read' => true]);
+        $this->notificationService->markAsRead($notification, auth()->id());
 
         return response()->json(['success' => true]);
     }
@@ -41,9 +35,7 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        Notification::where('user_id', auth()->id())
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+        $this->notificationService->markAllAsRead(auth()->id());
 
         return response()->json(['success' => true]);
     }
@@ -53,9 +45,7 @@ class NotificationController extends Controller
      */
     public function unreadCount()
     {
-        $count = Notification::where('user_id', auth()->id())
-            ->where('is_read', false)
-            ->count();
+        $count = $this->notificationService->unreadCount(auth()->id());
 
         return response()->json(['count' => $count]);
     }

@@ -2,11 +2,14 @@
 
 namespace App\Features\Admin\MasterData\Controllers;
 
+use App\Features\Admin\MasterData\Requests\StoreAreaRequest;
+use App\Features\Admin\MasterData\Requests\StoreBranchRequest;
+use App\Features\Admin\MasterData\Requests\StoreUserRequest;
+use App\Features\Admin\MasterData\Requests\UpdateUserRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class MasterDataController extends Controller
@@ -22,16 +25,14 @@ class MasterDataController extends Controller
         ]);
     }
 
-    public function storeArea(Request $request)
+    public function storeArea(StoreAreaRequest $request)
     {
-        $request->validate(['name' => 'required|string|max:255']);
         Area::create(['name' => $request->name]);
         return back()->with('success', 'Area berhasil ditambahkan.');
     }
 
-    public function updateArea(Request $request, Area $area)
+    public function updateArea(StoreAreaRequest $request, Area $area)
     {
-        $request->validate(['name' => 'required|string|max:255']);
         $area->update(['name' => $request->name]);
         return back()->with('success', 'Area berhasil diperbarui.');
     }
@@ -57,14 +58,8 @@ class MasterDataController extends Controller
         ]);
     }
 
-    public function storeBranch(Request $request)
+    public function storeBranch(StoreBranchRequest $request)
     {
-        $request->validate([
-            'name'       => 'required|string|max:255',
-            'area_id'    => 'required|exists:areas,id',
-            'kc_user_id' => 'nullable|exists:users,id',
-        ]);
-
         $branch = Branch::create($request->only('name', 'area_id', 'kc_user_id'));
 
         if ($request->kc_user_id) {
@@ -89,42 +84,24 @@ class MasterDataController extends Controller
         ]);
     }
 
-    public function storeUser(Request $request)
+    public function storeUser(StoreUserRequest $request)
     {
-        $request->validate([
-            'name'      => 'required|string|max:255',
-            'username'  => 'required|string|max:255|unique:users,username',
-            'email'     => 'required|email|unique:users,email',
-            'password'  => 'required|string|min:6',
-            'role'      => 'required|in:KC,AM,ADMIN',
-            'branch_id' => 'nullable|exists:branches,id',
-            'area_id'   => 'nullable|exists:areas,id',
-        ]);
-
         User::create([
-            'name'      => $request->name,
-            'username'  => $request->username,
-            'email'     => $request->email,
-            'password'  => $request->password,
-            'role'      => $request->role,
+            'name' => $request->name,
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => $request->password,
+            'role' => $request->role,
             'branch_id' => $request->branch_id,
-            'area_id'   => $request->area_id,
+            'area_id' => $request->area_id,
         ]);
 
         return back()->with('success', 'User berhasil ditambahkan.');
     }
 
-    public function updateUser(Request $request, User $user)
+    public function updateUser(UpdateUserRequest $request, User $user)
     {
-        $validated = $request->validate([
-            'name'      => 'required|string|max:255',
-            'username'  => 'required|string|max:255|unique:users,username,' . $user->id,
-            'email'     => 'required|email|unique:users,email,' . $user->id,
-            'password'  => 'nullable|string|min:6',
-            'role'      => 'required|in:KC,AM,ADMIN',
-            'branch_id' => 'nullable|exists:branches,id',
-            'area_id'   => 'nullable|exists:areas,id',
-        ]);
+        $validated = $request->validated();
 
         if ($validated['role'] !== 'KC') {
             $validated['branch_id'] = null;

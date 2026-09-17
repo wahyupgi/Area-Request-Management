@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     pendingMemos: Array,
@@ -12,14 +12,8 @@ const props = defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 
-// Realtime Clock
-const now = ref(new Date());
-let clockInterval = null;
-onMounted(() => { clockInterval = setInterval(() => { now.value = new Date(); }, 1000); });
-onUnmounted(() => { if (clockInterval) clearInterval(clockInterval); });
-
 const greeting = computed(() => {
-    const h = now.value.getHours();
+    const h = new Date().getHours();
     if (h >= 4 && h < 11) return 'Selamat Pagi';
     if (h >= 11 && h < 15) return 'Selamat Siang';
     if (h >= 15 && h < 18) return 'Selamat Sore';
@@ -28,13 +22,12 @@ const greeting = computed(() => {
 
 const userDisplayName = computed(() => (user.value?.name || 'Area Manager').split('(')[0].trim());
 
-const formattedDate = computed(() =>
-    new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now.value)
-);
-
-const formattedTime = computed(() =>
-    now.value.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + ' WIB'
-);
+const formattedDate = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+}).format(new Date());
 
 const formatDate = (d) => {
     if (!d) return '-';
@@ -67,120 +60,36 @@ const getUrgency = (submittedAt) => {
             <h2 class="text-base font-bold text-white tracking-tight">Dashboard Area Manager</h2>
         </template>
 
-        <!-- ═══════════════════════════════════════════════════════
-             HERO HEADER
-        ════════════════════════════════════════════════════════ -->
-        <div class="am-hero rounded-2xl p-6 mb-6 relative overflow-hidden">
-            <!-- Decorative background -->
-            <div class="am-hero-glow"></div>
-            <div class="am-hero-grid"></div>
-
-            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <section class="am-work-summary mb-8">
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <p class="text-indigo-300 text-xs font-semibold uppercase tracking-widest mb-1">Area Manager · Wilayah Anda</p>
-                    <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                        {{ greeting }}, <span class="text-indigo-300">{{ userDisplayName }}</span>!
-                    </h1>
-                    <p class="text-slate-400 text-sm mt-1">Pusat persetujuan memo operasional wilayah Anda.</p>
+                    <p class="am-eyebrow">{{ formattedDate }}</p>
+                    <h1 class="mt-2 text-2xl font-semibold text-white md:text-3xl">{{ greeting }}, {{ userDisplayName }}.</h1>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Tinjau memo dari cabang, ambil keputusan, dan jaga proses operasional wilayah tetap bergerak.</p>
                 </div>
-                <!-- Live Clock -->
-                <div class="am-clock-pill flex flex-col items-end gap-0.5 text-right">
-                    <span class="text-slate-300 text-sm font-mono font-bold tracking-wider">{{ formattedTime }}</span>
-                    <span class="text-slate-500 text-xs">{{ formattedDate }}</span>
+                <div class="flex flex-wrap gap-2">
+                    <Link :href="route('approvals.pending')" class="am-action-link am-action-link--primary">Buka antrean</Link>
+                    <Link :href="route('signature.index')" class="am-action-link">Tanda tangan digital</Link>
                 </div>
             </div>
-
-            <!-- Quick action row -->
-            <div class="relative z-10 mt-5 flex flex-wrap gap-2">
-                <Link
-                    :href="route('approvals.pending')"
-                    class="am-quick-btn am-quick-btn--primary"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    Antrean Persetujuan
-                    <span v-if="stats.pending > 0" class="am-badge-urgent">{{ stats.pending }}</span>
+            <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <Link :href="route('approvals.pending')" class="am-metric am-metric--priority">
+                    <span class="am-metric-label">Perlu ditinjau</span>
+                    <span class="am-metric-value">{{ stats.pending ?? 0 }}</span>
+                    <span class="am-metric-note">Antrean persetujuan</span>
                 </Link>
-                <Link
-                    :href="route('signature.index')"
-                    class="am-quick-btn am-quick-btn--ghost"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                    </svg>
-                    Tanda Tangan Digital
+                <Link :href="route('approvals.pending', { tab: 'approved' })" class="am-metric am-metric--approved">
+                    <span class="am-metric-label">Disetujui</span>
+                    <span class="am-metric-value">{{ stats.approved ?? 0 }}</span>
+                    <span class="am-metric-note">Keputusan selesai</span>
                 </Link>
-                <Link
-                    :href="route('signature.settings')"
-                    class="am-quick-btn am-quick-btn--ghost"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    Pengaturan Skema TTD
+                <Link :href="route('approvals.pending', { tab: 'rejected' })" class="am-metric am-metric--rejected">
+                    <span class="am-metric-label">Perlu revisi</span>
+                    <span class="am-metric-value">{{ stats.rejected ?? 0 }}</span>
+                    <span class="am-metric-note">Dikembalikan ke cabang</span>
                 </Link>
             </div>
-        </div>
-
-        <!-- ═══════════════════════════════════════════════════════
-             STATS ROW
-        ════════════════════════════════════════════════════════ -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <!-- Memo Masuk -->
-            <Link :href="route('approvals.pending', { tab: 'masuk' })" class="am-stat-card am-stat-card--indigo">
-                <div class="am-stat-icon am-stat-icon--indigo">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <div class="am-stat-body">
-                    <span class="am-stat-value text-indigo-300">{{ stats.pending ?? 0 }}</span>
-                    <span class="am-stat-label">Memo Masuk</span>
-                </div>
-                <div class="am-stat-pulse" v-if="(stats.pending ?? 0) > 0"></div>
-            </Link>
-
-            <!-- Pending -->
-            <Link :href="route('approvals.pending', { tab: 'masuk' })" class="am-stat-card am-stat-card--amber">
-                <div class="am-stat-icon am-stat-icon--amber">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div class="am-stat-body">
-                    <span class="am-stat-value text-amber-300">{{ stats.pending ?? 0 }}</span>
-                    <span class="am-stat-label">Perlu Disetujui</span>
-                </div>
-            </Link>
-
-            <!-- Approved -->
-            <Link :href="route('approvals.pending', { tab: 'approved' })" class="am-stat-card am-stat-card--emerald">
-                <div class="am-stat-icon am-stat-icon--emerald">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div class="am-stat-body">
-                    <span class="am-stat-value text-white">{{ stats.approved ?? 0 }}</span>
-                    <span class="am-stat-label">Telah Disetujui</span>
-                </div>
-            </Link>
-
-            <!-- Rejected -->
-            <Link :href="route('approvals.pending', { tab: 'rejected' })" class="am-stat-card am-stat-card--rose">
-                <div class="am-stat-icon am-stat-icon--rose">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div class="am-stat-body">
-                    <span class="am-stat-value text-white">{{ stats.rejected ?? 0 }}</span>
-                    <span class="am-stat-label">Ditolak / Revisi</span>
-                </div>
-            </Link>
-        </div>
+        </section>
 
         <!-- ═══════════════════════════════════════════════════════
              MAIN CONTENT GRID: Pending (left) + Recent (right)
@@ -251,13 +160,12 @@ const getUrgency = (submittedAt) => {
                                 <!-- Urgency badge -->
                                 <span v-if="getUrgency(memo.submitted_at) === 'critical'"
                                     class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping absolute"></span>
                                     <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
                                     Mendesak
                                 </span>
                                 <span v-else-if="getUrgency(memo.submitted_at) === 'high'"
                                     class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                                     Segera
                                 </span>
                                 <span v-else
@@ -364,6 +272,78 @@ const getUrgency = (submittedAt) => {
 </template>
 
 <style>
+/* ─── Daily Work Summary ───────────────────────────────────── */
+.am-work-summary {
+    background: linear-gradient(135deg, #12263d 0%, #1a2f47 48%, #1f3f5d 100%);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.2);
+    padding: 24px;
+}
+.am-eyebrow {
+    color: #d2e8ff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.am-action-link {
+    background: rgba(31, 105, 168, 0.18);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    border-radius: 6px;
+    color: #eff6ff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 11px;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.am-action-link:hover {
+    background: rgba(31, 105, 168, 0.28);
+    border-color: rgba(96, 165, 250, 0.5);
+    color: #ffffff;
+}
+.am-action-link--primary {
+    background: #1f69a8;
+    border-color: #1f69a8;
+    color: #ffffff;
+}
+.am-action-link--primary:hover {
+    background: #18598f;
+    border-color: #18598f;
+    color: #ffffff;
+}
+.am-metric {
+    background: rgba(15, 23, 42, 0.42);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding: 14px 16px;
+    transition: background-color 0.15s, transform 0.15s, border-color 0.15s;
+}
+.am-metric:hover { background: rgba(15, 23, 42, 0.56); border-color: rgba(148, 163, 184, 0.2); transform: translateY(-2px); }
+.am-metric-value {
+    color: #ffffff;
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+.am-metric-label {
+    color: #d6eafa;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.am-metric-note { color: rgba(214, 234, 250, 0.78); font-size: 11px; }
+.am-metric--priority { border-color: rgba(251, 191, 36, 0.55); }
+.am-metric--priority .am-metric-value { color: #fde68a; }
+.am-metric--approved { border-color: rgba(110, 231, 183, 0.45); }
+.am-metric--approved .am-metric-value { color: #a7f3d0; }
+.am-metric--rejected { border-color: rgba(253, 164, 175, 0.45); }
+.am-metric--rejected .am-metric-value { color: #fecdd3; }
+
 /* ─── Hero ─────────────────────────────────────────────────── */
 .am-hero {
     background: linear-gradient(135deg, #1e2035 0%, #1a1d2e 50%, #1e2035 100%);
@@ -562,6 +542,33 @@ const getUrgency = (submittedAt) => {
    ════════════════════════════════════════════════════════════ */
 
 /* Hero */
+html.theme-light .am-eyebrow,
+html.theme-light .am-metric-label { color: #64748b; }
+html.theme-light .am-work-summary {
+    background: linear-gradient(135deg, #dbeeff 0%, #eaf6ff 100%);
+    border-color: #b8dcf5;
+    box-shadow: 0 10px 24px rgba(31, 105, 168, 0.12);
+}
+html.theme-light .am-work-summary .text-white { color: #123f68; }
+html.theme-light .am-work-summary .text-slate-400 { color: #426581; }
+html.theme-light .am-eyebrow { color: #426581; }
+html.theme-light .am-action-link {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(15, 23, 42, 0.13);
+    color: #475569;
+}
+html.theme-light .am-action-link:hover {
+    background: #f1f5f9;
+    border-color: rgba(15, 23, 42, 0.2);
+    color: #0f172a;
+}
+html.theme-light .am-metric { border-color: rgba(15, 23, 42, 0.1); }
+html.theme-light .am-metric { background: rgba(255, 255, 255, 0.7); }
+html.theme-light .am-metric:hover { background: #ffffff; }
+html.theme-light .am-metric-value { color: #123f68; }
+html.theme-light .am-metric-label { color: #426581; }
+html.theme-light .am-metric-note { color: #64839c; }
+html.theme-light .am-metric--priority .am-metric-value { color: #b45309; }
 html.theme-light .am-hero {
     background: linear-gradient(135deg, #eef2ff 0%, #f0f4ff 50%, #eef2ff 100%);
     border-color: rgba(99, 102, 241, 0.25);
