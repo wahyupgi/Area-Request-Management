@@ -33,6 +33,15 @@ const handleReject = () => {
     });
 };
 
+const downloadMemo = () => {
+    const originalTitle = document.title;
+    document.title = `Memo-${props.memo.code || 'Dokumen'}`;
+    window.addEventListener('afterprint', () => {
+        document.title = originalTitle;
+    }, { once: true });
+    window.print();
+};
+
 const showSignerModal = ref(false);
 const showMetaModal = ref(false);
 
@@ -41,10 +50,13 @@ const existingSlot3 = existingCustom[2] || {};
 const existingSlot4 = existingCustom[3] || {};
 
 const signersForm = useForm({
+    slot3_enabled: !!(existingSlot3.name || existingSlot3.role),
+    slot4_enabled: !!(existingSlot4.name || existingSlot4.role),
     slot3_name: existingSlot3.name || '',
     slot3_role: existingSlot3.role || '',
     slot4_name: existingSlot4.name || '',
     slot4_role: existingSlot4.role || '',
+    footer_box_count: Number(props.memo.field_values?.footer_box_count || 2),
 });
 
 const existingMeta = props.memo.field_values?.meta || {};
@@ -52,6 +64,8 @@ const metaForm = useForm({
     code: props.memo.code || '',
     direktorat: existingMeta.direktorat || '',
     divisi: existingMeta.divisi || '',
+    kepada: existingMeta.kepada || props.memo.area_manager?.name || '',
+    kepada_jabatan: existingMeta.kepada_jabatan || 'Area Manager',
     perihal: existingMeta.perihal || '',
     lampiran: existingMeta.lampiran || '',
 });
@@ -64,14 +78,28 @@ const saveMeta = () => {
 };
 
 const saveSigners = () => {
-    signersForm.transform(() => ({
-        signers: [
-            { name: props.memo.creator?.name || '', role: 'Kepala Cabang', location: 'document' },
-            { name: props.memo.area_manager?.name || '', role: 'Area Manager', location: 'document' },
-            { name: signersForm.slot3_name, role: signersForm.slot3_role, location: 'document' },
-            { name: signersForm.slot4_name, role: signersForm.slot4_role, location: 'document' },
-        ],
-    })).post(route('approvals.updateSigners', props.memo.id), {
+    const signers = [
+        { name: props.memo.creator?.name || '', role: 'Kepala Cabang', location: 'document' },
+        { name: props.memo.area_manager?.name || '', role: 'Area Manager', location: 'document' },
+    ];
+
+    if (signersForm.slot3_enabled) {
+        signers.push({
+            name: signersForm.slot3_name,
+            role: signersForm.slot3_role,
+            location: 'document',
+        });
+    }
+
+    if (signersForm.slot4_enabled) {
+        signers.push({
+            name: signersForm.slot4_name,
+            role: signersForm.slot4_role,
+            location: 'document',
+        });
+    }
+
+    signersForm.transform(() => ({ signers, footer_box_count: signersForm.footer_box_count })).post(route('approvals.updateSigners', props.memo.id), {
         preserveScroll: true,
         onSuccess: () => {
             showSignerModal.value = false;
@@ -132,6 +160,14 @@ const formatDate = (dateString) => {
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         <span>Cetak Dokumen</span>
+                    </button>
+                    <button
+                        @click="downloadMemo"
+                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold border border-indigo-500/30 transition-colors shadow-sm print:hidden"
+                        title="Download memo sebagai PDF"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0l4-4m-4 4l-4-4M5 21h14"/></svg>
+                        <span>Download Memo</span>
                     </button>
                 </div>
             </div>
@@ -262,12 +298,12 @@ const formatDate = (dateString) => {
                                 <p class="text-white font-semibold">{{ memo.area_manager?.name || '-' }}</p>
                                 <p class="text-slate-400 text-[11px]">Area Manager</p>
                             </div>
-                            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+                            <div v-if="signersForm.slot3_enabled" class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
                                 <span class="text-[10px] uppercase font-bold text-indigo-400 block mb-0.5">Penandatangan 3:</span>
                                 <p class="text-white font-semibold">{{ signersForm.slot3_name || '(Belum diisi)' }}</p>
                                 <p class="text-slate-400 text-[11px]">{{ signersForm.slot3_role || '-' }}</p>
                             </div>
-                            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+                            <div v-if="signersForm.slot4_enabled" class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
                                 <span class="text-[10px] uppercase font-bold text-indigo-400 block mb-0.5">Penandatangan 4:</span>
                                 <p class="text-white font-semibold">{{ signersForm.slot4_name || '(Belum diisi)' }}</p>
                                 <p class="text-slate-400 text-[11px]">{{ signersForm.slot4_role || '-' }}</p>
@@ -437,53 +473,71 @@ const formatDate = (dateString) => {
                 </p>
 
                 <div class="space-y-4 mb-6">
+                    <div class="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900/50 p-3">
+                        <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Pengaturan slot tambahan</span>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-slate-900/50 border border-white/5">
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Jumlah kotak persegi di footer</label>
+                        <select v-model.number="signersForm.footer_box_count" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                            <option :value="1">1 kotak</option>
+                            <option :value="2">2 kotak</option>
+                        </select>
+                    </div>
+
                     <!-- Slot 3 -->
                     <div class="p-3.5 rounded-xl bg-slate-900/50 border border-white/5 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Penandatangan 3 (Disetujui Oleh)</span>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Nama Lengkap</label>
-                            <input
-                                v-model="signersForm.slot3_name"
-                                type="text"
-                                placeholder="Contoh: Nama Pejabat / Pimpinan"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                            />
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Jabatan</label>
-                            <input
-                                v-model="signersForm.slot3_role"
-                                type="text"
-                                placeholder="Contoh: General Manager / Operational Director"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                            />
+                        <label class="flex items-center gap-2 text-xs font-medium text-slate-200">
+                            <input v-model="signersForm.slot3_enabled" type="checkbox" class="h-4 w-4 rounded border-white/20 bg-slate-700 text-indigo-500 focus:ring-indigo-500" />
+                            Tampilkan Penandatangan 3
+                        </label>
+                        <div v-if="signersForm.slot3_enabled" class="space-y-3">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Nama Lengkap</label>
+                                <input
+                                    v-model="signersForm.slot3_name"
+                                    type="text"
+                                    placeholder="Contoh: Nama Pejabat / Pimpinan"
+                                    class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Jabatan</label>
+                                <input
+                                    v-model="signersForm.slot3_role"
+                                    type="text"
+                                    placeholder="Contoh: General Manager / Operational Director"
+                                    class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                />
+                            </div>
                         </div>
                     </div>
 
                     <!-- Slot 4 -->
                     <div class="p-3.5 rounded-xl bg-slate-900/50 border border-white/5 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Penandatangan 4 (Disetujui Oleh)</span>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Nama Lengkap</label>
-                            <input
-                                v-model="signersForm.slot4_name"
-                                type="text"
-                                placeholder="Contoh: Nama Pejabat / Pimpinan"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                            />
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Jabatan</label>
-                            <input
-                                v-model="signersForm.slot4_role"
-                                type="text"
-                                placeholder="Contoh: Direktur Utama"
-                                class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                            />
+                        <label class="flex items-center gap-2 text-xs font-medium text-slate-200">
+                            <input v-model="signersForm.slot4_enabled" type="checkbox" class="h-4 w-4 rounded border-white/20 bg-slate-700 text-indigo-500 focus:ring-indigo-500" />
+                            Tampilkan Penandatangan 4
+                        </label>
+                        <div v-if="signersForm.slot4_enabled" class="space-y-3">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Nama Lengkap</label>
+                                <input
+                                    v-model="signersForm.slot4_name"
+                                    type="text"
+                                    placeholder="Contoh: Nama Pejabat / Pimpinan"
+                                    class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Jabatan</label>
+                                <input
+                                    v-model="signersForm.slot4_role"
+                                    type="text"
+                                    placeholder="Contoh: Direktur Utama"
+                                    class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -534,6 +588,14 @@ const formatDate = (dateString) => {
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1.5">Perihal <span class="text-slate-500">(default: judul memo)</span></label>
                         <input v-model="metaForm.perihal" type="text" :placeholder="memo.title" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Tujuan / Kepada Yth</label>
+                        <input v-model="metaForm.kepada" type="text" placeholder="contoh: Bpk. / Ibu. Area Manager" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Jabatan / Divisi Tujuan</label>
+                        <input v-model="metaForm.kepada_jabatan" type="text" placeholder="contoh: Area Manager / Kepala Divisi" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-3.5 py-2 text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1.5">Lampiran <span class="text-slate-500">(default: jumlah file)</span></label>

@@ -41,9 +41,9 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $username = trim($this->string('username')->toString());
+        $login = trim($this->string('username')->toString());
         $credentials = [
-            'username' => $username,
+            filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username' => $login,
             'password' => $this->string('password')->toString(),
         ];
 

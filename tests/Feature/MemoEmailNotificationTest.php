@@ -31,7 +31,7 @@ class MemoEmailNotificationTest extends TestCase
         $response = $this->actingAs($kc)->post(route('memos.submit', $memo));
 
         $response->assertRedirect(route('memos.show', $memo));
-        Mail::assertSent(MemoSubmitted::class, function (MemoSubmitted $mail) use ($am, $memo) {
+        Mail::assertQueued(MemoSubmitted::class, function (MemoSubmitted $mail) use ($am, $memo) {
             return $mail->hasTo($am->email) && $mail->memo->is($memo);
         });
     }
@@ -48,7 +48,7 @@ class MemoEmailNotificationTest extends TestCase
         $response = $this->actingAs($am)->post(route('approvals.approve', $memo));
 
         $response->assertRedirect(route('approvals.pending'));
-        Mail::assertSent(MemoApproved::class, function (MemoApproved $mail) use ($kc, $memo) {
+        Mail::assertQueued(MemoApproved::class, function (MemoApproved $mail) use ($kc, $memo) {
             return $mail->hasTo($kc->email) && $mail->memo->is($memo);
         });
     }

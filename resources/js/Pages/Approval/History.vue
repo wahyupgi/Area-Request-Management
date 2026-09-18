@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import MemoDocument from '@/Components/MemoDocument.vue';
 import { Head } from '@inertiajs/vue3';
 
 const props = defineProps({ memo: Object });
@@ -9,10 +10,28 @@ const props = defineProps({ memo: Object });
     <Head :title="'Riwayat: ' + memo.title" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-white">Riwayat Approval</h1>
+            <div class="flex items-center gap-3">
+                <button
+                    onclick="history.back()"
+                    class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors"
+                    title="Kembali"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </button>
+                <h1 class="text-xl font-bold text-white">Riwayat Approval</h1>
+            </div>
         </template>
 
-        <div class="max-w-3xl space-y-6">
+        <div class="max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-8 w-full flex justify-center">
+                <div class="w-full max-w-[210mm]">
+                    <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-6">
             <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
                 <h2 class="text-lg font-bold text-white">{{ memo.title }}</h2>
                 <p class="text-sm text-slate-400 mt-1">{{ memo.code }} · {{ memo.template?.name }}</p>
@@ -39,6 +58,7 @@ const props = defineProps({ memo: Object });
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </AuthenticatedLayout>

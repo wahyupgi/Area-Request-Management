@@ -38,21 +38,22 @@ class Memo extends Model
     protected static function booted(): void
     {
         static::creating(function (Memo $memo) {
-            if (empty($memo->code)) {
-                $date = now()->format('Ymd');
-                $prefix = 'MEMO-' . $date . '-';
-                $lastCode = static::where('code', 'like', $prefix . '%')
-                    ->orderByDesc('code')
-                    ->value('code');
-                $sequence = $lastCode ? (int) substr($lastCode, -4) + 1 : 1;
-                $candidate = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            $year = now()->year;
+            $month = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][now()->month - 1];
+            $sequence = static::where('code', 'like', 'INT/RBO/BRL/PGI/%/' . $year)
+                ->pluck('code')
+                ->map(function (string $code) {
+                    return preg_match('#^INT/RBO/BRL/PGI/(\d+)/[IVXLCDM]+/\d{4}$#', $code, $matches)
+                        ? (int) $matches[1]
+                        : 0;
+                })
+                ->max() + 1;
 
-                while (static::where('code', $candidate)->exists()) {
-                    $sequence++;
-                    $candidate = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
-                }
+            $memo->code = 'INT/RBO/BRL/PGI/' . str_pad((string) $sequence, 3, '0', STR_PAD_LEFT) . '/' . $month . '/' . $year;
 
-                $memo->code = $candidate;
+            while (static::where('code', $memo->code)->exists()) {
+                $sequence++;
+                $memo->code = 'INT/RBO/BRL/PGI/' . str_pad((string) $sequence, 3, '0', STR_PAD_LEFT) . '/' . $month . '/' . $year;
             }
         });
     }

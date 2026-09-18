@@ -97,14 +97,14 @@ const submit = () => {
                 <form @submit.prevent="submit" class="space-y-5">
                     <div>
                         <label for="username" class="block text-sm font-medium text-slate-300 mb-2">Username</label>
-                        <input id="username" v-model="form.username" type="text" required autofocus autocomplete="username" class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="Masukkan username" />
+                        <input id="username" v-model="form.username" type="text" autofocus autocomplete="username" class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="Masukkan username" />
                         <p v-if="form.errors.username" class="text-red-400 text-sm mt-2">{{ form.errors.username }}</p>
                     </div>
 
                     <div>
                         <label for="password" class="block text-sm font-medium text-slate-300 mb-2">Password</label>
                         <div class="relative">
-                            <input id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'" required autocomplete="current-password" class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 pr-14 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="Masukkan password" />
+                            <input id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 pr-14 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="Masukkan password" />
                             <button type="button" :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'" class="absolute inset-y-0 right-0 flex items-center px-5 text-slate-400 hover:text-white transition-colors" @click="showPassword = !showPassword">
                                 <svg v-if="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M10.584 10.587a2 2 0 002.829 2.829M9.88 4.24A9.77 9.77 0 0112 4c5.523 0 9.75 4.478 9.75 10a10.01 10.01 0 01-2.036 5.995M6.228 6.228C4.238 7.838 2.75 10.38 2.25 14c.33 2.39 1.35 4.48 2.856 6.086" /></svg>
                                 <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 12s3.5-6 9.75-6 9.75 6 9.75 6-3.5 6-9.75 6-9.75-6-9.75-6z" /><circle cx="12" cy="12" r="2.5" stroke-width="2" /></svg>

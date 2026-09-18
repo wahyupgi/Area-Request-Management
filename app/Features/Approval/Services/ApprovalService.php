@@ -9,6 +9,7 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Mail\MemoApproved;
 use App\Mail\MemoRejected;
+use Illuminate\Mail\Mailable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -91,11 +92,11 @@ class ApprovalService
 
         $memo->loadMissing(['creator', 'areaManager', 'branch', 'template']);
         if ($memo->creator?->email) {
-            try {
-                Mail::to($memo->creator->email)->send(new MemoApproved($memo));
-            } catch (\Throwable $e) {
-                \Log::warning('Gagal mengirim email MemoApproved: ' . $e->getMessage());
-            }
+            $this->queueMail(
+                $memo->creator->email,
+                new MemoApproved($memo),
+                'MemoApproved'
+            );
         }
     }
 
@@ -123,11 +124,20 @@ class ApprovalService
 
         $memo->loadMissing(['creator', 'areaManager', 'branch', 'template']);
         if ($memo->creator?->email) {
-            try {
-                Mail::to($memo->creator->email)->send(new MemoRejected($memo, $notes));
-            } catch (\Throwable $e) {
-                \Log::warning('Gagal mengirim email MemoRejected: ' . $e->getMessage());
-            }
+            $this->queueMail(
+                $memo->creator->email,
+                new MemoRejected($memo, $notes),
+                'MemoRejected'
+            );
+        }
+    }
+
+    private function queueMail(string $email, Mailable $mailable, string $context): void
+    {
+        try {
+            Mail::to($email)->queue($mailable);
+        } catch (\Throwable $e) {
+            \Log::warning("Gagal mengantrekan email {$context}: " . $e->getMessage());
         }
     }
 }

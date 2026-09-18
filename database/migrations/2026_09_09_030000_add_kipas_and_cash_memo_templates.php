@@ -20,8 +20,16 @@ return new class extends Migration
                 ['key' => 'cabang', 'label' => 'Kode / Nama Cabang', 'type' => 'text', 'required' => true],
                 ['key' => 'permintaan', 'label' => 'Permintaan', 'type' => 'text', 'required' => true],
                 ['key' => 'tujuan', 'label' => 'Tujuan', 'type' => 'text', 'required' => true],
-                ['key' => 'area', 'label' => 'Area Penempatan', 'type' => 'text', 'required' => true],
-                ['key' => 'qty_kipas_ada', 'label' => 'Qty Kipas yang Ada', 'type' => 'number', 'required' => true],
+                [
+                    'key' => 'area_penempatan',
+                    'label' => 'Area Penempatan',
+                    'type' => 'table',
+                    'required' => true,
+                    'columns' => [
+                        ['key' => 'area', 'label' => 'Area', 'type' => 'text'],
+                        ['key' => 'qty', 'label' => 'Qty (yang ada)', 'type' => 'number'],
+                    ],
+                ],
                 ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'textarea', 'required' => true],
             ]),
         ]);

@@ -19,9 +19,9 @@ const roleLabel = computed(() => {
 });
 
 const portalSubtitle = computed(() => {
-    if (user.value?.role === 'ADMIN') return 'Portal Administrator';
-    if (user.value?.role === 'AM') return 'Portal Area Manager';
-    if (user.value?.role === 'KC') return 'Portal Kantor Cabang';
+    if (user.value?.role === 'ADMIN') return 'Administrator';
+    if (user.value?.role === 'AM') return 'Area Manager';
+    if (user.value?.role === 'KC') return 'Kantor Cabang';
     return 'PT Pusat Gadai Indonesia';
 });
 

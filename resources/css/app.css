@@ -91,6 +91,39 @@ html.theme-light textarea {
     color: #0f172a !important;
 }
 
+input[type="file"] {
+    display: block;
+    width: 100%;
+    background-color: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 0.9rem;
+    color: #e2e8f0;
+    padding: 0.7rem 0.85rem;
+    line-height: 1.4;
+}
+
+html.theme-light input[type="file"] {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+input[type="file"]::file-selector-button {
+    margin-right: 0.9rem;
+    border: 0;
+    border-radius: 0.75rem;
+    background: #1f69a8;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
+}
+
+html.theme-light input[type="file"]::file-selector-button {
+    background: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
 html.theme-light input:focus,
 html.theme-light select:focus,
 html.theme-light textarea:focus {
@@ -913,6 +946,77 @@ html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
 .card-hover-rise:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
+}
+
+/* Signature submit modal: dedicated style to avoid global theme overrides */
+.signature-submit-overlay {
+    background: rgba(15, 23, 42, 0.36);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.signature-submit-modal {
+    background: rgba(30, 41, 59, 0.96);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+}
+
+.signature-submit-subtext,
+.signature-submit-label {
+    color: #cbd5e1;
+}
+
+.signature-submit-close {
+    color: #94a3b8;
+}
+
+.signature-submit-close:hover {
+    color: #ffffff;
+}
+
+.signature-submit-preview-box {
+    background: rgba(15, 23, 42, 0.42);
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+.signature-submit-cancel {
+    background: #dc2626;
+    color: #ffffff;
+}
+
+.signature-submit-cancel:hover {
+    background: #b91c1c;
+    color: #ffffff;
+}
+
+html.theme-light .signature-submit-overlay {
+    background: rgba(15, 23, 42, 0.24);
+}
+
+html.theme-light .signature-submit-modal {
+    background: rgba(255, 255, 255, 0.98);
+    border-color: rgba(31, 105, 168, 0.28);
+}
+
+html.theme-light .signature-submit-modal h2 {
+    color: #0f172a !important;
+}
+
+html.theme-light .signature-submit-subtext,
+html.theme-light .signature-submit-label {
+    color: #334155;
+}
+
+html.theme-light .signature-submit-preview-box {
+    background: rgba(241, 245, 249, 0.95);
+    border-color: rgba(148, 163, 184, 0.35);
+}
+
+html.theme-light .signature-submit-close {
+    color: #64748b;
+}
+
+html.theme-light .signature-submit-close:hover {
+    color: #0f172a;
 }
 
 /* ==========================================================================

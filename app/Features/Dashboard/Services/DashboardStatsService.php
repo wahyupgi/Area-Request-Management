@@ -17,7 +17,7 @@ class DashboardStatsService
             'template:id,name',
             'branch:id,name',
             'areaManager:id,name',
-            'latestApproval:id,memo_id,action,signed_at',
+            'latestApproval:id,memo_approvals.memo_id,action,signed_at',
         ])
             ->where('created_by', $user->id)
             ->orderByDesc('updated_at')
@@ -54,7 +54,7 @@ class DashboardStatsService
             'template:id,name',
             'branch:id,name',
             'creator:id,name',
-            'latestApproval:id,memo_id,action,created_at',
+            'latestApproval:id,memo_approvals.memo_id,action,created_at',
         ])
             ->where('area_manager_id', $user->id)
             ->whereIn('status', [Memo::STATUS_APPROVED, Memo::STATUS_REJECTED])

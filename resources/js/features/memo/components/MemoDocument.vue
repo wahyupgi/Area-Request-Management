@@ -34,6 +34,8 @@ const introText = computed(() => props.memo.field_values?.pengantar || `Sehubung
 
 // Meta: editable header fields (KC/AM customizable)
 const memoMeta = computed(() => props.memo.field_values?.meta || {});
+const recipientName = computed(() => memoMeta.value.kepada || (isCashOut.value ? (cashOutValues.value.penerima || 'Bpk. / Ibu.') : (props.memo.area_manager?.name || 'Bpk. / Ibu.')));
+const recipientRole = computed(() => memoMeta.value.kepada_jabatan || (isCashOut.value ? (cashOutValues.value.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : 'Area Manager'));
 
 const configuredSignatures = computed(() => {
     const custom = props.memo.field_values?.custom_signers;
@@ -64,7 +66,7 @@ const handleImgError = (event) => {
 </script>
 
 <template>
-    <div id="printable-memo" class="memo-document bg-white text-black pt-[3.4cm] pl-[2.54cm] pr-[2cm] pb-[2cm] print:p-0 rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] mx-auto print:max-w-full print:min-h-0 text-xs leading-normal border border-slate-200 print:border-none transition-all">
+    <div id="printable-memo" class="memo-document bg-white text-black pt-[3cm] pl-[2.54cm] pr-[2cm] pb-[2cm] print:p-0 rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] mx-auto print:max-w-full print:min-h-0 text-xs leading-normal border border-slate-200 print:border-none transition-all">
         <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
                 <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-14 h-14 object-contain" />
@@ -75,27 +77,27 @@ const handleImgError = (event) => {
         </div>
 
         <div class="text-center mb-5">
-            <h1 class="text-lg font-extrabold uppercase underline tracking-widest mb-0.5">INTERNAL MEMO</h1>
-            <p class="text-[11px] font-semibold tracking-wider text-gray-800">{{ memo.code }}</p>
+            <h1 class="font-extrabold uppercase underline tracking-widest mb-0.5" style="font-size: 21px !important;">INTERNAL MEMO</h1>
+            <p class="text-[11px] tracking-wider text-gray-800">{{ memo.code }}</p>
         </div>
 
-        <div class="text-right mb-4 text-xs font-semibold text-gray-900">
+        <div class="text-right mb-4 text-xs text-gray-900">
             {{ formatDate(memo.submitted_at || memo.created_at) }}
         </div>
 
         <div class="grid grid-cols-[120px_12px_1fr] text-xs gap-y-1 mb-3">
-            <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div>{{ memoMeta.direktorat || (isCashOut ? (cashOutValues.direktorat || 'Regional Branch Office') : 'Operasional') }}</div>
-            <div class="font-bold text-gray-900">Divisi</div><div>:</div><div>{{ memoMeta.divisi || (isCashOut ? (cashOutValues.divisi || 'Branch Leader') : (memo.template?.category || 'Support')) }}</div>
-            <div class="font-bold text-gray-900">Perihal</div><div>:</div><div class="font-bold text-black">{{ memoMeta.perihal || memo.title }}</div>
-            <div class="font-bold text-gray-900">Lampiran</div><div>:</div><div>{{ memoMeta.lampiran || (isCashOut ? (cashOutValues.lampiran || '-') : (memo.attachments?.length ? memo.attachments.length + ' Berkas' : '-')) }}</div>
+            <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div class="font-bold text-gray-900">{{ memoMeta.direktorat || (isCashOut ? (cashOutValues.direktorat || 'Regional Branch Office') : 'Operasional') }}</div>
+            <div class="text-gray-900">Divisi</div><div>:</div><div>{{ memoMeta.divisi || (isCashOut ? (cashOutValues.divisi || 'Branch Leader') : (memo.template?.category || 'Support')) }}</div>
+            <div class="text-gray-900">Perihal</div><div>:</div><div>{{ memoMeta.perihal || memo.title }}</div>
+            <div class="text-gray-900">Lampiran</div><div>:</div><div>{{ memoMeta.lampiran || (isCashOut ? (cashOutValues.lampiran || '-') : (memo.attachments?.length ? memo.attachments.length + ' Berkas' : '-')) }}</div>
         </div>
 
         <hr class="border-t-2 border-black my-3" />
 
         <div class="text-xs mb-4 leading-normal">
             <p class="mb-0.5">Kepada Yth :</p>
-            <p class="font-bold text-xs">{{ isCashOut ? (cashOutValues.penerima || 'Bpk. / Ibu.') : (memo.area_manager?.name || 'Bpk. / Ibu.') }}</p>
-            <p class="font-medium">{{ isCashOut ? (cashOutValues.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : 'Area Manager' }}</p>
+            <p class="text-xs">{{ recipientName }}</p>
+            <p class="font-medium">{{ recipientRole }}</p>
             <p class="font-medium">Di tempat,</p>
         </div>
 

@@ -24,10 +24,12 @@ const form = useForm({
         pengantar: props.memo.field_values?.pengantar || `Sehubungan dengan pengajuan ${props.memo.template?.name || props.memo.title || 'memo ini'}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`,
         items: initialItems,
         meta: {
-            direktorat: props.memo.field_values?.meta?.direktorat || '',
-            divisi: props.memo.field_values?.meta?.divisi || '',
+            direktorat: props.memo.field_values?.meta?.direktorat || 'Regional Branch Office',
+            divisi: props.memo.field_values?.meta?.divisi || 'Branch Leader',
             perihal: props.memo.field_values?.meta?.perihal || '',
             lampiran: props.memo.field_values?.meta?.lampiran || '',
+            kepada: props.memo.field_values?.meta?.kepada || props.memo.area_manager?.name || '',
+            kepada_jabatan: props.memo.field_values?.meta?.kepada_jabatan || 'Area Manager',
         },
     },
 });
@@ -176,7 +178,7 @@ const deleteMemo = async () => {
                         <!-- Nomor Memo -->
                         <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Memo</label>
-                            <input v-model="form.code" type="text" placeholder="Masukkan nomor memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <input :value="form.code" type="text" readonly class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-slate-300 text-sm cursor-not-allowed" />
                             <p v-if="form.errors.code" class="text-red-400 text-sm mt-2">{{ form.errors.code }}</p>
                         </div>
 
@@ -208,6 +210,14 @@ const deleteMemo = async () => {
                                 <div>
                                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Perihal <span class="text-slate-600">(opsional, jika beda dari judul)</span></label>
                                     <input v-model="form.field_values.meta.perihal" type="text" :placeholder="form.title || 'Mengikuti judul memo'" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Tujuan / Kepada Yth</label>
+                                    <input v-model="form.field_values.meta.kepada" type="text" placeholder="contoh: Bpk. / Ibu. Area Manager" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Jabatan / Divisi Tujuan</label>
+                                    <input v-model="form.field_values.meta.kepada_jabatan" type="text" placeholder="contoh: Area Manager / Kepala Divisi" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Lampiran <span class="text-slate-600">(keterangan teks)</span></label>
@@ -294,36 +304,38 @@ const deleteMemo = async () => {
             </div>
 
             <!-- Digital signature confirmation before submission -->
-            <div v-if="showSignatureDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4">
-                <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-slate-800 border border-emerald-500/30 rounded-2xl p-6 shadow-2xl">
+            <Teleport to="body">
+            <div v-if="showSignatureDialog" class="signature-submit-overlay fixed inset-0 z-[999] flex items-start justify-center p-4 pt-20 pb-6 sm:items-center sm:pt-4">
+                <div class="signature-submit-modal w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl p-6 shadow-2xl">
                 <div class="flex items-start justify-between gap-4 mb-4">
                     <div>
                         <h2 class="text-lg font-semibold text-white">Tanda Tangan Digital KC</h2>
-                        <p class="text-sm text-slate-400 mt-1">Masukkan tanda tangan terlebih dahulu sebelum memo dikirim ke Area Manager.</p>
+                        <p class="signature-submit-subtext mt-1 text-sm">Masukkan tanda tangan terlebih dahulu sebelum memo dikirim ke Area Manager.</p>
                     </div>
-                    <button type="button" @click="showSignatureDialog = false" class="text-slate-400 hover:text-white text-xl leading-none" aria-label="Tutup">&times;</button>
+                    <button type="button" @click="showSignatureDialog = false" class="signature-submit-close text-xl leading-none" aria-label="Tutup">&times;</button>
                 </div>
 
-                <div v-if="signature && !signatureFile" class="flex items-center gap-4 mb-4 p-3 rounded-xl bg-slate-900/40 border border-white/5">
+                <div v-if="signature && !signatureFile" class="signature-submit-preview-box flex items-center gap-4 mb-4 p-3 rounded-xl border">
                     <img :src="'/storage/' + signature.signature_image" alt="Tanda tangan digital KC" class="h-14 w-32 object-contain bg-white/10 rounded-lg p-1" />
                     <div>
-                        <p class="text-sm text-emerald-400 font-medium">Tanda tangan terdaftar</p>
-                        <p class="text-xs text-slate-400 mt-1">Tanda tangan ini akan digunakan untuk memo.</p>
+                        <p class="text-sm text-blue-400 font-medium">Tanda tangan terdaftar</p>
+                        <p class="signature-submit-subtext mt-1 text-xs">Tanda tangan ini akan digunakan untuk memo.</p>
                     </div>
                 </div>
 
-                <label class="block text-sm font-medium text-slate-300 mb-2">{{ signature ? 'Ganti tanda tangan (opsional)' : 'Upload tanda tangan' }}</label>
-                <input type="file" @change="selectSignature" accept="image/png,image/jpeg" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer" />
-                <p class="text-xs text-slate-500 mt-1">Format PNG/JPG, maksimal 2MB.</p>
+                <label class="signature-submit-label mb-2 block text-sm font-medium">{{ signature ? 'Ganti tanda tangan (opsional)' : 'Upload tanda tangan' }}</label>
+                <input type="file" @change="selectSignature" accept="image/png,image/jpeg" class="text-sm" />
+                <p class="signature-submit-subtext mt-1 text-xs">Format PNG/JPG, maksimal 2MB.</p>
                 <img v-if="signaturePreview" :src="signaturePreview" alt="Preview tanda tangan digital KC" class="h-16 mt-4 object-contain bg-white/10 rounded-lg p-1" />
                 <p v-if="$page.props.errors?.signature" class="text-red-400 text-sm mt-2">{{ $page.props.errors.signature }}</p>
 
                 <div class="flex gap-3 mt-5">
-                    <button type="button" @click="showSignatureDialog = false" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-xl transition-colors">Batal</button>
-                    <button type="button" @click="confirmSubmit" :disabled="submittingMemo || (!signature && !signatureFile)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors">{{ submittingMemo ? 'Mengirim...' : 'Tanda Tangani & Kirim ke AM' }}</button>
+                    <button type="button" @click="showSignatureDialog = false" class="signature-submit-cancel px-5 py-2.5 text-sm font-medium rounded-xl transition-colors">Batal</button>
+                    <button type="button" @click="confirmSubmit" :disabled="submittingMemo || (!signature && !signatureFile)" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors">{{ submittingMemo ? 'Mengirim...' : 'Tanda Tangani & Kirim ke AM' }}</button>
                 </div>
                 </div>
             </div>
+            </Teleport>
 
             <!-- Delete -->
             <div v-if="memo.status === 'draft'" class="flex justify-end">

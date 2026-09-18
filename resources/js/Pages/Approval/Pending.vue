@@ -60,13 +60,6 @@ const formatDate = (dateStr) => {
                 ]"
             >
                 Masuk
-                <span
-                    v-if="memos.length > 0"
-                    :class="[
-                        activeTab === 'masuk' ? 'bg-amber-400 text-slate-900' : 'bg-slate-600 text-slate-300',
-                        'inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-colors'
-                    ]"
-                >{{ memos.length }}</span>
             </button>
             <button
                 @click="activeTab = 'approved'"
@@ -76,13 +69,6 @@ const formatDate = (dateStr) => {
                 ]"
             >
                 Disetujui
-                <span
-                    v-if="approvedMemos.length > 0"
-                    :class="[
-                        activeTab === 'approved' ? 'bg-emerald-400 text-slate-900' : 'bg-slate-600 text-slate-300',
-                        'inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-colors'
-                    ]"
-                >{{ approvedMemos.length }}</span>
             </button>
             <button
                 @click="activeTab = 'rejected'"
@@ -92,13 +78,6 @@ const formatDate = (dateStr) => {
                 ]"
             >
                 Ditolak / Revisi
-                <span
-                    v-if="rejectedMemos.length > 0"
-                    :class="[
-                        activeTab === 'rejected' ? 'bg-rose-400 text-white' : 'bg-slate-600 text-slate-300',
-                        'inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-colors'
-                    ]"
-                >{{ rejectedMemos.length }}</span>
             </button>
             <button
                 @click="activeTab = 'riwayat'"
@@ -108,13 +87,6 @@ const formatDate = (dateStr) => {
                 ]"
             >
                 Semua Riwayat
-                <span
-                    v-if="history.length > 0"
-                    :class="[
-                        activeTab === 'riwayat' ? 'bg-indigo-400 text-white' : 'bg-slate-600 text-slate-300',
-                        'inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-colors'
-                    ]"
-                >{{ history.length }}</span>
             </button>
         </div>
 

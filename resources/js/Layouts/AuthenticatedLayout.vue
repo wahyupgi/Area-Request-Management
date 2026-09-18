@@ -37,9 +37,9 @@ const roleLabel = computed(() => {
 });
 
 const portalSubtitle = computed(() => {
-    if (user.value?.role === 'ADMIN') return 'Portal Administrator';
-    if (user.value?.role === 'AM') return 'Portal Area Manager';
-    if (user.value?.role === 'KC') return 'Portal Kantor Cabang';
+    if (user.value?.role === 'ADMIN') return 'Administrator';
+    if (user.value?.role === 'AM') return 'Area Manager';
+    if (user.value?.role === 'KC') return 'Kantor Cabang';
     return 'PT Pusat Gadai Indonesia';
 });
 
@@ -266,7 +266,7 @@ const isActive = (routeName) => {
             </header>
 
             <!-- Main Content -->
-            <main :class="['p-6 print:p-0 transition-opacity duration-150', isNavigating ? 'opacity-40 pointer-events-none' : 'opacity-100']">
+            <main class="p-6 print:p-0">
                 <slot />
             </main>
         </div>

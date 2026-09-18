@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Dewi Lestari',
             'username' => 'dewi',
             'email' => 'kc.klaten@arm.test',
-            'password' => 'dewi123',
+            'password' => bcrypt('dewi123'),
             'role' => 'KC',
         ]);
         $branch2 = Branch::create([
@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Budi',
             'username' => 'budi',
             'email' => 'kc.sragen@arm.test',
-            'password' => 'budi123',
+            'password' => bcrypt('budi123'),
             'role' => 'KC',
         ]);
         $branch3 = Branch::create([
@@ -122,8 +122,16 @@ class DatabaseSeeder extends Seeder
                 ['key' => 'cabang', 'label' => 'Kode / Nama Cabang', 'type' => 'text', 'required' => true],
                 ['key' => 'permintaan', 'label' => 'Permintaan', 'type' => 'text', 'required' => true],
                 ['key' => 'tujuan', 'label' => 'Tujuan', 'type' => 'text', 'required' => true],
-                ['key' => 'area', 'label' => 'Area Penempatan', 'type' => 'text', 'required' => true],
-                ['key' => 'qty_kipas_ada', 'label' => 'Qty Kipas yang Ada', 'type' => 'number', 'required' => true],
+                [
+                    'key' => 'area_penempatan',
+                    'label' => 'Area Penempatan',
+                    'type' => 'table',
+                    'required' => true,
+                    'columns' => [
+                        ['key' => 'area', 'label' => 'Area', 'type' => 'text'],
+                        ['key' => 'qty', 'label' => 'Qty (yang ada)', 'type' => 'number'],
+                    ],
+                ],
                 ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'textarea', 'required' => true],
             ],
             'is_active' => true,

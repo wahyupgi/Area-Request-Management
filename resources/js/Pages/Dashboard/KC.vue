@@ -392,7 +392,7 @@ const filteredMemos = computed(() => {
             <!-- Footer -->
             <div class="pt-4 mt-2 border-t border-white/5 flex items-center justify-between text-xs text-slate-500">
                 <span>Menampilkan {{ filteredMemos.length }} dari {{ memos.length }} total memo</span>
-                <span class="hidden sm:inline">Portal Resmi PT Pusat Gadai Indonesia</span>
+                <span class="hidden sm:inline">PT Pusat Gadai Indonesia</span>
             </div>
         </div>
     </AuthenticatedLayout>

@@ -125,6 +125,7 @@ class ApprovalController extends Controller
 
         $fieldValues = $memo->field_values ?? [];
         $fieldValues['custom_signers'] = $validated['signers'] ?? [];
+        $fieldValues['footer_box_count'] = $validated['footer_box_count'] ?? 2;
         $memo->update(['field_values' => $fieldValues]);
 
         return back()->with('success', 'Nama penandatangan berhasil diperbarui.');
@@ -140,7 +141,8 @@ class ApprovalController extends Controller
         if ($user->isKC() && $memo->created_by !== $user->id) abort(403);
         if ($user->isAM() && $memo->area_manager_id !== $user->id) abort(403);
 
-        $memo->load(['template', 'branch', 'creator', 'areaManager', 'approvals.approver', 'approvals.signature']);
+        $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'areaManager.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
+        $this->service->loadSignaturePeople($memo);
 
         return Inertia::render('Approval/History', [
             'memo' => $memo,

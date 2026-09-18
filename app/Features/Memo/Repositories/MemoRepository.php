@@ -43,7 +43,7 @@ class MemoRepository
             'template:id,name',
             'branch:id,name',
             'areaManager:id,name',
-            'latestApproval:id,memo_id,action,signed_at',
+            'latestApproval:id,memo_approvals.memo_id,action,signed_at',
             'attachments:id,memo_id',
         ])->forUser($user);
     }

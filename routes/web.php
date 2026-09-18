@@ -3,16 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes — Entry Point
-|--------------------------------------------------------------------------
-|
-| Route definitions are organized per feature in routes/features/.
-| Tambahkan fitur baru dengan membuat file baru di sana dan require-nya di sini.
-|
-*/
-
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');

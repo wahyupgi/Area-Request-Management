@@ -20,5 +20,8 @@ createInertiaApp({
             .use(ZiggyVue)
             .mount(el);
     },
-    progress: false,
+    progress: {
+        color: '#38bdf8', // Tailwind sky-400 to match the app theme
+        showSpinner: true,
+    },
 });

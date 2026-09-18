@@ -8,6 +8,7 @@ use App\Models\MemoAttachment;
 use App\Models\Notification;
 use App\Models\User;
 use App\Mail\MemoSubmitted;
+use Illuminate\Mail\Mailable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -32,7 +33,7 @@ class MemoService
             ->first();
 
         $memo = Memo::create([
-            'code' => $request->code,
+            'code' => null,
             'template_id' => $request->template_id,
             'title' => $request->title,
             'field_values' => $request->field_values ?? [],
@@ -157,11 +158,20 @@ class MemoService
 
         $memo->loadMissing(['creator', 'areaManager', 'branch', 'template']);
         if ($memo->areaManager?->email) {
-            try {
-                Mail::to($memo->areaManager->email)->send(new MemoSubmitted($memo));
-            } catch (\Throwable $e) {
-                \Log::warning('Gagal mengirim email MemoSubmitted: ' . $e->getMessage());
-            }
+            $this->queueMail(
+                $memo->areaManager->email,
+                new MemoSubmitted($memo),
+                'MemoSubmitted'
+            );
+        }
+    }
+
+    private function queueMail(string $email, Mailable $mailable, string $context): void
+    {
+        try {
+            Mail::to($email)->queue($mailable);
+        } catch (\Throwable $e) {
+            \Log::warning("Gagal mengantrekan email {$context}: " . $e->getMessage());
         }
     }
 

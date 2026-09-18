@@ -17,6 +17,8 @@ class UpdateMemoMetaRequest extends FormRequest
             'code' => ['nullable', 'string', 'max:255'],
             'direktorat' => ['nullable', 'string', 'max:255'],
             'divisi' => ['nullable', 'string', 'max:255'],
+            'kepada' => ['nullable', 'string', 'max:255'],
+            'kepada_jabatan' => ['nullable', 'string', 'max:255'],
             'perihal' => ['nullable', 'string', 'max:500'],
             'lampiran' => ['nullable', 'string', 'max:255'],
         ];

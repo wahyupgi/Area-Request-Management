@@ -46,6 +46,8 @@ class MemoController extends Controller
      */
     public function create()
     {
+        MemoTemplate::ensureRequiredDefaults();
+
         $templates = \Illuminate\Support\Facades\Cache::remember('active_memo_templates', now()->addHour(), function () {
             return MemoTemplate::where('is_active', true)->get();
         });
@@ -104,6 +106,8 @@ class MemoController extends Controller
                 ->with('error', 'Memo tidak bisa diedit.');
         }
 
+        MemoTemplate::ensureRequiredDefaults();
+
         $memo->load(['template', 'attachments', 'approvals.approver', 'creator.digitalSignature']);
         $templates = \Illuminate\Support\Facades\Cache::remember('active_memo_templates', now()->addHour(), function () {
             return MemoTemplate::where('is_active', true)->get();
@@ -133,7 +137,7 @@ class MemoController extends Controller
         }
 
         $memo->update([
-            'code' => $request->code ?? $memo->code,
+            'code' => $memo->code,
             'title' => $request->title,
             'field_values' => $request->field_values ?? [],
             'status' => 'draft',
