@@ -2,6 +2,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref, watch, computed } from 'vue';
+import { 
+    PlusOutlined, 
+    DeleteOutlined, 
+    SaveOutlined, 
+    SendOutlined
+} from '@ant-design/icons-vue';
 
 const props = defineProps({
     templates: Array,
@@ -16,7 +22,7 @@ const generateMemoNumber = () => {
 
 const form = useForm({
     code: generateMemoNumber(),
-    template_id: '',
+    template_id: undefined,
     title: '',
     field_values: {
         pengantar: '',
@@ -32,17 +38,25 @@ const attachment = ref(null);
 const groupedTemplates = computed(() => {
     const groups = {};
     (props.templates || []).forEach(t => {
-        let cat = t.category || 'Lainnya';
+        const category = String(t.category || '').trim();
+        const templateName = String(t.name || '').trim();
+        const normalizedCategory = category.toLowerCase();
+        let cat = category || 'Lainnya';
 
-        if (cat === 'Ma-Link') {
-            const name = (t.name || '').toUpperCase();
-            cat = name.startsWith('FIN') ? 'Ma-Link - FIN' : 'Ma-Link - HRD';
+        if (normalizedCategory === 'ma-link' || /^(fin|hrd)\s*-/i.test(templateName)) {
+            cat = /^fin\s*-/i.test(templateName) ? 'Ma-Link - FIN' : 'Ma-Link - HRD';
         }
 
         if (!groups[cat]) groups[cat] = [];
         groups[cat].push(t);
     });
-    return groups;
+    return Object.keys(groups).map(key => ({
+        label: key === 'GA' ? 'Divisi GA' : key,
+        options: groups[key].map(t => ({
+            value: t.id,
+            label: `[${/^(fin|hrd)\s*-/i.test(String(t.name || '').trim()) ? (String(t.name).trim().toUpperCase().startsWith('FIN') ? 'FIN' : 'HRD') : String(t.category || '').trim()}] ${String(t.name || '').replace(/^(FIN|HRD)\s*-\s*/i, '')}`
+        }))
+    }));
 });
 
 watch(() => form.template_id, (val) => {
@@ -114,137 +128,161 @@ const submitAndSign = () => {
     <Head title="Buat Memo Baru" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-white">Buat Memo Baru</h1>
+            <h1 class="text-xl font-bold text-gray-800 mb-0">Buat Memo Baru</h1>
         </template>
 
-        <div class="w-full max-w-none">
-            <form @submit.prevent="submit" class="space-y-6">
-                <!-- Template Selection -->
-                <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 lg:col-span-2">
-                    <h2 class="text-lg font-semibold text-white mb-2">Pilih Template Memo</h2>
-                    <p class="text-xs text-slate-400 mb-4">Pilih jenis memo sesuai kebutuhan cabang pada Divisi GA atau Ma-Link (FIN dan HRD).</p>
-                    <select v-model="form.template_id" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
-                        <option value="" disabled>-- Pilih Kategori & Template Memo --</option>
-                        <optgroup v-for="(items, category) in groupedTemplates" :key="category" :label="category === 'GA' ? 'Divisi GA' : category">
-                            <option v-for="t in items" :key="t.id" :value="t.id">
-                                [{{ t.category === 'Ma-Link' ? (t.name.startsWith('FIN') ? 'FIN' : 'HRD') : t.category }}] {{ t.name.replace(/^(FIN|HRD)\s*-\s*/, '') }}
-                            </option>
-                        </optgroup>
-                    </select>
-                    <p v-if="form.errors.template_id" class="text-red-400 text-sm mt-2">{{ form.errors.template_id }}</p>
-                </div>
+        <a-form layout="vertical" @finish="submit" class="memo-create-page">
+            <!-- Template Selection -->
+            <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
+                <h2 class="text-lg font-semibold mb-2">Pilih Template Memo</h2>
+                <p class="text-gray-500 text-sm mb-4">Pilih jenis memo sesuai kebutuhan cabang pada Divisi GA atau Ma-Link (FIN dan HRD).</p>
+                <a-form-item 
+                    :validateStatus="form.errors.template_id ? 'error' : ''" 
+                    :help="form.errors.template_id"
+                >
+                    <a-select
+                        v-model:value="form.template_id"
+                        placeholder="-- Pilih Kategori & Template Memo --"
+                        :options="groupedTemplates"
+                        :listHeight="420"
+                        popup-class-name="memo-template-dropdown"
+                        style="width: 100%"
+                        size="large"
+                    />
+                </a-form-item>
+            </a-card>
 
-                <div v-if="selectedTemplate" class="grid grid-cols-1 lg:grid-cols-[minmax(260px,0.7fr)_minmax(0,1.3fr)] gap-4 items-start">
-                    <div class="flex flex-col gap-4 self-start">
+            <a-row :gutter="24" v-if="selectedTemplate">
+                <a-col :xs="24" :lg="10" class="mb-6">
+                    <div class="flex flex-col gap-6">
                         <!-- Nomor Memo -->
-                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Memo</label>
-                            <input v-model="form.code" type="text" placeholder="Masukkan nomor memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <p v-if="form.errors.code" class="text-red-400 text-sm mt-2">{{ form.errors.code }}</p>
-                        </div>
+                        <a-card :bordered="false" class="rounded-lg shadow-sm">
+                            <a-form-item 
+                                label="Nomor Memo" 
+                                :validateStatus="form.errors.code ? 'error' : ''" 
+                                :help="form.errors.code"
+                                class="mb-0"
+                            >
+                                <a-input v-model:value="form.code" placeholder="Masukkan nomor memo..." size="large" />
+                            </a-form-item>
+                        </a-card>
 
                         <!-- Title -->
-                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Judul Memo</label>
-                            <input v-model="form.title" type="text" placeholder="Masukkan judul memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <p v-if="form.errors.title" class="text-red-400 text-sm mt-2">{{ form.errors.title }}</p>
-                        </div>
+                        <a-card :bordered="false" class="rounded-lg shadow-sm">
+                            <a-form-item 
+                                label="Judul Memo" 
+                                :validateStatus="form.errors.title ? 'error' : ''" 
+                                :help="form.errors.title"
+                                class="mb-0"
+                            >
+                                <a-input v-model:value="form.title" placeholder="Masukkan judul memo..." size="large" />
+                            </a-form-item>
+                        </a-card>
 
-                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Isi Memo</label>
-                            <textarea v-model="form.field_values.pengantar" rows="5" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-y"></textarea>
-                            <p class="text-xs text-slate-500 mt-2">Teks ini akan tampil pada bagian “Sehubungan dengan” dan dapat diubah sesuai kebutuhan pengajuan.</p>
-                        </div>
+                        <!-- Isi Memo -->
+                        <a-card :bordered="false" class="rounded-lg shadow-sm">
+                            <a-form-item 
+                                label="Isi Memo" 
+                                class="mb-0"
+                                extra="Teks ini akan tampil pada bagian “Sehubungan dengan” dan dapat diubah sesuai kebutuhan pengajuan."
+                            >
+                                <a-textarea v-model:value="form.field_values.pengantar" :rows="5" />
+                            </a-form-item>
+                        </a-card>
 
-                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-                            <h2 class="text-sm font-semibold text-white mb-1">Informasi Dokumen</h2>
-                            <p class="text-xs text-slate-400 mb-4">Detail header yang tampil di dokumen cetak.</p>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Direktorat</label>
-                                    <input v-model="form.field_values.meta.direktorat" type="text" placeholder="contoh: Operasional" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Divisi</label>
-                                    <input v-model="form.field_values.meta.divisi" type="text" :placeholder="selectedTemplate?.category || 'contoh: GA / Ma-Link'" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Perihal <span class="text-slate-600">(opsional, jika beda dari judul)</span></label>
-                                    <input v-model="form.field_values.meta.perihal" type="text" :placeholder="form.title || 'Mengikuti judul memo'" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Lampiran <span class="text-slate-600">(keterangan teks)</span></label>
-                                    <input v-model="form.field_values.meta.lampiran" type="text" placeholder="contoh: 1 Lembar, 3 Berkas" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Informasi Dokumen -->
+                        <a-card :bordered="false" class="rounded-lg shadow-sm">
+                            <h2 class="text-sm font-semibold mb-1">Informasi Dokumen</h2>
+                            <p class="text-xs text-gray-500 mb-4">Detail header yang tampil di dokumen cetak.</p>
+                            
+                            <a-form-item label="Direktorat" class="mb-3">
+                                <a-input v-model:value="form.field_values.meta.direktorat" placeholder="contoh: Operasional" />
+                            </a-form-item>
+                            <a-form-item label="Divisi" class="mb-3">
+                                <a-input v-model:value="form.field_values.meta.divisi" :placeholder="selectedTemplate?.category || 'contoh: GA / Ma-Link'" />
+                            </a-form-item>
+                            <a-form-item label="Perihal" extra="opsional, jika beda dari judul" class="mb-3">
+                                <a-input v-model:value="form.field_values.meta.perihal" :placeholder="form.title || 'Mengikuti judul memo'" />
+                            </a-form-item>
+                            <a-form-item label="Lampiran" extra="keterangan teks" class="mb-0">
+                                <a-input v-model:value="form.field_values.meta.lampiran" placeholder="contoh: 1 Lembar, 3 Berkas" />
+                            </a-form-item>
+                        </a-card>
 
-                        <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-                            <h2 class="text-lg font-semibold text-white mb-4">Lampiran</h2>
-                            <input type="file" @change="selectAttachment" class="max-w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer" />
-                            <p class="text-xs text-slate-500 mt-2">Maksimal 10MB. Lampiran akan tersimpan bersama draft memo.</p>
-                        </div>
-
+                        <!-- Lampiran -->
+                        <a-card :bordered="false" class="rounded-lg shadow-sm">
+                            <h2 class="text-sm font-semibold mb-2">Lampiran Dokumen</h2>
+                            <input type="file" @change="selectAttachment" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                            <p class="text-xs text-gray-400 mt-2">Maksimal 10MB. Lampiran akan tersimpan bersama draft memo.</p>
+                        </a-card>
                     </div>
+                </a-col>
 
+                <a-col :xs="24" :lg="14">
                     <!-- Dynamic Fields -->
-                    <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 min-w-0 self-start">
-                        <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-white/10 p-4 space-y-4 mb-4 last:mb-0">
-                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                            <h3 class="text-sm font-semibold text-white">Item {{ itemIndex + 1 }}</h3>
-                            <button v-if="form.field_values.items.length > 1" type="button" class="text-sm text-red-400 hover:text-red-300" @click="removeItem(itemIndex)">Hapus item</button>
-                        </div>
-                        <div v-for="field in selectedTemplate.field_schema" :key="field.key">
-                            <label class="block text-sm font-medium text-slate-300 mb-2">
-                                {{ field.label }}
-                                <span v-if="field.required" class="text-red-400">*</span>
-                            </label>
-                            <input v-if="field.type === 'text'" v-model="item[field.key]" type="text" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <input v-else-if="field.type === 'number'" v-model="item[field.key]" type="number" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <input v-else-if="field.type === 'date'" v-model="item[field.key]" type="date" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                            <textarea v-else-if="field.type === 'textarea'" v-model="item[field.key]" rows="4" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors resize-none"></textarea>
-                            <!-- Table field: multiple sub-rows (e.g. area + qty) -->
-                            <div v-else-if="field.type === 'table'" class="space-y-2">
-                                <div v-for="(subRow, subIndex) in ensureTableRows(item, field.key, field.columns)" :key="'sub-' + subIndex" class="flex items-start gap-2 bg-slate-700/30 border border-white/10 rounded-xl p-3">
-                                    <div class="flex-1 grid gap-2" :class="field.columns.length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
-                                        <div v-for="col in field.columns" :key="col.key">
-                                            <label class="block text-xs text-slate-400 mb-1">{{ col.label }}</label>
-                                            <input v-model="subRow[col.key]" :type="col.type === 'number' ? 'number' : 'text'" class="w-full bg-slate-800/60 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                        </div>
-                                    </div>
-                                    <button v-if="item[field.key].length > 1" type="button" @click="removeTableRow(item, field.key, subIndex)" class="mt-5 text-red-400 hover:text-red-300 text-lg leading-none flex-shrink-0">&times;</button>
-                                </div>
-                                <button type="button" @click="addTableRow(item, field.key, field.columns)" class="w-full px-3 py-2 border border-dashed border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-xs font-medium rounded-xl transition-colors">+ Tambah Baris</button>
+                    <a-card :bordered="false" class="rounded-lg shadow-sm">
+                        <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-gray-200 rounded-lg p-5 mb-4 relative">
+                            <div class="flex justify-between items-center border-b pb-2 mb-4">
+                                <h3 class="font-semibold">Item {{ itemIndex + 1 }}</h3>
+                                <a-button v-if="form.field_values.items.length > 1" type="text" danger size="small" @click="removeItem(itemIndex)">
+                                    <template #icon><delete-outlined /></template>
+                                    Hapus
+                                </a-button>
                             </div>
-                            <p v-if="form.errors['field_values.items.' + itemIndex + '.' + field.key]" class="text-red-400 text-sm mt-1">{{ form.errors['field_values.items.' + itemIndex + '.' + field.key] }}</p>
-                        </div>
-                        </div>
-                        <button type="button" class="w-full mt-4 px-4 py-2.5 border border-indigo-400/40 text-indigo-300 hover:bg-indigo-500/10 text-sm font-medium" @click="addItem">+ Tambah Item</button>
-                        <div class="hidden mt-6 border-t border-white/10 pt-5 lg:block">
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-                                <button type="submit" :disabled="form.processing" class="w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/20 sm:w-auto">
-                                    {{ form.processing ? 'Menyimpan...' : 'Simpan Draft' }}
-                                </button>
-                                <button type="button" @click="submitAndSign" :disabled="form.processing" class="w-full px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-500/25 sm:w-auto">
-                                    Tanda Tangani &amp; Kirim ke AM
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Submit -->
-                <div v-if="selectedTemplate" class="bg-slate-800/50 border border-white/5 rounded-2xl p-5 lg:hidden">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-                        <button type="submit" :disabled="form.processing" class="order-2 w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/20 sm:order-1 sm:w-auto">
-                            {{ form.processing ? 'Menyimpan...' : 'Simpan Draft' }}
-                        </button>
-                        <button type="button" @click="submitAndSign" :disabled="form.processing" class="order-1 w-full px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-500/25 sm:order-2 sm:w-auto">
-                            Tanda Tangani &amp; Kirim ke AM
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
+                            <div v-for="field in selectedTemplate.field_schema" :key="field.key" class="mb-4">
+                                <a-form-item 
+                                    :label="field.label" 
+                                    :required="field.required"
+                                    :validateStatus="form.errors['field_values.items.' + itemIndex + '.' + field.key] ? 'error' : ''"
+                                    :help="form.errors['field_values.items.' + itemIndex + '.' + field.key]"
+                                    class="mb-0"
+                                >
+                                    <a-input v-if="field.type === 'text'" v-model:value="item[field.key]" />
+                                    <a-input v-else-if="field.type === 'number'" type="number" v-model:value="item[field.key]" />
+                                    <a-input v-else-if="field.type === 'date'" type="date" v-model:value="item[field.key]" />
+                                    <a-textarea v-else-if="field.type === 'textarea'" v-model:value="item[field.key]" :rows="4" />
+                                    
+                                    <!-- Table field: multiple sub-rows (e.g. area + qty) -->
+                                    <div v-else-if="field.type === 'table'" class="mt-2 space-y-3">
+                                        <div v-for="(subRow, subIndex) in ensureTableRows(item, field.key, field.columns)" :key="'sub-' + subIndex" class="flex gap-2 items-start bg-gray-50 p-3 rounded border border-gray-200">
+                                            <a-row :gutter="12" class="flex-1">
+                                                <a-col :span="24 / field.columns.length" v-for="col in field.columns" :key="col.key">
+                                                    <div class="text-xs text-gray-500 mb-1">{{ col.label }}</div>
+                                                    <a-input v-model:value="subRow[col.key]" :type="col.type === 'number' ? 'number' : 'text'" size="small" />
+                                                </a-col>
+                                            </a-row>
+                                            <a-button v-if="item[field.key].length > 1" type="text" danger class="mt-5" @click="removeTableRow(item, field.key, subIndex)">
+                                                <delete-outlined />
+                                            </a-button>
+                                        </div>
+                                        <a-button type="dashed" block @click="addTableRow(item, field.key, field.columns)">
+                                            <template #icon><plus-outlined /></template>
+                                            Tambah Baris
+                                        </a-button>
+                                    </div>
+                                </a-form-item>
+                            </div>
+                        </div>
+
+                        <a-button type="dashed" block class="mt-2" @click="addItem">
+                            <template #icon><plus-outlined /></template>
+                            Tambah Item
+                        </a-button>
+
+                        <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
+                            <a-button size="large" type="default" @click="submit" :loading="form.processing && !form.submit_after_save">
+                                <template #icon><save-outlined /></template>
+                                Simpan Draft
+                            </a-button>
+                            <a-button size="large" type="primary" @click="submitAndSign" :loading="form.processing && form.submit_after_save" class="bg-green-600 hover:bg-green-500 border-green-600">
+                                <template #icon><send-outlined /></template>
+                                Tanda Tangani &amp; Kirim ke AM
+                            </a-button>
+                        </div>
+                    </a-card>
+                </a-col>
+            </a-row>
+        </a-form>
     </AuthenticatedLayout>
 </template>

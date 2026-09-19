@@ -85,6 +85,13 @@ const statusConfig = {
     },
 };
 
+const statusTagColor = (status) => ({
+    draft: 'default',
+    submitted: 'processing',
+    approved: 'success',
+    rejected: 'error',
+}[status] || 'default');
+
 const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -97,8 +104,7 @@ const formatDate = (dateString) => {
 
 const formatTime = (dateString) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('id-ID', {
+    return new Date(dateString).toLocaleTimeString('id-ID', {
         hour: '2-digit',
         minute: '2-digit'
     });
@@ -106,22 +112,23 @@ const formatTime = (dateString) => {
 
 const filteredMemos = computed(() => {
     let list = props.memos || [];
-    
+
     if (statusFilter.value !== 'all') {
         list = list.filter(m => m.status === statusFilter.value);
     }
-    
+
     if (searchQuery.value.trim()) {
         const q = searchQuery.value.toLowerCase().trim();
-        list = list.filter(m => 
+        list = list.filter(m =>
             (m.code && m.code.toLowerCase().includes(q)) ||
             (m.title && m.title.toLowerCase().includes(q)) ||
             (m.template?.name && m.template.name.toLowerCase().includes(q))
         );
     }
-    
+
     return list;
 });
+
 </script>
 
 <template>
@@ -161,10 +168,8 @@ const filteredMemos = computed(() => {
 
                 <Link
                     :href="route('memos.create')"
-                    class="btn-primary-anim flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20"
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>Buat Memo Baru</span>
+                    <a-button type="primary" size="large">Buat Memo Baru</a-button>
                 </Link>
             </div>
         </div>
@@ -237,7 +242,7 @@ const filteredMemos = computed(() => {
 
             <!-- Filter Status Tabs -->
             <div class="flex items-center gap-1.5 py-3 overflow-x-auto text-xs border-b border-white/5 scrollbar-none">
-                <button
+                <a-button size="small"
                     @click="statusFilter = 'all'"
                     :class="[
                         statusFilter === 'all'
@@ -247,8 +252,8 @@ const filteredMemos = computed(() => {
                     ]"
                 >
                     Semua ({{ memos.length }})
-                </button>
-                <button
+                </a-button>
+                <a-button size="small"
                     @click="statusFilter = 'submitted'"
                     :class="[
                         statusFilter === 'submitted'
@@ -258,8 +263,8 @@ const filteredMemos = computed(() => {
                     ]"
                 >
                     Menunggu AM ({{ memos.filter(m => m.status === 'submitted').length }})
-                </button>
-                <button
+                </a-button>
+                <a-button size="small"
                     @click="statusFilter = 'approved'"
                     :class="[
                         statusFilter === 'approved'
@@ -269,8 +274,8 @@ const filteredMemos = computed(() => {
                     ]"
                 >
                     Disetujui ({{ memos.filter(m => m.status === 'approved').length }})
-                </button>
-                <button
+                </a-button>
+                <a-button size="small"
                     @click="statusFilter = 'draft'"
                     :class="[
                         statusFilter === 'draft'
@@ -280,8 +285,8 @@ const filteredMemos = computed(() => {
                     ]"
                 >
                     Draft ({{ memos.filter(m => m.status === 'draft').length }})
-                </button>
-                <button
+                </a-button>
+                <a-button size="small"
                     @click="statusFilter = 'rejected'"
                     :class="[
                         statusFilter === 'rejected'
@@ -291,7 +296,7 @@ const filteredMemos = computed(() => {
                     ]"
                 >
                     Perlu Revisi ({{ memos.filter(m => m.status === 'rejected').length }})
-                </button>
+                </a-button>
             </div>
 
             <!-- Table -->
@@ -333,9 +338,9 @@ const filteredMemos = computed(() => {
                                 <span class="text-slate-600 block text-[11px]">{{ formatTime(memo.created_at) }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap" :class="statusConfig[memo.status]?.badgeClass || 'bg-slate-500/15 text-slate-300 border-slate-500/30'">
-                                    <span>{{ statusConfig[memo.status]?.label || memo.status }}</span>
-                                </div>
+                                <a-tag :color="statusTagColor(memo.status)">
+                                    {{ statusConfig[memo.status]?.label || memo.status }}
+                                </a-tag>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div v-if="memo.latest_approval?.signature" class="flex items-center gap-2">
@@ -353,16 +358,13 @@ const filteredMemos = computed(() => {
                                     <Link
                                         v-if="memo.status === 'draft' || memo.status === 'rejected'"
                                         :href="route('memos.edit', memo.id)"
-                                        class="btn-secondary-anim px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-medium border border-indigo-500/20"
                                     >
-                                        Edit
+                                        <a-button type="primary" ghost size="small">Edit</a-button>
                                     </Link>
                                     <Link
                                         :href="route('memos.show', memo.id)"
-                                        class="btn-secondary-anim inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-white/5"
                                     >
-                                        <span>Detail</span>
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                        <a-button type="primary" ghost size="small">Detail</a-button>
                                     </Link>
                                 </div>
                             </td>
@@ -379,10 +381,8 @@ const filteredMemos = computed(() => {
                                     <p class="text-xs text-slate-500 mt-1 max-w-sm">Mulai buat pengajuan memo baru atau sesuaikan filter Anda.</p>
                                     <Link
                                         :href="route('memos.create')"
-                                        class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-all shadow-sm"
                                     >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                        Buat Memo Sekarang
+                                        <a-button type="primary">Buat Memo Sekarang</a-button>
                                     </Link>
                                 </div>
                             </td>
@@ -416,4 +416,111 @@ const filteredMemos = computed(() => {
     .dashboard-kc-theme .text-purple-600 { color: #60a5fa !important; }
     .dashboard-kc-theme .from-indigo-500 { --tw-gradient-from: #1f69a8 !important; }
     .dashboard-kc-theme .to-purple-600 { --tw-gradient-to: #3b82f6 !important; }
+
+    html.theme-light .dashboard-kc-theme .bg-slate-800\/50,
+    html.theme-light .dashboard-kc-theme .bg-slate-800\/60,
+    html.theme-light .dashboard-kc-theme .bg-slate-900\/60 {
+        background-color: #ffffff !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    html.theme-light .dashboard-kc-theme .text-white {
+        color: #0f172a !important;
+    }
+
+    html.theme-light .dashboard-kc-theme .text-slate-200,
+    html.theme-light .dashboard-kc-theme .text-slate-300 {
+        color: #334155 !important;
+    }
+
+    html.theme-light .dashboard-kc-theme .text-slate-400,
+    html.theme-light .dashboard-kc-theme .text-slate-500,
+    html.theme-light .dashboard-kc-theme .text-slate-600 {
+        color: #64748b !important;
+    }
+
+    html.theme-light .dashboard-kc-theme .border-white\/5,
+    html.theme-light .dashboard-kc-theme .border-white\/10 {
+        border-color: #e2e8f0 !important;
+    }
+
+    html.theme-light .dashboard-kc-theme .hover\:bg-white\/5:hover,
+    html.theme-light .dashboard-kc-theme .hover\:bg-white\/\[0\.02\]:hover {
+        background-color: #f8fafc !important;
+    }
+
+    .tracking-progress {
+        height: 4px;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.2);
+    }
+
+    .tracking-progress-bar {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #38bdf8, #34d399);
+        transition: width 0.3s ease;
+    }
+
+    .tracking-steps {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.4rem;
+    }
+
+    .tracking-step {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+        color: #64748b;
+        font-size: 10px;
+        text-align: center;
+    }
+
+    .tracking-step-dot {
+        width: 8px;
+        height: 8px;
+        border: 2px solid #64748b;
+        border-radius: 50%;
+        background: transparent;
+    }
+
+    .tracking-step.is-done {
+        color: #bae6fd;
+    }
+
+    .tracking-step.is-done .tracking-step-dot {
+        border-color: #38bdf8;
+        background: #38bdf8;
+    }
+
+    .tracking-step.is-current {
+        color: #fbbf24;
+        font-weight: 700;
+    }
+
+    .tracking-step.is-current .tracking-step-dot {
+        border-color: #fbbf24;
+        background: #fbbf24;
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.14);
+    }
+
+    .tracking-updated {
+        display: block;
+        margin-top: 0.35rem;
+        color: #64748b;
+        font-size: 10px;
+    }
+
+    html.theme-light .tracking-step.is-done {
+        color: #2563a5;
+    }
+
+    html.theme-light .tracking-updated {
+        color: #64748b;
+    }
     </style>

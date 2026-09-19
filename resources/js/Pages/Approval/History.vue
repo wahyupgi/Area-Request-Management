@@ -2,6 +2,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import MemoDocument from '@/Components/MemoDocument.vue';
 import { Head } from '@inertiajs/vue3';
+import { 
+    ArrowLeftOutlined,
+    CheckCircleOutlined,
+    CloseCircleOutlined
+} from '@ant-design/icons-vue';
 
 const props = defineProps({ memo: Object });
 </script>
@@ -11,55 +16,59 @@ const props = defineProps({ memo: Object });
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-3">
-                <button
-                    onclick="history.back()"
-                    class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors"
-                    title="Kembali"
-                >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                </button>
-                <h1 class="text-xl font-bold text-white">Riwayat Approval</h1>
+                <a-button type="text" shape="circle" onclick="history.back()">
+                    <template #icon><arrow-left-outlined /></template>
+                </a-button>
+                <h1 class="text-xl font-bold text-gray-800 mb-0">Riwayat Approval</h1>
             </div>
         </template>
 
-        <div class="max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div class="lg:col-span-8 w-full flex justify-center">
-                <div class="w-full max-w-[210mm]">
+        <a-row :gutter="[24, 24]" class="max-w-7xl mx-auto">
+            <!-- Left Column: Memo Document -->
+            <a-col :xs="24" :lg="16" class="flex justify-center">
+                <div class="w-full max-w-[210mm] shadow-md bg-white">
                     <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
                 </div>
-            </div>
+            </a-col>
 
-            <div class="lg:col-span-4 space-y-6">
-            <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                <h2 class="text-lg font-bold text-white">{{ memo.title }}</h2>
-                <p class="text-sm text-slate-400 mt-1">{{ memo.code }} · {{ memo.template?.name }}</p>
-            </div>
+            <!-- Right Column: Approval History -->
+            <a-col :xs="24" :lg="8">
+                <a-card :bordered="false" class="rounded-lg shadow-sm mb-6 bg-gray-50">
+                    <h2 class="text-lg font-bold text-gray-800 mb-1">{{ memo.title }}</h2>
+                    <p class="text-sm text-gray-500 mb-0">{{ memo.code }} · {{ memo.template?.name }}</p>
+                </a-card>
 
-            <div class="space-y-4">
-                <div v-for="(approval, idx) in memo.approvals" :key="approval.id" class="relative">
-                    <div v-if="idx < memo.approvals.length - 1" class="absolute left-6 top-12 bottom-0 w-px bg-white/10"></div>
-                    <div :class="[approval.action === 'approved' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20', 'border rounded-2xl p-6']">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div :class="[approval.action === 'approved' ? 'bg-emerald-500' : 'bg-red-500', 'w-10 h-10 rounded-full flex items-center justify-center']">
-                                <svg v-if="approval.action === 'approved'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                <svg v-else class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <a-card title="Timeline Approval" :bordered="false" class="rounded-lg shadow-sm">
+                    <a-timeline>
+                        <a-timeline-item v-for="(approval, idx) in memo.approvals" :key="approval.id" :color="approval.action === 'approved' ? 'green' : 'red'">
+                            <template #dot>
+                                <check-circle-outlined v-if="approval.action === 'approved'" />
+                                <close-circle-outlined v-else />
+                            </template>
+                            
+                            <div class="mb-4 bg-white border border-gray-100 rounded-lg p-4 shadow-sm" :class="approval.action === 'approved' ? 'border-green-100' : 'border-red-100'">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800 mb-0">{{ approval.approver?.name }}</p>
+                                        <p class="text-xs text-gray-500 mb-0">{{ new Date(approval.created_at).toLocaleString('id-ID') }}</p>
+                                    </div>
+                                    <a-tag :color="approval.action === 'approved' ? 'success' : 'error'" class="uppercase m-0">
+                                        {{ approval.action }}
+                                    </a-tag>
+                                </div>
+                                
+                                <div v-if="approval.notes" class="text-sm text-gray-600 bg-gray-50 p-3 rounded mt-3">
+                                    {{ approval.notes }}
+                                </div>
+                                
+                                <div v-if="approval.signature" class="mt-3">
+                                    <img :src="'/storage/' + approval.signature.signature_image" alt="Signature" class="h-16 rounded border border-gray-200 bg-white p-1" />
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm font-semibold text-white">{{ approval.approver?.name }}</p>
-                                <p class="text-xs text-slate-500">{{ new Date(approval.created_at).toLocaleString('id-ID') }}</p>
-                            </div>
-                            <span :class="[approval.action === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400', 'text-xs font-semibold px-3 py-1 rounded-full ml-auto uppercase']">{{ approval.action }}</span>
-                        </div>
-                        <p v-if="approval.notes" class="text-sm text-slate-300 mt-2 pl-13">{{ approval.notes }}</p>
-                        <div v-if="approval.signature" class="mt-3 pl-13">
-                            <img :src="'/storage/' + approval.signature.signature_image" alt="Signature" class="h-16 rounded-lg bg-white/5 p-2" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </div>
-        </div>
+                        </a-timeline-item>
+                    </a-timeline>
+                </a-card>
+            </a-col>
+        </a-row>
     </AuthenticatedLayout>
 </template>

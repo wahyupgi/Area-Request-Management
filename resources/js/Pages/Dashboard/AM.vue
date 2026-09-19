@@ -68,8 +68,8 @@ const getUrgency = (submittedAt) => {
                     <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Tinjau memo dari cabang, ambil keputusan, dan jaga proses operasional wilayah tetap bergerak.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <Link :href="route('approvals.pending')" class="am-action-link am-action-link--primary">Buka antrean</Link>
-                    <Link :href="route('signature.index')" class="am-action-link">Tanda tangan digital</Link>
+                    <Link :href="route('approvals.pending')"><a-button type="primary">Buka antrean</a-button></Link>
+                    <Link :href="route('signature.index')"><a-button>Tanda tangan digital</a-button></Link>
                 </div>
             </div>
             <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">

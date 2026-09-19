@@ -1,7 +1,9 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
-import { ref } from 'vue';
+import { useTheme } from '@/composables/useTheme';
+import { computed, ref } from 'vue';
+import { LoginOutlined } from '@ant-design/icons-vue';
 
 const watermarkPositions = [
     {
@@ -42,9 +44,25 @@ const form = useForm({
     remember: false,
 });
 
+const { theme } = useTheme();
+const isLightTheme = computed(() => theme.value === 'light');
 const showPassword = ref(false);
 
+const inputClass = computed(() => (
+    isLightTheme.value
+        ? 'w-full bg-white border border-slate-300 rounded-xl px-5 py-3.5 text-slate-900 placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors'
+        : 'w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors'
+));
+
+const passwordToggleClass = computed(() => (
+    isLightTheme.value
+        ? 'absolute inset-y-0 right-3 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors'
+        : 'absolute inset-y-0 right-3 flex items-center justify-center text-slate-400 hover:text-white transition-colors'
+));
+
 const submit = () => {
+    if (form.processing) return;
+
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
     });
@@ -94,32 +112,137 @@ const submit = () => {
                     <p class="text-slate-400 mt-2 text-sm">Silakan masuk menggunakan kredensial akun Anda.</p>
                 </div>
 
-                <form @submit.prevent="submit" class="space-y-5">
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-slate-300 mb-2">Username</label>
-                        <input id="username" v-model="form.username" type="text" autofocus autocomplete="username" class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="Masukkan username" />
-                        <p v-if="form.errors.username" class="text-red-400 text-sm mt-2">{{ form.errors.username }}</p>
-                    </div>
+                <a-form layout="vertical" @finish="submit" class="login-custom-form">
+                    <a-form-item 
+                        label="Username" 
+                        :validateStatus="form.errors.username ? 'error' : ''" 
+                        :help="form.errors.username"
+                    >
+                        <a-input 
+                            v-model:value="form.username" 
+                            autofocus 
+                            autocomplete="username" 
+                            size="large" 
+                            placeholder="Masukkan username"
+                            class="login-text-input"
+                            :class="isLightTheme ? 'light-login-input' : ''"
+                            @keydown.enter.prevent="submit"
+                        />
+                    </a-form-item>
 
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-slate-300 mb-2">Password</label>
-                        <div class="relative">
-                            <input id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 pr-14 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="Masukkan password" />
-                            <button type="button" :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'" class="absolute inset-y-0 right-0 flex items-center px-5 text-slate-400 hover:text-white transition-colors" @click="showPassword = !showPassword">
-                                <svg v-if="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M10.584 10.587a2 2 0 002.829 2.829M9.88 4.24A9.77 9.77 0 0112 4c5.523 0 9.75 4.478 9.75 10a10.01 10.01 0 01-2.036 5.995M6.228 6.228C4.238 7.838 2.75 10.38 2.25 14c.33 2.39 1.35 4.48 2.856 6.086" /></svg>
-                                <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 12s3.5-6 9.75-6 9.75 6 9.75 6-3.5 6-9.75 6-9.75-6-9.75-6z" /><circle cx="12" cy="12" r="2.5" stroke-width="2" /></svg>
-                            </button>
-                        </div>
-                        <p v-if="form.errors.password" class="text-red-400 text-sm mt-2">{{ form.errors.password }}</p>
-                    </div>
+                    <a-form-item 
+                        label="Password" 
+                        :validateStatus="form.errors.password ? 'error' : ''" 
+                        :help="form.errors.password"
+                    >
+                        <a-input-password 
+                            v-model:value="form.password" 
+                            autocomplete="current-password" 
+                            size="large" 
+                            placeholder="Masukkan password"
+                            class="login-password-input"
+                            :class="isLightTheme ? 'light-login-input' : ''"
+                            @keydown.enter.prevent="submit"
+                        />
+                    </a-form-item>
 
-                    <button type="submit" :disabled="form.processing" class="w-full py-4 mt-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex justify-center items-center gap-2">
-                        <span v-if="form.processing">Memproses...</span>
-                        <span v-else>Login</span>
-                        <svg v-if="!form.processing" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                    </button>
-                </form>
+                    <a-button 
+                        type="primary" 
+                        html-type="button"
+                        @click="submit"
+                        :loading="form.processing" 
+                        size="large" 
+                        block
+                        class="login-submit-button mt-4"
+                        style="height: 52px; border-radius: 0.75rem; font-weight: 600;"
+                    >
+                        Login <template #icon><LoginOutlined v-if="!form.processing" /></template>
+                    </a-button>
+                </a-form>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+:deep(.login-custom-form .ant-form-item-label > label) {
+    color: #cbd5e1;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+:deep(.login-custom-form .ant-input),
+:deep(.login-custom-form .ant-input-affix-wrapper) {
+    background-color: rgba(30, 41, 59, 0.5);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 0.75rem;
+    box-shadow: none !important;
+}
+:deep(.login-custom-form .ant-input:focus),
+:deep(.login-custom-form .ant-input-affix-wrapper:focus),
+:deep(.login-custom-form .ant-input-affix-wrapper-focused) {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 1px #6366f1 !important;
+}
+:deep(.login-custom-form .ant-input-affix-wrapper .ant-input) {
+    background-color: transparent !important;
+    color: white !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+:deep(.login-custom-form .ant-input-affix-wrapper .ant-input::placeholder),
+:deep(.login-custom-form .ant-input::placeholder) {
+    color: #64748b;
+}
+:deep(.login-custom-form .ant-input-password-icon) {
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+:deep(.login-custom-form .ant-input-password-icon:hover) {
+    color: white;
+}
+
+:deep(.light-login-input),
+:deep(.light-login-input .ant-input-affix-wrapper) {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+:deep(.light-login-input .ant-input::placeholder),
+:deep(.light-login-input .ant-input-affix-wrapper .ant-input::placeholder) {
+    color: #64748b !important;
+}
+:deep(.light-login-input .ant-input-password-icon) {
+    color: #64748b !important;
+}
+
+:deep(.login-password-input .ant-input) {
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+:deep(.login-submit-button) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    line-height: 1 !important;
+}
+
+:deep(.login-submit-button .ant-btn-icon),
+:deep(.login-submit-button .anticon) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.25rem;
+    height: 1.25rem;
+    line-height: 1 !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+</style>

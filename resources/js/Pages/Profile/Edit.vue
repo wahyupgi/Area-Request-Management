@@ -20,27 +20,25 @@ defineProps({
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Profil Saya</h2>
+            <h1 class="font-semibold text-xl text-white leading-tight">Profil Saya</h1>
         </template>
 
-        <div class="profile-page py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="profile-panel p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                    <UpdateProfileInformationForm
-                        :must-verify-email="mustVerifyEmail"
-                        :status="status"
-                        class="max-w-xl"
-                    />
-                </div>
+        <div class="max-w-4xl space-y-6">
+            <a-card :bordered="false" class="bg-slate-800/50 border border-white/5 shadow-none">
+                <UpdateProfileInformationForm
+                    :must-verify-email="mustVerifyEmail"
+                    :status="status"
+                    class="max-w-xl"
+                />
+            </a-card>
 
-                <div class="profile-panel p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                    <UpdatePasswordForm class="max-w-xl" />
-                </div>
+            <a-card :bordered="false" class="bg-slate-800/50 border border-white/5 shadow-none">
+                <UpdatePasswordForm class="max-w-xl" />
+            </a-card>
 
-                <div class="profile-panel p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                    <DeleteUserForm class="max-w-xl" />
-                </div>
-            </div>
+            <a-card :bordered="false" class="bg-slate-800/50 border border-white/5 shadow-none">
+                <DeleteUserForm class="max-w-xl" />
+            </a-card>
         </div>
     </AuthenticatedLayout>
 </template>

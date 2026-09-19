@@ -322,8 +322,8 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                     </div>
 
                     <!-- Enterprise Table -->
-                    <div class="overflow-x-auto -mx-6">
-                        <table class="w-full text-left table-head-pgi">
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[820px] text-left table-head-pgi">
                             <thead>
                                 <tr class="text-[11px] font-semibold uppercase tracking-wider">
                                     <th class="px-6 py-3.5">Kode &amp; Tanggal</th>

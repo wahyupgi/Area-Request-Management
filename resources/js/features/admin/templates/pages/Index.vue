@@ -16,38 +16,45 @@ const toggleActive = (template) => {
             <h1 class="text-xl font-bold text-white">Kelola Template Memo</h1>
         </template>
 
-        <div class="flex items-center justify-between mb-6">
-            <p class="text-sm text-slate-400">{{ templates.length }} template terdaftar</p>
-            <Link :href="route('admin.templates.create')" class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-500/25">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Buat Template
-            </Link>
-        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-4">
+                <h2 class="text-xl font-bold text-slate-800">Daftar Template ({{ templates.length }})</h2>
+                <Link :href="route('admin.templates.create')" class="inline-flex items-center gap-2 rounded-xl bg-[#1f69a8] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#185a97]">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Buat Template
+                </Link>
+            </div>
 
-        <div class="space-y-3">
-            <div v-for="t in templates" :key="t.id" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <div class="flex items-center gap-3 mb-1">
-                            <h3 class="text-white font-semibold">{{ t.name }}</h3>
-                            <span v-if="t.category" class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded-full">{{ t.category }}</span>
-                            <span :class="[t.is_active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400', 'text-xs px-2.5 py-0.5 rounded-full font-medium']">
-                                {{ t.is_active ? 'Aktif' : 'Nonaktif' }}
-                            </span>
+            <div class="divide-y divide-slate-200">
+                <div v-for="t in templates" :key="t.id" class="px-6 py-5">
+                    <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2.5 mb-2">
+                                <h3 class="text-xl font-bold text-slate-800">{{ t.name }}</h3>
+                                <span v-if="t.category" class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700 border border-blue-200">
+                                    {{ t.category }}
+                                </span>
+                                <span :class="[t.is_active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700', 'inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold']">
+                                    {{ t.is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </div>
+                            <p class="text-sm text-slate-500">{{ t.field_schema?.length || 0 }} field · Dibuat oleh {{ t.creator?.name }}</p>
                         </div>
-                        <p class="text-sm text-slate-500">{{ t.field_schema?.length || 0 }} field · Dibuat oleh {{ t.creator?.name }}</p>
-                        <div class="flex flex-wrap gap-2 mt-3">
-                            <span v-for="f in t.field_schema" :key="f.key" class="text-xs bg-slate-700/50 text-slate-400 px-2.5 py-1 rounded-lg">
-                                {{ f.label }} <span class="text-slate-600">({{ f.type }})</span>
-                                <span v-if="f.required" class="text-red-400">*</span>
-                            </span>
+
+                        <div class="flex items-center gap-2">
+                            <button @click="toggleActive(t)" :class="[t.is_active ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100' : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100', 'rounded-xl border px-3 py-2 text-xs font-semibold transition-colors']">
+                                {{ t.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                            </button>
+                            <Link :href="route('admin.templates.edit', t.id)" class="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 transition-colors hover:bg-sky-100">Edit</Link>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button @click="toggleActive(t)" :class="[t.is_active ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10', 'px-3 py-2 text-sm rounded-xl transition-colors']">
-                            {{ t.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                        </button>
-                        <Link :href="route('admin.templates.edit', t.id)" class="px-3 py-2 text-sm text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-colors">Edit</Link>
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span v-for="f in t.field_schema" :key="f.key" class="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700">
+                            {{ f.label }}
+                            <span class="ml-1 text-slate-500">({{ f.type }})</span>
+                            <span v-if="f.required" class="ml-1 text-red-500">*</span>
+                        </span>
                     </div>
                 </div>
             </div>

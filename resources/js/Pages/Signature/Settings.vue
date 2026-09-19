@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { reactive } from 'vue';
+import { PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     templates: Array,
@@ -47,54 +48,99 @@ const save = (template) => {
             <h1 class="text-xl font-bold text-white">Pengaturan Tanda Tangan</h1>
         </template>
 
-        <div class="max-w-4xl space-y-6">
-            <div class="bg-slate-800/50 border border-white/5 p-5">
-                <h2 class="text-lg font-semibold text-white">Pengaturan Penandatangan per Template</h2>
-                <p class="text-sm text-slate-400 mt-1">Isi nama lengkap dan jabatan penandatangan. Slot juga dapat ditempatkan di kotak paraf kanan bawah.</p>
-            </div>
+        <div class="am-signature-page max-w-5xl space-y-6">
+            <a-alert
+                message="Pengaturan Penandatangan per Template"
+                description="Isi nama lengkap dan jabatan penandatangan. Slot juga dapat ditempatkan di kotak paraf kanan bawah."
+                type="info"
+                show-icon
+                class="bg-sky-500/10 border-sky-500/20 text-sky-100 custom-dark-alert"
+            />
 
-            <div v-for="template in templates" :key="template.id" class="bg-slate-800/50 border border-white/5 p-6">
-                <div class="flex items-start justify-between gap-4 mb-5">
-                    <div>
-                        <p class="text-xs text-sky-400 uppercase tracking-wider font-semibold">{{ template.category || 'Tanpa Divisi' }}</p>
-                        <h2 class="text-lg font-semibold text-white mt-1">{{ template.name }}</h2>
+            <a-card 
+                v-for="template in templates" 
+                :key="template.id" 
+                :bordered="false" 
+                class="bg-slate-800/50 border border-white/5 mb-6"
+            >
+                <template #title>
+                    <div class="flex flex-col">
+                        <span class="text-xs text-sky-400 uppercase tracking-wider font-semibold">{{ template.category || 'Tanpa Divisi' }}</span>
+                        <span class="text-white font-medium mt-1">{{ template.name }}</span>
                     </div>
-                    <button type="button" class="text-sm text-sky-300 hover:text-white" @click="addSlot(template)">+ Tambah Slot</button>
-                </div>
+                </template>
+                <template #extra>
+                    <a-button type="dashed" size="small" @click="addSlot(template)">
+                        <template #icon><PlusOutlined /></template>
+                        Tambah Slot
+                    </a-button>
+                </template>
 
-                <div v-if="forms[template.id].signature_schema.length === 0" class="border border-dashed border-white/15 p-5 text-sm text-slate-500 text-center">
-                    Belum ada slot tanda tangan.
-                </div>
+                <a-empty 
+                    v-if="forms[template.id].signature_schema.length === 0" 
+                    description="Belum ada slot tanda tangan" 
+                    :image="false" 
+                    class="py-6 border border-dashed border-white/10 rounded-xl"
+                />
 
-                <div v-for="(slot, index) in forms[template.id].signature_schema" :key="index" class="border border-white/10 p-4 mb-3">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-semibold text-slate-400">Slot {{ index + 1 }}</span>
-                        <button type="button" class="text-xs text-red-400 hover:text-red-300" @click="removeSlot(template, index)">Hapus</button>
+                <a-form layout="vertical">
+                    <div 
+                        v-for="(slot, index) in forms[template.id].signature_schema" 
+                        :key="index" 
+                        class="bg-slate-700/30 rounded-xl p-5 relative border border-white/5 mb-4"
+                    >
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-slate-400 text-xs font-semibold uppercase tracking-wider m-0">Slot {{ index + 1 }}</h4>
+                            <a-button type="text" danger size="small" @click="removeSlot(template, index)">
+                                <template #icon><DeleteOutlined /></template>
+                                Hapus
+                            </a-button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <a-form-item label="Nama Lengkap" class="mb-0">
+                                <a-input v-model:value="slot.name" placeholder="Contoh: Fathurrahman M" />
+                            </a-form-item>
+                            
+                            <a-form-item label="Jabatan" class="mb-0">
+                                <a-input v-model:value="slot.role" placeholder="Contoh: Manager GA" />
+                            </a-form-item>
+                            
+                            <a-form-item label="Lokasi pada dokumen" class="mb-0">
+                                <a-select v-model:value="slot.location">
+                                    <a-select-option value="document">Kolom tanda tangan utama</a-select-option>
+                                    <a-select-option value="bottom_right">Kotak paraf kanan bawah</a-select-option>
+                                </a-select>
+                            </a-form-item>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Nama lengkap</label>
-                            <input v-model="slot.name" type="text" placeholder="Contoh: Fathurrahman M" class="w-full bg-slate-700/50 border border-white/10 px-3 py-2 text-sm text-white" />
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Jabatan</label>
-                            <input v-model="slot.role" type="text" placeholder="Contoh: Manager GA" class="w-full bg-slate-700/50 border border-white/10 px-3 py-2 text-sm text-white" />
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Lokasi pada dokumen</label>
-                            <select v-model="slot.location" class="w-full bg-slate-700/50 border border-white/10 px-3 py-2 text-sm text-white">
-                                <option value="document">Kolom tanda tangan dokumen</option>
-                                <option value="bottom_right">Kotak paraf kanan bawah</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
 
-                <p v-if="forms[template.id].errors.signature_schema" class="text-sm text-red-400 mb-3">{{ forms[template.id].errors.signature_schema }}</p>
-                <button type="button" :disabled="forms[template.id].processing" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-sm font-medium" @click="save(template)">
-                    {{ forms[template.id].processing ? 'Menyimpan...' : 'Simpan Pengaturan' }}
-                </button>
-            </div>
+                    <div v-if="forms[template.id].errors.signature_schema" class="text-red-400 text-sm mb-4">
+                        {{ forms[template.id].errors.signature_schema }}
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <a-button type="primary" :loading="forms[template.id].processing" @click="save(template)">
+                            <template #icon><SaveOutlined /></template>
+                            Simpan Pengaturan
+                        </a-button>
+                    </div>
+                </a-form>
+            </a-card>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+:deep(.custom-dark-alert.ant-alert) {
+    background-color: rgba(14, 165, 233, 0.1);
+    border-color: rgba(14, 165, 233, 0.2);
+}
+:deep(.custom-dark-alert .ant-alert-message),
+:deep(.custom-dark-alert .ant-alert-description) {
+    color: #e0f2fe;
+}
+:deep(.custom-dark-alert .ant-alert-icon) {
+    color: #38bdf8;
+}
+</style>

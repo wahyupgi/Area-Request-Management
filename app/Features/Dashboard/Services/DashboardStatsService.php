@@ -95,6 +95,25 @@ class DashboardStatsService
             ->limit(8)
             ->get();
 
+        $activityCounts = Memo::query()
+            ->where('created_at', '>=', now()->subDays(6)->startOfDay())
+            ->selectRaw('DATE(created_at) as activity_date, COUNT(*) as total')
+            ->groupByRaw('DATE(created_at)')
+            ->orderBy('activity_date')
+            ->get()
+            ->keyBy('activity_date');
+
+        $activity = collect(range(6, 0))->map(function (int $daysAgo) use ($activityCounts) {
+            $date = now()->subDays($daysAgo);
+            $dateKey = $date->toDateString();
+
+            return [
+                'date' => $dateKey,
+                'label' => $date->locale('id')->isoFormat('ddd'),
+                'count' => (int) ($activityCounts->get($dateKey)->total ?? 0),
+            ];
+        })->values();
+
         return [
             'stats' => [
                 'total_memos' => (int) ($memoStats->total ?? 0),
@@ -108,6 +127,7 @@ class DashboardStatsService
                 'total_branches' => Branch::count(),
             ],
             'recentMemos' => $recentMemos,
+            'activity' => $activity,
         ];
     }
 }

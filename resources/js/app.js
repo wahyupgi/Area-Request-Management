@@ -7,6 +7,9 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { initializeTheme } from './composables/useTheme';
 
+import Antd from 'ant-design-vue';
+import 'ant-design-vue/dist/reset.css';
+
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 initializeTheme();
@@ -18,6 +21,7 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .use(Antd)
             .mount(el);
     },
     progress: {

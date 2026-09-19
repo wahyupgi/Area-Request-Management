@@ -53,6 +53,7 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard/Admin', [
             'stats' => $dashboard['stats'],
             'recentMemos' => $dashboard['recentMemos'],
+            'activity' => $dashboard['activity'],
         ]);
     }
 }

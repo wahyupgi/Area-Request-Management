@@ -6,6 +6,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 const props = defineProps({
     stats: Object,
     recentMemos: Array,
+    activity: Array,
 });
 
 const page = usePage();
@@ -122,6 +123,43 @@ const approvedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((a
 const pendingPercent = computed(() => totalMemosCount.value > 0 ? Math.round((pendingCount.value / totalMemosCount.value) * 100) : 0);
 const draftPercent = computed(() => totalMemosCount.value > 0 ? Math.round((draftCount.value / totalMemosCount.value) * 100) : 0);
 const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((rejectedCount.value / totalMemosCount.value) * 100) : 0);
+
+const donutSegments = computed(() => {
+    const circumference = 2 * Math.PI * 42;
+    const values = [approvedCount.value, pendingCount.value, draftCount.value, rejectedCount.value];
+    const colors = ['#8b7cf6', '#ffc43d', '#64748b', '#ff9b7a'];
+    const total = values.reduce((sum, value) => sum + value, 0);
+    let offset = 0;
+
+    return values.map((value, index) => {
+        const length = total > 0 ? (value / total) * circumference : 0;
+        const segment = {
+            color: colors[index],
+            dasharray: `${length} ${circumference - length}`,
+            dashoffset: -offset,
+        };
+        offset += length;
+        return segment;
+    });
+});
+
+const activityDays = computed(() => {
+    return (props.activity || []).map((item) => ({
+        label: item.label,
+        date: item.date,
+        count: Number(item.count) || 0,
+    }));
+});
+
+const maxActivity = computed(() => Math.max(...activityDays.value.map((day) => day.count), 1));
+
+const statusChartData = computed(() => [
+    { status: 'Disetujui', value: approvedCount.value },
+    { status: 'Menunggu', value: pendingCount.value },
+    { status: 'Draft', value: draftCount.value },
+    { status: 'Ditolak', value: rejectedCount.value },
+]);
+
 </script>
 
 <template>
@@ -253,6 +291,84 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
             </Link>
         </div>
 
+        <!-- Activity Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <a-card :bordered="false" class="lg:col-span-2 dashboard-ant-card">
+                <div class="flex items-start justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-base font-bold text-white tracking-tight">Aktivitas Pengajuan</h2>
+                        <p class="text-xs text-slate-400 mt-1">Jumlah memo yang masuk dalam 7 hari terakhir.</p>
+                    </div>
+                    <span class="text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-2.5 py-1.5 whitespace-nowrap">
+                        {{ activityDays.reduce((total, day) => total + day.count, 0) }} memo
+                    </span>
+                </div>
+
+                <div class="dashboard-bar-chart">
+                    <div v-for="day in activityDays" :key="day.date" class="dashboard-bar-column">
+                        <span class="dashboard-bar-value">{{ day.count }}</span>
+                        <div class="dashboard-bar-track">
+                            <div
+                                class="dashboard-bar-fill"
+                                :style="{ height: `${Math.max((day.count / maxActivity) * 100, day.count ? 8 : 2)}%` }"
+                                :title="`${day.date}: ${day.count} memo`"
+                            ></div>
+                        </div>
+                        <span class="dashboard-bar-label">{{ day.label }}</span>
+                    </div>
+                </div>
+            </a-card>
+
+            <a-card :bordered="false" class="dashboard-ant-card">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white tracking-tight">Approval Status</h2>
+                        <p class="text-xs text-slate-400 mt-1">Ringkasan status seluruh memo.</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-approval-summary">
+                    <div class="dashboard-status-donut">
+                        <svg class="dashboard-status-svg" viewBox="0 0 100 100" aria-label="Grafik status persetujuan">
+                            <circle class="dashboard-status-track" cx="50" cy="50" r="42" />
+                            <circle
+                                v-for="(segment, index) in donutSegments"
+                                :key="index"
+                                class="dashboard-status-segment"
+                                cx="50"
+                                cy="50"
+                                r="42"
+                                :stroke="segment.color"
+                                :stroke-dasharray="segment.dasharray"
+                                :stroke-dashoffset="segment.dashoffset"
+                            />
+                        </svg>
+                        <div class="dashboard-status-hole">
+                            <strong>{{ approvedPercent }}%</strong>
+                            <span>selesai</span>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-approval-legend">
+                        <div class="dashboard-legend-row">
+                            <span><i class="dashboard-legend-dot dashboard-legend-pending"></i>Pending</span>
+                            <strong>{{ pendingCount }}</strong>
+                        </div>
+                        <div class="dashboard-legend-row">
+                            <span><i class="dashboard-legend-dot dashboard-legend-approved"></i>Approved</span>
+                            <strong>{{ approvedCount }}</strong>
+                        </div>
+                        <div class="dashboard-legend-row">
+                            <span><i class="dashboard-legend-dot dashboard-legend-rejected"></i>Rejected</span>
+                            <strong>{{ rejectedCount }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-approval-footer">{{ pendingCount }} require your action</div>
+            </a-card>
+        </div>
+
         <!-- 2-Column Main Workspace -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Left 8 Columns: Recent Memos Table with Live Search & Tabs -->
@@ -279,7 +395,7 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
 
                     <!-- Filter Status Tabs -->
                     <div class="flex items-center gap-1.5 py-3 overflow-x-auto text-xs border-b border-white/5 scrollbar-none">
-                        <button
+                        <a-button size="small"
                             @click="statusFilter = 'all'"
                             :class="[
                                 statusFilter === 'all'
@@ -289,8 +405,8 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                             ]"
                         >
                             Semua ({{ recentMemos.length }})
-                        </button>
-                        <button
+                        </a-button>
+                        <a-button size="small"
                             @click="statusFilter = 'submitted'"
                             :class="[
                                 statusFilter === 'submitted'
@@ -300,8 +416,8 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                             ]"
                         >
                             Menunggu Review ({{ recentMemos.filter(m => m.status === 'submitted').length }})
-                        </button>
-                        <button
+                        </a-button>
+                        <a-button size="small"
                             @click="statusFilter = 'approved'"
                             :class="[
                                 statusFilter === 'approved'
@@ -311,8 +427,8 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                             ]"
                         >
                             Disetujui ({{ recentMemos.filter(m => m.status === 'approved').length }})
-                        </button>
-                        <button
+                        </a-button>
+                        <a-button size="small"
                             @click="statusFilter = 'draft'"
                             :class="[
                                 statusFilter === 'draft'
@@ -322,8 +438,8 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                             ]"
                         >
                             Draft ({{ recentMemos.filter(m => m.status === 'draft').length }})
-                        </button>
-                        <button
+                        </a-button>
+                        <a-button size="small"
                             @click="statusFilter = 'rejected'"
                             :class="[
                                 statusFilter === 'rejected'
@@ -333,12 +449,12 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
                             ]"
                         >
                             Ditolak ({{ recentMemos.filter(m => m.status === 'rejected').length }})
-                        </button>
+                        </a-button>
                     </div>
 
                     <!-- Enterprise Table -->
-                    <div class="overflow-x-auto -mx-6">
-                        <table class="w-full text-left table-head-pgi">
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[820px] text-left table-head-pgi">
                             <thead>
                                 <tr class="text-[11px] font-semibold uppercase tracking-wider">
                                     <th class="px-6 py-3.5">Kode &amp; Tanggal</th>
@@ -442,86 +558,6 @@ const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((r
 
             <!-- Right 4 Columns: Widgets (Breakdown, Shortcuts, SOP Info) -->
             <div class="lg:col-span-4 flex flex-col gap-6">
-                <!-- Widget 1: Status Distribution -->
-                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-5 shadow-sm">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-bold text-white tracking-tight">Distribusi Status Memo</h3>
-                        <span class="text-xs font-semibold text-slate-400">{{ totalMemosCount }} total</span>
-                    </div>
-
-                    <!-- Progress Stack Bar -->
-                    <div class="h-2.5 w-full bg-slate-900/60 rounded-full overflow-hidden flex mb-4 border border-white/5">
-                        <div
-                            :style="{ width: `${approvedPercent}%` }"
-                            title="Disetujui"
-                            class="bg-emerald-500 transition-all duration-500"
-                        ></div>
-                        <div
-                            :style="{ width: `${pendingPercent}%` }"
-                            title="Menunggu Persetujuan"
-                            class="bg-amber-400 transition-all duration-500"
-                        ></div>
-                        <div
-                            :style="{ width: `${draftPercent}%` }"
-                            title="Draft"
-                            class="bg-slate-600 transition-all duration-500"
-                        ></div>
-                        <div
-                            :style="{ width: `${rejectedPercent}%` }"
-                            title="Ditolak"
-                            class="bg-rose-500 transition-all duration-500"
-                        ></div>
-                    </div>
-
-                   
-                    <div class="space-y-2 text-xs">
-                        <div class="flex items-center justify-between py-1 border-b border-white/5">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                                <span class="text-slate-300">Disetujui (Approved)</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 font-medium">
-                                <span class="text-white">{{ approvedCount }}</span>
-                                <span class="text-slate-500">({{ approvedPercent }}%)</span>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-between py-1 border-b border-white/5">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                                <span class="text-slate-300">Menunggu Review AM</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 font-medium">
-                                <span class="text-amber-300">{{ pendingCount }}</span>
-                                <span class="text-slate-500">({{ pendingPercent }}%)</span>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-between py-1 border-b border-white/5">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
-                                <span class="text-slate-300">Draft Kantor Cabang</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 font-medium">
-                                <span class="text-white">{{ draftCount }}</span>
-                                <span class="text-slate-500">({{ draftPercent }}%)</span>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-between py-1">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                                <span class="text-slate-300">Ditolak / Perlu Revisi</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 font-medium">
-                                <span class="text-white">{{ rejectedCount }}</span>
-                                <span class="text-slate-500">({{ rejectedPercent }}%)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
                 <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-5 shadow-sm">
                     <h3 class="text-sm font-bold text-white tracking-tight mb-3">Pusat Akses Master Data</h3>
                     <div class="space-y-2">

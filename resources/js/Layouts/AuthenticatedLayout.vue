@@ -1,13 +1,34 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
+import { useTheme } from '@/composables/useTheme';
+import {
+    MenuUnfoldOutlined,
+    MenuFoldOutlined,
+    BellOutlined,
+    UserOutlined,
+    DashboardOutlined,
+    FileTextOutlined,
+    FormOutlined,
+    InboxOutlined,
+    EditOutlined,
+    SettingOutlined,
+    AppstoreOutlined,
+    EnvironmentOutlined,
+    BankOutlined,
+    TeamOutlined,
+    LogoutOutlined,
+    DownOutlined
+} from '@ant-design/icons-vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const unreadCount = ref(page.props.unreadNotificationsCount || 0);
 const { success, error } = useSweetAlert();
+const { theme } = useTheme();
+const isLightTheme = computed(() => theme.value === 'light');
 
 watch(() => page.props.flash?.success, (message) => {
     if (message) success(message);
@@ -17,10 +38,8 @@ watch(() => page.props.flash?.error, (message) => {
     if (message) error(message);
 });
 
-const showingNavDropdown = ref(false);
-const showNotifications = ref(false);
-const showUserMenu = ref(false);
 const notifications = ref([]);
+const userMenuOpen = ref(false);
 const sidebarStateKey = 'arm-sidebar-collapsed';
 const sidebarCollapsed = ref(
     typeof window !== 'undefined' && window.localStorage.getItem(sidebarStateKey) === 'true'
@@ -45,30 +64,42 @@ const portalSubtitle = computed(() => {
 
 const roleBadgeClass = computed(() => {
     const classes = {
-        KC: 'bg-sky-400/20 text-sky-200 border border-sky-400/30',
-        AM: 'bg-emerald-400/20 text-emerald-200 border border-emerald-400/30',
-        ADMIN: 'bg-purple-400/20 text-purple-200 border border-purple-400/30'
+        KC: 'blue',
+        AM: 'green',
+        ADMIN: 'purple'
     };
-    return classes[user.value?.role] || '';
+    return classes[user.value?.role] || 'default';
 });
 
 const navItems = computed(() => {
     const role = user.value?.role;
     const items = [
-        { name: 'Dashboard', route: 'dashboard', icon: 'dashboard', roles: ['KC', 'AM', 'ADMIN'] },
-        { name: 'Profil Saya', route: 'profile.edit', icon: 'profile', roles: ['KC', 'AM', 'ADMIN'] },
-        { name: 'Memo Saya', route: 'memos.index', icon: 'memo', roles: ['KC'] },
-        { name: 'Buat Memo', route: 'memos.create', icon: 'create', roles: ['KC'] },
-        { name: 'Kotak Masuk', route: 'approvals.pending', icon: 'inbox', roles: ['AM'] },
-        { name: 'Tanda Tangan', route: 'signature.index', icon: 'signature', roles: ['AM'] },
-        { name: 'Pengaturan TTD', route: 'signature.settings', icon: 'signature-settings', roles: ['AM'] },
-        { name: 'Template Memo', route: 'admin.templates.index', icon: 'template', roles: ['ADMIN'] },
-        { name: 'Kelola Area', route: 'admin.areas.index', icon: 'area', roles: ['ADMIN'] },
-        { name: 'Kelola Cabang', route: 'admin.branches.index', icon: 'branch', roles: ['ADMIN'] },
-        { name: 'Kelola User', route: 'admin.users.index', icon: 'users', roles: ['ADMIN'] },
+        { name: 'Dashboard', route: 'dashboard', icon: DashboardOutlined, roles: ['KC', 'AM', 'ADMIN'] },
+        { name: 'Profil Saya', route: 'profile.edit', icon: UserOutlined, roles: ['KC', 'AM', 'ADMIN'] },
+        { name: 'Memo Saya', route: 'memos.index', icon: FileTextOutlined, roles: ['KC'] },
+        { name: 'Buat Memo', route: 'memos.create', icon: FormOutlined, roles: ['KC'] },
+        { name: 'Kotak Masuk', route: 'approvals.pending', icon: InboxOutlined, roles: ['AM'] },
+        { name: 'Tanda Tangan', route: 'signature.index', icon: EditOutlined, roles: ['AM'] },
+        { name: 'Pengaturan TTD', route: 'signature.settings', icon: SettingOutlined, roles: ['AM'] },
+        { name: 'Template Memo', route: 'admin.templates.index', icon: AppstoreOutlined, roles: ['ADMIN'] },
+        { name: 'Kelola Area', route: 'admin.areas.index', icon: EnvironmentOutlined, roles: ['ADMIN'] },
+        { name: 'Kelola Cabang', route: 'admin.branches.index', icon: BankOutlined, roles: ['ADMIN'] },
+        { name: 'Kelola User', route: 'admin.users.index', icon: TeamOutlined, roles: ['ADMIN'] },
     ];
     return items.filter(item => item.roles.includes(role));
 });
+
+const selectedKeys = ref([]);
+
+watch(() => route().current(), (currentRoute) => {
+    if (currentRoute) {
+        selectedKeys.value = [currentRoute];
+    }
+}, { immediate: true });
+
+const onNavClick = (item) => {
+    router.visit(route(item.route));
+};
 
 const fetchNotifications = async () => {
     try {
@@ -99,184 +130,282 @@ const markAllRead = async () => {
     } catch (e) {}
 };
 
-const toggleNotifications = () => {
-    showUserMenu.value = false;
-    showNotifications.value = !showNotifications.value;
-    if (showNotifications.value) fetchNotifications();
+const handleNotificationDropdown = (visible) => {
+    if (visible) fetchNotifications();
 };
 
-const toggleUserMenu = () => {
-    showNotifications.value = false;
-    showUserMenu.value = !showUserMenu.value;
+const handleUserDropdown = (visible) => {
+    userMenuOpen.value = visible;
 };
 
-const activePendingRoute = ref(null);
-const isNavigating = ref(false);
-
-router.on('start', () => {
-    isNavigating.value = true;
-});
-
-router.on('finish', () => {
-    isNavigating.value = false;
-    activePendingRoute.value = null;
-});
-
-const onNavClick = (routeName) => {
-    activePendingRoute.value = routeName;
-};
-
-const isActive = (routeName) => {
-    if (activePendingRoute.value) {
-        return activePendingRoute.value === routeName;
-    }
-    try { return route().current(routeName); } catch { return false; }
+const handleLogout = () => {
+    router.post(route('logout'));
 };
 </script>
 
 <template>
-    <div class="app-shell min-h-screen">
+    <a-layout :style="{ height: '100vh', overflow: 'hidden', background: isLightTheme ? '#f8fafc' : '#0f172a' }">
         <!-- Sidebar -->
-        <aside :class="[sidebarCollapsed ? 'w-20' : 'w-72', 'fixed inset-y-0 left-0 z-30 flex flex-col transition-all duration-300 ease-in-out print:hidden']">
-            <div class="sidebar-pgi flex flex-col h-full backdrop-blur-xl">
-                <!-- Logo -->
-                <div class="flex items-center gap-3 px-5 py-5 sidebar-divider border-b">
-                    <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-11 h-11 rounded-xl object-contain bg-white p-1 shadow-md ring-1 ring-white/20 flex-shrink-0" />
-                    <div v-if="!sidebarCollapsed" class="flex flex-col min-w-0">
-                        <span class="sidebar-brand-title text-xs font-bold tracking-wider uppercase leading-tight">SISTEM LAYANAN<br>PENGAJUAN</span>
-                        <div class="flex items-center gap-1.5 mt-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse flex-shrink-0"></span>
-                            <span class="sidebar-brand-subtitle text-[10px] font-medium tracking-wide truncate">{{ portalSubtitle }}</span>
-                        </div>
+        <a-layout-sider
+            v-model:collapsed="sidebarCollapsed"
+            :trigger="null"
+            collapsible
+            theme="dark"
+            :style="{ background: isLightTheme ? '#2474ad' : '#155080', height: '100vh', position: 'sticky', top: 0 }"
+            :class="isLightTheme ? 'border-r border-blue-600' : 'border-r border-slate-800'"
+            :width="280"
+        >
+            <div class="flex items-center gap-3 px-5 py-4 border-b border-blue-500/80">
+                <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-10 h-10 rounded-lg object-contain border border-blue-700 bg-white p-0.5 shadow-sm flex-shrink-0" />
+                <div v-if="!sidebarCollapsed" class="flex flex-col min-w-0 text-white">
+                    <span class="sidebar-brand-title text-xs font-bold text-white tracking-wider uppercase leading-tight">SISTEM LAYANAN<br>PENGAJUAN</span>
+                    <div class="flex items-center gap-1.5 mt-1 text-[10px] text-blue-100">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-300 animate-pulse flex-shrink-0"></span>
+                        <span class="font-medium tracking-wide truncate">{{ portalSubtitle }}</span>
                     </div>
                 </div>
-
-                <!-- Navigation -->
-                <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
-                    <Link
-                        v-for="item in navItems"
-                        :key="item.route"
-                        :href="route(item.route)"
-                        prefetch
-                        @click="onNavClick(item.route)"
-                        :class="[
-                            isActive(item.route)
-                                ? 'sidebar-nav-active'
-                                : 'sidebar-nav-inactive',
-                            sidebarCollapsed ? 'justify-center px-2' : 'px-3.5',
-                            'sidebar-nav-item group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 border active:scale-[0.98]'
-                        ]"
-                        :title="sidebarCollapsed ? item.name : undefined"
-                    >
-                        <!-- Icons -->
-                        <svg v-if="item.icon === 'dashboard'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                        <svg v-else-if="item.icon === 'memo'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        <svg v-else-if="item.icon === 'create'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
-                        <svg v-else-if="item.icon === 'approval'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                        <svg v-else-if="item.icon === 'inbox'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-                        <svg v-else-if="item.icon === 'signature'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                        <svg v-else-if="item.icon === 'signature-settings'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.594 3.94a1.5 1.5 0 012.812 0l.342 1.025a7.35 7.35 0 011.68.982l1.022-.35a1.5 1.5 0 011.987 1.987l-.35 1.022c.39.51.72 1.073.982 1.68l1.025.342a1.5 1.5 0 010 2.812l-1.025.342a7.35 7.35 0 01-.982 1.68l.35 1.022a1.5 1.5 0 01-1.987 1.987l-1.022-.35a7.35 7.35 0 01-1.68.982l-.342 1.025a1.5 1.5 0 01-2.812 0l-.342-1.025a7.35 7.35 0 01-1.68-.982l-1.022.35a1.5 1.5 0 01-1.987-1.987l.35-1.022a7.35 7.35 0 01-.982-1.68l-1.025-.342a1.5 1.5 0 010-2.812l1.025-.342a7.35 7.35 0 01.982-1.68l-.35-1.022a1.5 1.5 0 011.987-1.987l1.022.35a7.35 7.35 0 011.68-.982l.342-1.025z"/><circle cx="11" cy="12" r="2.5" stroke-width="1.5"/></svg>
-                        <svg v-else-if="item.icon === 'template'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm10 0a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>
-                        <svg v-else-if="item.icon === 'area'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <svg v-else-if="item.icon === 'branch'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                        <svg v-else-if="item.icon === 'users'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        <svg v-else-if="item.icon === 'profile'" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0112 19.5c-1.052 0-2.062-.133-3-.384m6-3.06a9.38 9.38 0 00-2.625-.372 9.37 9.37 0 00-2.625.372m5.25 0a24.73 24.73 0 01-1.5 3.06M9 19.128v-.003a9.37 9.37 0 012.625-.372M9 19.128v.106a12.318 12.318 0 003 .384m-3.75-9.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0z"/></svg>
-                        <span v-if="!sidebarCollapsed">{{ item.name }}</span>
-                    </Link>
-                </nav>
             </div>
-        </aside>
+
+            <a-menu
+                v-model:selectedKeys="selectedKeys"
+                mode="inline"
+                theme="dark"
+                :style="{ background: isLightTheme ? '#2474ad' : '#155080' }"
+                class="border-r-0 pt-4"
+            >
+                <a-menu-item
+                    v-for="item in navItems"
+                    :key="item.route"
+                    @click="onNavClick(item)"
+                >
+                    <template #icon>
+                        <component :is="item.icon" />
+                    </template>
+                    {{ item.name }}
+                </a-menu-item>
+            </a-menu>
+        </a-layout-sider>
 
         <!-- Main Content -->
-        <div :class="[sidebarCollapsed ? 'pl-20' : 'pl-72', 'print:pl-0', 'transition-all duration-300']">
+        <a-layout class="main-layout" :style="{ background: isLightTheme ? '#f8fafc' : '#0f172a' }">
             <!-- Top Bar -->
-            <header class="app-header-pgi sticky top-0 z-20 h-16 flex items-center justify-between px-6 backdrop-blur-xl print:hidden">
-                <div class="flex items-center gap-4">
-                    <button
-                        type="button"
-                        :aria-label="sidebarCollapsed ? 'Tampilkan menu' : 'Sembunyikan menu'"
-                        :title="sidebarCollapsed ? 'Tampilkan menu' : 'Sembunyikan menu'"
+            <a-layout-header
+                class="px-6 sticky top-0 z-10 border-b"
+                :style="{ padding: '0 24px', height: '64px', color: isLightTheme ? '#0f172a' : '#e2e8f0', background: isLightTheme ? '#ffffff' : '#17233a', backgroundColor: isLightTheme ? '#ffffff' : '#17233a', borderColor: isLightTheme ? '#e2e8f0' : '#334155' }"
+            >
+                <div class="header-left flex items-center gap-4" :class="isLightTheme ? 'text-slate-700' : 'text-slate-200'">
+                    <menu-unfold-outlined
+                        v-if="sidebarCollapsed"
+                        class="text-lg cursor-pointer hover:text-blue-600 transition-colors flex-shrink-0"
                         @click="toggleSidebar"
-                        class="app-header-control p-2 rounded-lg transition-colors"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    </button>
-                    <div>
+                    />
+                    <menu-fold-outlined
+                        v-else
+                        class="text-lg cursor-pointer hover:text-blue-600 transition-colors flex-shrink-0"
+                        @click="toggleSidebar"
+                    />
+                    <div class="leading-none flex items-center min-w-0" :class="isLightTheme ? 'text-slate-800' : 'text-slate-100'">
                         <slot name="header" />
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <ThemeToggle />
-                    <!-- Notification Bell -->
-                    <div class="relative">
-                        <button @click="toggleNotifications" class="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                            <span v-if="unreadCount > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold animate-pulse">
-                                {{ unreadCount > 9 ? '9+' : unreadCount }}
-                            </span>
-                        </button>
+                <div class="header-right flex items-center gap-3 flex-shrink-0 self-center" :class="isLightTheme ? 'text-slate-700' : 'text-slate-200'">
+                    <div class="flex items-center justify-center">
+                        <ThemeToggle />
+                    </div>
 
-                        <!-- Notification Dropdown -->
-                        <div v-if="showNotifications" class="notification-popover fixed top-[4.25rem] right-32 w-96 bg-slate-800 border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-50">
-                            <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                                <h3 class="text-sm font-semibold text-white">Notifikasi</h3>
-                                <button @click="markAllRead" class="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">Tandai semua dibaca</button>
-                            </div>
-                            <div class="max-h-80 overflow-y-auto">
-                                <div v-if="notifications.length === 0" class="px-4 py-8 text-center text-sm text-slate-500">Tidak ada notifikasi</div>
-                                <div
-                                    v-for="notif in notifications"
-                                    :key="notif.id"
-                                    @click="markAsRead(notif)"
-                                    :class="[!notif.is_read ? 'bg-indigo-500/5 border-l-2 border-l-indigo-500' : 'border-l-2 border-l-transparent', 'px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors']"
-                                >
-                                    <p class="text-sm text-slate-300">{{ notif.message }}</p>
-                                    <p class="text-[11px] text-slate-500 mt-1">{{ new Date(notif.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }}</p>
+                    <!-- Notifications -->
+                    <a-dropdown trigger="['click']" placement="bottomRight" @openChange="handleNotificationDropdown">
+                        <a-badge :count="unreadCount" :overflow-count="99" class="notification-badge cursor-pointer flex items-center justify-center">
+                            <a-avatar shape="square" class="bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                                <template #icon><bell-outlined /></template>
+                            </a-avatar>
+                        </a-badge>
+                        <template #overlay>
+                            <div class="bg-white rounded-lg shadow-lg border border-gray-100 w-80 overflow-hidden">
+                                <div class="flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
+                                    <span class="font-medium">Notifikasi</span>
+                                    <a-button type="link" size="small" @click="markAllRead" class="text-xs">
+                                        Tandai dibaca
+                                    </a-button>
+                                </div>
+                                <div class="max-h-80 overflow-y-auto">
+                                    <a-empty v-if="notifications.length === 0" description="Tidak ada notifikasi" class="py-6" />
+                                    <a-list v-else item-layout="horizontal" :data-source="notifications" class="px-2">
+                                        <template #renderItem="{ item }">
+                                            <a-list-item 
+                                                class="cursor-pointer hover:bg-gray-50 rounded px-2 transition-colors border-b-0" 
+                                                :class="{'bg-blue-50/50': !item.is_read}"
+                                                @click="markAsRead(item)"
+                                            >
+                                                <a-list-item-meta :description="new Date(item.created_at).toLocaleString('id-ID')">
+                                                    <template #title>
+                                                        <span class="text-sm font-normal" :class="{'font-medium text-blue-600': !item.is_read}">
+                                                            {{ item.message }}
+                                                        </span>
+                                                    </template>
+                                                    <template #avatar v-if="!item.is_read">
+                                                        <a-badge dot status="processing" />
+                                                    </template>
+                                                </a-list-item-meta>
+                                            </a-list-item>
+                                        </template>
+                                    </a-list>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </template>
+                    </a-dropdown>
 
-                    <!-- User Dropdown -->
-                    <div class="relative">
-                        <button
-                            type="button"
-                            :aria-expanded="showUserMenu"
-                            aria-controls="user-menu"
-                            @click="toggleUserMenu"
-                            class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-colors text-left"
-                        >
-                            <span class="text-sm font-medium text-slate-300">{{ user?.name }}</span>
-                            <svg v-if="showUserMenu" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 9l7 7 7-7"/></svg>
-                            <svg v-else class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                        </button>
-                        
-                        <div v-if="showUserMenu" id="user-menu" class="user-menu-popover absolute right-0 top-full mt-2 w-44 max-w-[calc(100vw-1rem)] bg-slate-800 border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50 py-1 text-left">
-                            <div class="px-4 py-2 border-b border-white/10 mb-1">
-                                <p class="text-sm font-medium text-white truncate">{{ user?.name }}</p>
-                                <p class="text-xs text-slate-400 truncate">{{ roleLabel }}</p>
-                            </div>
-                            <Link :href="route('profile.edit')" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                Profil Saya
-                            </Link>
-                            <Link :href="route('logout')" method="post" as="button" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                Keluar
-                            </Link>
+                    <!-- User Menu -->
+                    <a-dropdown placement="bottomRight" trigger="['click']" @openChange="handleUserDropdown">
+                                <div class="user-menu-trigger flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2.5 py-1.5 rounded-lg transition-colors self-center">
+                            <a-avatar size="small" class="bg-blue-500 flex items-center justify-center">
+                                <template #icon><user-outlined /></template>
+                            </a-avatar>
+                            <span class="text-sm font-medium hidden sm:block leading-none">{{ user?.name }}</span>
+                                    <down-outlined :class="['user-menu-arrow text-[10px] opacity-70', { 'is-open': userMenuOpen }]" />
                         </div>
-                    </div>
+                        <template #overlay>
+                            <a-menu>
+                                <a-menu-item key="info" disabled class="py-2">
+                                    <div class="flex flex-col text-gray-800">
+                                        <span class="font-medium">{{ user?.name }}</span>
+                                        <span class="text-xs text-gray-500">{{ roleLabel }}</span>
+                                    </div>
+                                </a-menu-item>
+                                <a-menu-divider />
+                                <a-menu-item key="profile" @click="router.visit(route('profile.edit'))">
+                                    <user-outlined class="mr-2" /> Profil Saya
+                                </a-menu-item>
+                                <a-menu-item key="logout" class="text-red-500" @click="handleLogout">
+                                    <logout-outlined class="mr-2" /> Keluar
+                                </a-menu-item>
+                            </a-menu>
+                        </template>
+                    </a-dropdown>
                 </div>
-            </header>
+            </a-layout-header>
 
-            <!-- Main Content -->
-            <main class="p-6 print:p-0">
+            <!-- Main Content Area -->
+            <a-layout-content
+                :style="{ margin: '24px 16px', padding: '24px', background: isLightTheme ? '#ffffff' : '#1e293b', minHeight: '280px', height: 'calc(100vh - 64px - 48px)', overflowY: 'auto', borderColor: isLightTheme ? '#f3f4f6' : '#334155' }"
+                class="rounded-lg shadow-sm border overflow-initial"
+            >
                 <slot />
-            </main>
-        </div>
-
-        <!-- Click outside to close notifications/user menu -->
-        <div v-if="showNotifications || showUserMenu" @click="showNotifications = false; showUserMenu = false" class="fixed inset-0 z-10"></div>
-    </div>
+            </a-layout-content>
+        </a-layout>
+    </a-layout>
 </template>
+
+<style>
+/* Adjust Ant Design layout variables slightly if needed */
+.ant-layout-header {
+    padding: 0 24px !important;
+    background: #17233a !important;
+    background-color: #17233a !important;
+    border-bottom: 1px solid #334155 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    line-height: 1 !important;
+}
+
+html.theme-light .ant-layout-header {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border-bottom-color: #e2e8f0 !important;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.header-left {
+    min-width: 0;
+    height: 100%;
+}
+
+.header-left > .anticon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px;
+    height: 24px;
+    line-height: 1 !important;
+}
+
+.header-left > div {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.header-left h2 {
+    margin: 0;
+    line-height: 1.25;
+}
+
+.header-right {
+    margin-left: auto;
+    align-items: center;
+    height: 100%;
+}
+
+.header-right > * {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.header-right .ant-dropdown,
+.header-right .ant-dropdown-trigger,
+.header-right .ant-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.header-right .theme-toggle,
+.header-right .ant-avatar {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle;
+}
+
+.header-right .ant-avatar {
+    line-height: 1 !important;
+}
+
+.user-menu-arrow {
+    transform: rotate(-90deg);
+    transition: transform 0.2s ease;
+}
+
+.user-menu-arrow.is-open {
+    transform: rotate(0deg);
+}
+
+.ant-layout-sider {
+    overflow: hidden;
+}
+.ant-layout-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.7) transparent;
+}
+.ant-menu-item {
+    border-radius: 8px !important;
+    margin: 4px 8px !important;
+    width: calc(100% - 16px) !important;
+    font-weight: 600 !important;
+}
+
+.sidebar-brand-title {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+</style>

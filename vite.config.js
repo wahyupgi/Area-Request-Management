@@ -17,4 +17,28 @@ export default defineConfig({
             },
         }),
     ],
+    build: {
+        chunkSizeWarningLimit: 1500,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('@antv/') || id.includes('@ant-design/charts-util')) {
+                            return 'charts';
+                        }
+                        if (id.includes('@ant-design/icons-vue')) {
+                            return 'ant-design-icons';
+                        }
+                        if (id.includes('ant-design-vue')) {
+                            return 'ant-design-vue';
+                        }
+                        if (id.includes('@inertiajs') || id.includes('@vue') || id.includes('vue-router') || id.includes('vue')) {
+                            return 'vue-vendor';
+                        }
+                        return 'vendor';
+                    }
+                },
+            },
+        },
+    },
 });

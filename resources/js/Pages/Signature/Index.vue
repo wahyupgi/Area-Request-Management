@@ -2,7 +2,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { useSweetAlert } from '@/composables/useSweetAlert';
+import { UploadOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons-vue';
+import { Modal, message } from 'ant-design-vue';
 
 const props = defineProps({ signature: Object });
 
@@ -12,28 +13,62 @@ const form = useForm({
 });
 
 const preview = ref(null);
-const { confirm } = useSweetAlert();
 
-const onFileChange = (e) => {
-    const file = e.target.files[0];
-    form.signature_image = file;
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => { preview.value = ev.target.result; };
-        reader.readAsDataURL(file);
+const beforeUpload = (file) => {
+    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+    if (!isJpgOrPng) {
+        message.error('Hanya bisa mengunggah file JPG/PNG!');
+        return false;
     }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+        message.error('Gambar harus lebih kecil dari 2MB!');
+        return false;
+    }
+    
+    form.signature_image = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        preview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    
+    return false; // Prevent automatic upload
+};
+
+const handleRemoveImage = () => {
+    form.signature_image = null;
+    preview.value = null;
 };
 
 const save = () => {
+    if (!form.signature_image) {
+        message.error('Silakan unggah gambar tanda tangan terlebih dahulu.');
+        return;
+    }
     form.post(route('signature.store'), {
         forceFormData: true,
+        onSuccess: () => {
+            message.success('Tanda tangan berhasil disimpan.');
+            preview.value = null;
+            form.reset();
+        }
     });
 };
 
-const remove = async () => {
-    if (await confirm('Hapus tanda tangan digital Anda?', 'Tanda tangan digital akan dihapus dari akun Anda.')) {
-        router.delete(route('signature.destroy'));
-    }
+const remove = () => {
+    Modal.confirm({
+        title: 'Hapus tanda tangan digital Anda?',
+        content: 'Tanda tangan digital akan dihapus dari akun Anda secara permanen.',
+        okText: 'Hapus',
+        okType: 'danger',
+        cancelText: 'Batal',
+        onOk() {
+            router.delete(route('signature.destroy'), {
+                onSuccess: () => message.success('Tanda tangan berhasil dihapus.')
+            });
+        }
+    });
 };
 </script>
 
@@ -44,48 +79,112 @@ const remove = async () => {
             <h1 class="text-xl font-bold text-white">Tanda Tangan Digital</h1>
         </template>
 
-        <div class="max-w-2xl space-y-6">
+        <div class="am-signature-page signature-page max-w-3xl space-y-6">
             <!-- Current Signature -->
-            <div v-if="signature" class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                <h2 class="text-lg font-semibold text-white mb-4">Tanda Tangan Saat Ini</h2>
-                <div class="flex items-center gap-6">
-                    <div class="bg-white/10 rounded-2xl p-6">
+            <a-card v-if="signature" :bordered="false" class="bg-slate-800/50 border border-white/5">
+                <template #title>
+                    <span class="text-white font-medium">Tanda Tangan Saat Ini</span>
+                </template>
+                <div class="flex flex-col sm:flex-row items-center gap-6">
+                    <div class="bg-white/10 rounded-2xl p-6 flex items-center justify-center min-w-[200px]">
                         <img :src="'/storage/' + signature.signature_image" alt="Signature" class="h-24 object-contain" />
                     </div>
-                    <div>
-                        <p class="text-sm text-emerald-400 font-medium">✓ Terdaftar</p>
-                        <p v-if="signature.certificate_no" class="text-sm text-slate-400 mt-1">No. Sertifikat: {{ signature.certificate_no }}</p>
-                        <p class="text-xs text-slate-500 mt-1">Dibuat: {{ new Date(signature.created_at).toLocaleDateString('id-ID') }}</p>
-                        <button @click="remove" class="mt-3 text-sm text-red-400 hover:text-red-300 transition-colors">Hapus Tanda Tangan</button>
+                    <div class="flex-1 w-full">
+                        <a-tag color="success" class="mb-2">✓ Terdaftar</a-tag>
+                        <a-descriptions :column="1" size="small" class="custom-dark-descriptions">
+                            <a-descriptions-item v-if="signature.certificate_no" label="No. Sertifikat">
+                                {{ signature.certificate_no }}
+                            </a-descriptions-item>
+                            <a-descriptions-item label="Dibuat Pada">
+                                {{ new Date(signature.created_at).toLocaleDateString('id-ID') }}
+                            </a-descriptions-item>
+                        </a-descriptions>
+                        <div class="mt-4">
+                            <a-button danger @click="remove">
+                                <template #icon><DeleteOutlined /></template>
+                                Hapus Tanda Tangan
+                            </a-button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a-card>
 
             <!-- Upload New -->
-            <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                <h2 class="text-lg font-semibold text-white mb-4">{{ signature ? 'Ganti Tanda Tangan' : 'Upload Tanda Tangan' }}</h2>
-                <form @submit.prevent="save" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">File Gambar Tanda Tangan</label>
-                        <input type="file" @change="onFileChange" accept="image/png,image/jpeg" class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer" />
-                        <p class="text-xs text-slate-500 mt-1">Format: PNG atau JPG. Maksimal 2MB. Disarankan background transparan (PNG).</p>
-                        <p v-if="form.errors.signature_image" class="text-red-400 text-sm mt-1">{{ form.errors.signature_image }}</p>
+            <a-card :bordered="false" class="bg-slate-800/50 border border-white/5">
+                <template #title>
+                    <span class="text-white font-medium">{{ signature ? 'Ganti Tanda Tangan' : 'Upload Tanda Tangan' }}</span>
+                </template>
+                
+                <a-form layout="vertical" @finish="save">
+                    <a-form-item 
+                        label="File Gambar Tanda Tangan" 
+                        :validateStatus="form.errors.signature_image ? 'error' : ''" 
+                        :help="form.errors.signature_image || 'Format: PNG atau JPG. Maksimal 2MB. Disarankan background transparan (PNG).'"
+                    >
+                        <a-upload-dragger
+                            name="file"
+                            :multiple="false"
+                            :before-upload="beforeUpload"
+                            :show-upload-list="false"
+                            class="custom-dragger"
+                        >
+                            <p class="ant-upload-drag-icon">
+                                <UploadOutlined style="color: #6366f1;" />
+                            </p>
+                            <p class="ant-upload-text" style="color: #cbd5e1;">Klik atau seret file ke area ini</p>
+                            <p class="ant-upload-hint" style="color: #94a3b8;">
+                                Mendukung file tunggal upload. Hindari mengunggah data rahasia tanpa enkripsi.
+                            </p>
+                        </a-upload-dragger>
+                    </a-form-item>
+
+                    <!-- Preview -->
+                    <div v-if="preview" class="mb-6">
+                        <p class="text-sm text-slate-300 mb-2">Pratinjau:</p>
+                        <div class="bg-white/10 rounded-xl p-4 inline-block relative border border-white/10">
+                            <img :src="preview" alt="Preview" class="h-20 object-contain" />
+                            <a-button 
+                                type="primary" 
+                                danger 
+                                shape="circle" 
+                                size="small" 
+                                class="absolute -top-2 -right-2"
+                                @click="handleRemoveImage"
+                            >
+                                <template #icon><DeleteOutlined /></template>
+                            </a-button>
+                        </div>
                     </div>
 
-                    <div v-if="preview" class="bg-white/10 rounded-xl p-4 inline-block">
-                        <img :src="preview" alt="Preview" class="h-20 object-contain" />
-                    </div>
+                    <a-form-item label="Nomor Sertifikat (opsional)">
+                        <a-input v-model:value="form.certificate_no" placeholder="Contoh: CERT-JKT-001" size="large" />
+                    </a-form-item>
 
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Sertifikat (opsional)</label>
-                        <input v-model="form.certificate_no" type="text" placeholder="Contoh: CERT-JKT-001" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                    <div class="pt-2">
+                        <a-button type="primary" html-type="submit" :loading="form.processing" size="large" :disabled="!form.signature_image">
+                            <template #icon><SaveOutlined /></template>
+                            Simpan Tanda Tangan
+                        </a-button>
                     </div>
-
-                    <button type="submit" :disabled="form.processing || !form.signature_image" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-500/25">
-                        {{ form.processing ? 'Menyimpan...' : 'Simpan Tanda Tangan' }}
-                    </button>
-                </form>
-            </div>
+                </a-form>
+            </a-card>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+:deep(.custom-dark-descriptions .ant-descriptions-item-label) {
+    color: #94a3b8;
+}
+:deep(.custom-dark-descriptions .ant-descriptions-item-content) {
+    color: #f1f5f9;
+    font-weight: 500;
+}
+:deep(.custom-dragger.ant-upload-drag) {
+    background-color: rgba(30, 41, 59, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+:deep(.custom-dragger.ant-upload-drag:hover) {
+    border-color: #6366f1 !important;
+}
+</style>

@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { PlusOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     memos: Object,
@@ -11,11 +12,39 @@ const props = defineProps({
 const memoList = computed(() => props.memos?.data ?? []);
 const paginationLinks = computed(() => props.memos?.links ?? []);
 
-const statusConfig = {
-    draft: { label: 'Draft', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
-    submitted: { label: 'Submitted', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
-    approved: { label: 'Approved', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
-    rejected: { label: 'Rejected', class: 'bg-slate-500/15 text-slate-300 border border-slate-500/30' },
+const columns = [
+    { title: 'Kode', dataIndex: 'code', key: 'code' },
+    { title: 'Judul', dataIndex: 'title', key: 'title' },
+    { title: 'Template', dataIndex: ['template', 'name'], key: 'template' },
+    { title: 'Status', dataIndex: 'status', key: 'status' },
+    { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at' },
+    { title: 'Aksi', key: 'action', align: 'center' }
+];
+
+const getStatusColor = (status) => {
+    const colors = {
+        draft: 'default',
+        submitted: 'processing',
+        approved: 'success',
+        rejected: 'error',
+    };
+    return colors[status] || 'default';
+};
+
+const getStatusLabel = (status) => {
+    const labels = {
+        draft: 'Draft',
+        submitted: 'Submitted',
+        approved: 'Approved',
+        rejected: 'Rejected',
+    };
+    return labels[status] || status;
+};
+
+const onFilterChange = (e) => {
+    const status = e.target.value;
+    const query = status ? { status } : {};
+    router.get(route('memos.index'), query, { preserveState: true });
 };
 </script>
 
@@ -23,62 +52,78 @@ const statusConfig = {
     <Head title="Daftar Memo" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-white">Daftar Memo</h1>
+            <h1 class="text-xl font-bold text-gray-800 mb-0">Daftar Memo</h1>
         </template>
 
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex gap-2">
-                <Link :href="route('memos.index')" :class="[!filters?.status ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white', 'px-4 py-2 rounded-xl text-sm font-medium transition-colors']">Semua</Link>
-                <Link v-for="s in ['draft','submitted','approved','rejected']" :key="s" :href="route('memos.index', {status: s})" :class="[filters?.status === s ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white', 'px-4 py-2 rounded-xl text-sm font-medium transition-colors capitalize']">{{ s }}</Link>
+        <a-card :bordered="false" class="rounded-lg shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <a-radio-group :value="filters?.status || ''" @change="onFilterChange" button-style="solid">
+                    <a-radio-button value="">Semua</a-radio-button>
+                    <a-radio-button value="draft">Draft</a-radio-button>
+                    <a-radio-button value="submitted">Submitted</a-radio-button>
+                    <a-radio-button value="approved">Approved</a-radio-button>
+                    <a-radio-button value="rejected">Rejected</a-radio-button>
+                </a-radio-group>
+                
+                <a-button type="primary" @click="router.visit(route('memos.create'))">
+                    <template #icon><plus-outlined /></template>
+                    Buat Memo
+                </a-button>
             </div>
-            <Link :href="route('memos.create')" class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-500/25">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Buat Memo
-            </Link>
-        </div>
 
-        <div class="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
-            <div v-if="memoList.length === 0" class="px-6 py-16 text-center">
-                <p class="text-slate-500">Tidak ada memo ditemukan.</p>
-            </div>
-            <table v-else class="w-full table-head-pgi">
-                <thead>
-                    <tr class="border-b border-white/5">
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Kode</th>
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Judul</th>
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Template</th>
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Status</th>
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Tanggal</th>
-                        <th class="text-center text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="memo in memoList" :key="memo.id" class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                        <td class="px-6 py-4 text-sm text-slate-300 font-mono">{{ memo.code }}</td>
-                        <td class="px-6 py-4 text-sm text-white font-medium">{{ memo.title }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-400">{{ memo.template?.name }}</td>
-                        <td class="px-6 py-4">
-                            <span :class="[statusConfig[memo.status]?.class, 'inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap']">{{ statusConfig[memo.status]?.label }}</span>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-slate-400">{{ new Date(memo.created_at).toLocaleDateString('id-ID') }}</td>
-                        <td class="px-6 py-4 text-center space-x-3">
-                            <Link v-if="['draft','rejected'].includes(memo.status)" :href="route('memos.edit', memo.id)" class="text-indigo-400 hover:text-indigo-300 text-sm">Edit</Link>
-                            <Link :href="route('memos.show', memo.id)" class="text-slate-400 hover:text-white text-sm">Detail</Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div v-if="paginationLinks.length > 3" class="flex flex-wrap items-center justify-center gap-2 border-t border-white/5 px-6 py-4">
-                <template v-for="(page, index) in paginationLinks" :key="index">
-                    <Link
-                        v-if="page.url"
-                        :href="page.url"
-                        :class="['px-3 py-1.5 rounded-lg text-sm', page.active ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white']"
-                        v-html="page.label"
-                    />
+            <a-table 
+                :dataSource="memoList" 
+                :columns="columns" 
+                rowKey="id"
+                :pagination="false"
+                class="memo-table-pgi mb-4"
+            >
+                <template #bodyCell="{ column, record }">
+                    <template v-if="column.key === 'status'">
+                        <a-tag :color="getStatusColor(record.status)">
+                            {{ getStatusLabel(record.status) }}
+                        </a-tag>
+                    </template>
+                    <template v-else-if="column.key === 'created_at'">
+                        {{ new Date(record.created_at).toLocaleDateString('id-ID') }}
+                    </template>
+                    <template v-else-if="column.key === 'action'">
+                        <a-space>
+                            <a-button 
+                                v-if="['draft','rejected'].includes(record.status)" 
+                                type="primary" 
+                                ghost 
+                                size="small"
+                                @click="router.visit(route('memos.edit', record.id))"
+                            >
+                                <template #icon><edit-outlined /></template>
+                                Edit
+                            </a-button>
+                            <a-button 
+                                size="small"
+                                @click="router.visit(route('memos.show', record.id))"
+                            >
+                                <template #icon><eye-outlined /></template>
+                                Detail
+                            </a-button>
+                        </a-space>
+                    </template>
                 </template>
+            </a-table>
+
+            <div v-if="paginationLinks.length > 3" class="flex justify-center mt-4">
+                <a-space wrap>
+                    <template v-for="(page, index) in paginationLinks" :key="index">
+                        <a-button 
+                            v-if="page.url"
+                            :type="page.active ? 'primary' : 'default'"
+                            @click="router.visit(page.url)"
+                            v-html="page.label"
+                        />
+                        <a-button v-else disabled v-html="page.label" />
+                    </template>
+                </a-space>
             </div>
-        </div>
+        </a-card>
     </AuthenticatedLayout>
 </template>

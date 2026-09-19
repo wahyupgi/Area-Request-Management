@@ -48,9 +48,7 @@ class MemoController extends Controller
     {
         MemoTemplate::ensureRequiredDefaults();
 
-        $templates = \Illuminate\Support\Facades\Cache::remember('active_memo_templates', now()->addHour(), function () {
-            return MemoTemplate::where('is_active', true)->get();
-        });
+        $templates = MemoTemplate::where('is_active', true)->get();
 
         return Inertia::render('Memo/Create', [
             'templates' => $templates,
@@ -109,9 +107,7 @@ class MemoController extends Controller
         MemoTemplate::ensureRequiredDefaults();
 
         $memo->load(['template', 'attachments', 'approvals.approver', 'creator.digitalSignature']);
-        $templates = \Illuminate\Support\Facades\Cache::remember('active_memo_templates', now()->addHour(), function () {
-            return MemoTemplate::where('is_active', true)->get();
-        });
+        $templates = MemoTemplate::where('is_active', true)->get();
 
         return Inertia::render('Memo/Edit', [
             'memo' => $memo,

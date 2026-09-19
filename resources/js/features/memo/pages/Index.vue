@@ -33,37 +33,39 @@ const statusConfig = {
             </Link>
         </div>
 
-        <div class="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
+        <div class="bg-slate-800/50 border border-white/5 rounded-2xl">
             <div v-if="memos.length === 0" class="px-6 py-16 text-center">
                 <p class="text-slate-500">Tidak ada memo ditemukan.</p>
             </div>
-            <table v-else class="w-full table-head-pgi">
-                <thead>
-                    <tr class="border-b border-white/5">
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Kode</th>
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Judul</th>
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Template</th>
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Status</th>
-                        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Tanggal</th>
-                        <th class="text-center text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="memo in memos" :key="memo.id" class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                        <td class="px-6 py-4 text-sm text-slate-300 font-mono">{{ memo.code }}</td>
-                        <td class="px-6 py-4 text-sm text-white font-medium">{{ memo.title }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-400">{{ memo.template?.name }}</td>
-                        <td class="px-6 py-4">
-                            <span :class="[statusConfig[memo.status]?.class, 'inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap']">{{ statusConfig[memo.status]?.label }}</span>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-slate-400">{{ new Date(memo.created_at).toLocaleDateString('id-ID') }}</td>
-                        <td class="px-6 py-4 text-center space-x-3">
-                            <Link v-if="['draft','rejected'].includes(memo.status)" :href="route('memos.edit', memo.id)" class="text-indigo-400 hover:text-indigo-300 text-sm">Edit</Link>
-                            <Link :href="route('memos.show', memo.id)" class="text-slate-400 hover:text-white text-sm">Detail</Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div v-else class="overflow-x-auto -mx-6 px-6">
+                <table class="w-full min-w-[780px] table-head-pgi">
+                    <thead>
+                        <tr class="border-b border-white/5">
+                            <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Kode</th>
+                            <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Judul</th>
+                            <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Template</th>
+                            <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Status</th>
+                            <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Tanggal</th>
+                            <th class="text-center text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="memo in memos" :key="memo.id" class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                            <td class="px-6 py-4 text-sm text-slate-300 font-mono">{{ memo.code }}</td>
+                            <td class="px-6 py-4 text-sm text-white font-medium">{{ memo.title }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-400">{{ memo.template?.name }}</td>
+                            <td class="px-6 py-4">
+                                <span :class="[statusConfig[memo.status]?.class, 'inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap']">{{ statusConfig[memo.status]?.label }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-400">{{ new Date(memo.created_at).toLocaleDateString('id-ID') }}</td>
+                            <td class="px-6 py-4 text-center space-x-3">
+                                <Link v-if="['draft','rejected'].includes(memo.status)" :href="route('memos.edit', memo.id)" class="text-indigo-400 hover:text-indigo-300 text-sm">Edit</Link>
+                                <Link :href="route('memos.show', memo.id)" class="text-slate-400 hover:text-white text-sm">Detail</Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

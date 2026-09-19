@@ -2,31 +2,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import MemoDocument from '@/Components/MemoDocument.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import {
+    ArrowLeftOutlined,
+    PrinterOutlined,
+    EditOutlined,
+    PaperClipOutlined,
+    CheckCircleOutlined,
+    CloseCircleOutlined
+} from '@ant-design/icons-vue';
 
 const props = defineProps({ memo: Object });
 const user = usePage().props.auth.user;
 
 const statusConfig = {
-    draft: { 
-        label: 'Draft', 
-        badgeClass: 'bg-slate-700/40 text-slate-300 border-slate-600/30',
-        dotClass: 'bg-slate-400' 
-    },
-    submitted: { 
-        label: 'Menunggu Persetujuan', 
-        badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-        dotClass: 'bg-amber-400 animate-pulse' 
-    },
-    approved: { 
-        label: 'Disetujui Resmi', 
-        badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-        dotClass: 'bg-emerald-400' 
-    },
-    rejected: { 
-        label: 'Ditolak / Revisi', 
-        badgeClass: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-        dotClass: 'bg-rose-400' 
-    },
+    draft: { label: 'Draft', color: 'default' },
+    submitted: { label: 'Menunggu Persetujuan', color: 'warning' },
+    approved: { label: 'Disetujui Resmi', color: 'success' },
+    rejected: { label: 'Ditolak / Revisi', color: 'error' },
 };
 
 const formatDate = (dateString) => {
@@ -46,146 +38,145 @@ const formatDate = (dateString) => {
         <template #header>
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
-                    <button
-                        onclick="history.back()"
-                        class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors"
-                        title="Kembali"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    </button>
+                    <a-button type="text" shape="circle" onclick="history.back()">
+                        <template #icon><arrow-left-outlined /></template>
+                    </a-button>
                     <div>
-                        <h1 class="text-base font-bold text-white tracking-tight">Detail Dokumen Memo</h1>
-                        <div class="flex items-center gap-2 text-xs text-slate-400">
-                            <span class="font-mono font-semibold text-indigo-400">{{ memo.code }}</span>
+                        <h1 class="text-base font-bold text-gray-800 mb-0">Detail Dokumen Memo</h1>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <span class="font-mono font-semibold text-blue-600">{{ memo.code }}</span>
                             <span>•</span>
                             <span>{{ memo.branch?.name || 'Kantor Cabang' }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2.5">
-                    <span :class="[statusConfig[memo.status]?.badgeClass, 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border']">
-                        <span class="w-1.5 h-1.5 rounded-full" :class="statusConfig[memo.status]?.dotClass"></span>
-                        <span>{{ statusConfig[memo.status]?.label }}</span>
-                    </span>
+                <div class="flex items-center gap-3">
+                    <a-tag :color="statusConfig[memo.status]?.color" class="font-semibold">
+                        {{ statusConfig[memo.status]?.label }}
+                    </a-tag>
 
-                    <button
-                        onclick="window.print()"
-                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-white/10 transition-colors shadow-sm print:hidden"
-                    >
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                        <span>Cetak</span>
-                    </button>
+                    <a-button class="hidden sm:inline-flex print:hidden" onclick="window.print()">
+                        <template #icon><printer-outlined /></template>
+                        Cetak
+                    </a-button>
 
                     <div v-if="user.role === 'KC' && ['draft','rejected'].includes(memo.status)">
-                        <Link :href="route('memos.edit', memo.id)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
-                            Edit Memo
+                        <Link :href="route('memos.edit', memo.id)">
+                            <a-button type="primary">
+                                <template #icon><edit-outlined /></template>
+                                Edit Memo
+                            </a-button>
                         </Link>
                     </div>
                 </div>
             </div>
         </template>
 
-        <!-- Main Workspace: 2-Column Desktop, Stack on Mobile -->
         <div class="max-w-7xl mx-auto py-2 print:p-0 print:m-0 print:max-w-none print:w-full">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start print:block print:w-full print:m-0 print:p-0">
+            <a-row :gutter="[24, 24]" class="print:block print:w-full print:m-0 print:p-0">
                 
-                <!-- Left: Document Preview Stage (lg:col-span-8) -->
-                <div class="lg:col-span-8 w-full flex justify-center print:block print:w-full print:m-0 print:p-0">
-                    <div class="w-full max-w-[210mm] print:max-w-none print:w-full">
+                <!-- Left: Document Preview Stage -->
+                <a-col :xs="24" :lg="16" class="flex justify-center print:block print:w-full print:m-0 print:p-0">
+                    <div class="w-full max-w-[210mm] print:max-w-none print:w-full shadow-md print:shadow-none bg-white">
                         <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
                     </div>
-                </div>
+                </a-col>
 
-                <!-- Right: Information & History Sidebar (lg:col-span-4) -->
-                <div class="lg:col-span-4 space-y-4 lg:sticky lg:top-20 print:hidden w-full">
+                <!-- Right: Information & History Sidebar -->
+                <a-col :xs="24" :lg="8" class="print:hidden">
                     
                     <!-- Card 1: Metadata Summary -->
-                    <div class="bg-slate-800/50 border border-white/10 rounded-2xl p-5 shadow-sm">
-                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
-                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Informasi Dokumen</h3>
-                            <button
-                                onclick="window.print()"
-                                class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1"
-                            >
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                                <span>Cetak Memo</span>
-                            </button>
-                        </div>
+                    <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
+                        <template #extra>
+                            <a-button type="link" size="small" onclick="window.print()">
+                                <template #icon><printer-outlined /></template>
+                                Cetak
+                            </a-button>
+                        </template>
                         
-                        <div class="space-y-2.5 text-xs">
+                        <div class="space-y-3 text-sm">
                             <div class="flex items-center justify-between">
-                                <span class="text-slate-400">Kode Memo</span>
-                                <span class="font-mono text-indigo-400 font-semibold">{{ memo.code }}</span>
+                                <span class="text-gray-500">Kode Memo</span>
+                                <span class="font-mono text-blue-600 font-semibold">{{ memo.code }}</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-slate-400">Status</span>
-                                <span class="font-semibold text-white">{{ statusConfig[memo.status]?.label }}</span>
+                                <span class="text-gray-500">Status</span>
+                                <span class="font-semibold">{{ statusConfig[memo.status]?.label }}</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-slate-400">Pembuat Memo</span>
-                                <span class="text-white font-medium">{{ memo.creator?.name || '-' }}</span>
+                                <span class="text-gray-500">Pembuat</span>
+                                <span class="font-medium">{{ memo.creator?.name || '-' }}</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-slate-400">Kantor Cabang</span>
-                                <span class="text-white font-medium">{{ memo.branch?.name || '-' }}</span>
+                                <span class="text-gray-500">Cabang</span>
+                                <span class="font-medium">{{ memo.branch?.name || '-' }}</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-slate-400">Area Manager</span>
-                                <span class="text-white font-medium">{{ memo.area_manager?.name || '-' }}</span>
+                                <span class="text-gray-500">Area Manager</span>
+                                <span class="font-medium">{{ memo.area_manager?.name || '-' }}</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-slate-400">Tanggal Pengajuan</span>
-                                <span class="text-slate-300">{{ formatDate(memo.submitted_at || memo.created_at) }}</span>
+                                <span class="text-gray-500">Tgl Pengajuan</span>
+                                <span>{{ formatDate(memo.submitted_at || memo.created_at) }}</span>
                             </div>
                         </div>
 
                         <!-- Action if editable -->
-                        <div v-if="user.role === 'KC' && ['draft','rejected'].includes(memo.status)" class="mt-4 pt-3 border-t border-white/5">
-                            <Link :href="route('memos.edit', memo.id)" class="w-full flex items-center justify-center gap-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-all shadow-sm">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                <span>Edit & Perbaiki Memo</span>
+                        <div v-if="user.role === 'KC' && ['draft','rejected'].includes(memo.status)" class="mt-4 pt-3 border-t border-gray-100">
+                            <Link :href="route('memos.edit', memo.id)">
+                                <a-button type="primary" block>
+                                    <template #icon><edit-outlined /></template>
+                                    Edit & Perbaiki Memo
+                                </a-button>
                             </Link>
                         </div>
-                    </div>
+                    </a-card>
 
                     <!-- Card 2: Attachments (if any) -->
-                    <div v-if="memo.attachments?.length > 0" class="bg-slate-800/50 border border-white/10 rounded-2xl p-5 shadow-sm">
-                        <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-3 pb-3 border-b border-white/5">
-                            Lampiran Berkas ({{ memo.attachments.length }})
-                        </h3>
-                        <div class="space-y-2">
-                            <a
-                                v-for="att in memo.attachments"
-                                :key="att.id"
-                                :href="'/storage/' + att.file_path"
-                                target="_blank"
-                                class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 hover:border-indigo-500/30 text-xs transition-colors group"
-                            >
-                                <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                <span class="text-slate-300 group-hover:text-white truncate flex-1">{{ att.original_name || att.file_path }}</span>
-                                <svg class="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                            </a>
-                        </div>
-                    </div>
+                    <a-card v-if="memo.attachments?.length > 0" :title="'Lampiran (' + memo.attachments.length + ')'" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
+                        <a-list item-layout="horizontal" :data-source="memo.attachments" size="small">
+                            <template #renderItem="{ item }">
+                                <a-list-item>
+                                    <a-list-item-meta>
+                                        <template #title>
+                                            <a :href="'/storage/' + item.file_path" target="_blank" class="text-blue-600 hover:underline text-sm truncate block max-w-[200px]">
+                                                {{ item.original_name || item.file_path }}
+                                            </a>
+                                        </template>
+                                        <template #avatar><paper-clip-outlined class="text-gray-400" /></template>
+                                    </a-list-item-meta>
+                                </a-list-item>
+                            </template>
+                        </a-list>
+                    </a-card>
 
                     <!-- Card 3: Approval Timeline & Log -->
-                    <div v-if="memo.approvals?.length > 0" class="bg-slate-800/50 border border-white/10 rounded-2xl p-5 shadow-sm">
-                        <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-3 pb-3 border-b border-white/5">Riwayat Persetujuan</h3>
-                        <div class="space-y-2.5">
-                            <div v-for="a in memo.approvals" :key="a.id" class="p-3 rounded-xl bg-slate-900/40 border border-white/5 text-xs">
-                                <div class="flex items-center justify-between mb-1">
-                                    <span :class="[a.action === 'approved' ? 'text-emerald-400' : 'text-rose-400', 'font-semibold uppercase text-[10px]']">{{ a.action === 'approved' ? 'Disetujui' : 'Ditolak' }}</span>
-                                    <span class="text-[10px] text-slate-500">{{ formatDate(a.created_at) }}</span>
+                    <a-card v-if="memo.approvals?.length > 0" title="Riwayat Persetujuan" :bordered="false" class="rounded-lg shadow-sm" size="small">
+                        <a-timeline class="mt-2">
+                            <a-timeline-item v-for="a in memo.approvals" :key="a.id" :color="a.action === 'approved' ? 'green' : 'red'">
+                                <template #dot>
+                                    <check-circle-outlined v-if="a.action === 'approved'" />
+                                    <close-circle-outlined v-else />
+                                </template>
+                                <div class="text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="font-semibold" :class="a.action === 'approved' ? 'text-green-600' : 'text-red-600'">
+                                            {{ a.action === 'approved' ? 'Disetujui' : 'Ditolak' }}
+                                        </span>
+                                        <span class="text-xs text-gray-400">{{ formatDate(a.created_at) }}</span>
+                                    </div>
+                                    <p class="text-gray-500 text-xs mb-1">oleh {{ a.approver?.name }}</p>
+                                    <div v-if="a.notes" class="bg-gray-50 p-2 rounded text-xs text-gray-600 mt-1">
+                                        {{ a.notes }}
+                                    </div>
                                 </div>
-                                <p class="text-slate-400 text-[11px]">oleh {{ a.approver?.name }}</p>
-                                <p v-if="a.notes" class="text-slate-300 text-[11px] mt-1 bg-white/5 p-2 rounded-lg border border-white/5">{{ a.notes }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            </a-timeline-item>
+                        </a-timeline>
+                    </a-card>
+                </a-col>
 
-            </div>
+            </a-row>
         </div>
     </AuthenticatedLayout>
 </template>

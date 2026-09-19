@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({ template: { type: Object, default: null } });
 
@@ -22,7 +23,9 @@ const removeField = (index) => {
 
 const autoKey = (index) => {
     const label = form.field_schema[index].label;
-    form.field_schema[index].key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    if (label && !form.field_schema[index].key) {
+        form.field_schema[index].key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    }
 };
 
 const submit = () => {
@@ -41,70 +44,80 @@ const submit = () => {
             <h1 class="text-xl font-bold text-white">{{ isEdit ? 'Edit Template' : 'Buat Template Baru' }}</h1>
         </template>
 
-        <div class="max-w-3xl">
-            <form @submit.prevent="submit" class="space-y-6">
-                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Nama Template</label>
-                        <input v-model="form.name" type="text" placeholder="Contoh: Permohonan Penambahan Karyawan" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                        <p v-if="form.errors.name" class="text-red-400 text-sm mt-1">{{ form.errors.name }}</p>
+        <div class="max-w-4xl">
+            <a-form layout="vertical" @finish="submit">
+                <a-card :bordered="false" class="bg-slate-800/50 border border-white/5 mb-6">
+                    <template #title>
+                        <span class="text-white font-medium">Informasi Template</span>
+                    </template>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <a-form-item label="Nama Template" :validateStatus="form.errors.name ? 'error' : ''" :help="form.errors.name">
+                            <a-input v-model:value="form.name" placeholder="Contoh: Permohonan Penambahan Karyawan" />
+                        </a-form-item>
+                        <a-form-item label="Kategori" :validateStatus="form.errors.category ? 'error' : ''" :help="form.errors.category">
+                            <a-input v-model:value="form.category" placeholder="Contoh: SDM, Keuangan, Fasilitas" />
+                        </a-form-item>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Kategori</label>
-                        <input v-model="form.category" type="text" placeholder="Contoh: SDM, Keuangan, Fasilitas" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                    </div>
-                </div>
+                </a-card>
 
-                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-semibold text-white">Field Schema</h2>
-                        <button type="button" @click="addField" class="flex items-center gap-1 text-sm text-indigo-400 hover:text-indigo-300">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <a-card :bordered="false" class="bg-slate-800/50 border border-white/5 mb-6">
+                    <template #title>
+                        <span class="text-white font-medium">Field Schema</span>
+                    </template>
+                    <template #extra>
+                        <a-button type="dashed" @click="addField">
+                            <template #icon><PlusOutlined /></template>
                             Tambah Field
-                        </button>
-                    </div>
+                        </a-button>
+                    </template>
 
                     <div class="space-y-4">
-                        <div v-for="(field, idx) in form.field_schema" :key="idx" class="bg-slate-700/30 rounded-xl p-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-xs text-slate-500 font-medium">Field #{{ idx + 1 }}</span>
-                                <button v-if="form.field_schema.length > 1" type="button" @click="removeField(idx)" class="text-red-400 hover:text-red-300 text-xs">Hapus</button>
+                        <div v-for="(field, idx) in form.field_schema" :key="idx" class="bg-slate-700/30 rounded-xl p-5 relative border border-white/5">
+                            <div class="absolute top-4 right-4">
+                                <a-button v-if="form.field_schema.length > 1" type="text" danger @click="removeField(idx)">
+                                    <template #icon><DeleteOutlined /></template>
+                                </a-button>
                             </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs text-slate-400 mb-1">Label</label>
-                                    <input v-model="field.label" @blur="autoKey(idx)" type="text" placeholder="Nama Lengkap" class="w-full bg-slate-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-slate-400 mb-1">Key</label>
-                                    <input v-model="field.key" type="text" placeholder="nama_lengkap" class="w-full bg-slate-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-slate-400 mb-1">Tipe</label>
-                                    <select v-model="field.type" class="w-full bg-slate-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
-                                        <option value="text">Text</option>
-                                        <option value="textarea">Textarea</option>
-                                        <option value="number">Number</option>
-                                        <option value="date">Date</option>
-                                        <option value="select">Select</option>
-                                    </select>
-                                </div>
-                                <div class="flex items-end">
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input v-model="field.required" type="checkbox" class="w-4 h-4 rounded bg-slate-700 border-white/10 text-indigo-600 focus:ring-indigo-500" />
-                                        <span class="text-sm text-slate-300">Wajib diisi</span>
-                                    </label>
+                            
+                            <h4 class="text-slate-400 text-xs font-semibold mb-4 uppercase tracking-wider">Field #{{ idx + 1 }}</h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <a-form-item label="Label" class="mb-0">
+                                    <a-input v-model:value="field.label" @blur="autoKey(idx)" placeholder="Nama Lengkap" />
+                                </a-form-item>
+                                
+                                <a-form-item label="Key" class="mb-0">
+                                    <a-input v-model:value="field.key" placeholder="nama_lengkap" />
+                                </a-form-item>
+                                
+                                <a-form-item label="Tipe" class="mb-0">
+                                    <a-select v-model:value="field.type">
+                                        <a-select-option value="text">Text</a-select-option>
+                                        <a-select-option value="textarea">Textarea</a-select-option>
+                                        <a-select-option value="number">Number</a-select-option>
+                                        <a-select-option value="date">Date</a-select-option>
+                                        <a-select-option value="select">Select</a-select-option>
+                                    </a-select>
+                                </a-form-item>
+                                
+                                <div class="flex items-end pb-2">
+                                    <a-checkbox v-model:checked="field.required">
+                                        <span class="text-slate-300">Wajib diisi</span>
+                                    </a-checkbox>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <p v-if="form.errors.field_schema" class="text-red-400 text-sm mt-2">{{ form.errors.field_schema }}</p>
-                </div>
+                    <div v-if="form.errors.field_schema" class="text-red-400 text-sm mt-3">{{ form.errors.field_schema }}</div>
+                </a-card>
 
-                <button type="submit" :disabled="form.processing" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-500/25">
-                    {{ form.processing ? 'Menyimpan...' : (isEdit ? 'Simpan Perubahan' : 'Buat Template') }}
-                </button>
-            </form>
+                <div class="flex justify-end">
+                    <a-button type="primary" html-type="submit" :loading="form.processing" size="large">
+                        <template #icon><SaveOutlined /></template>
+                        {{ isEdit ? 'Simpan Perubahan' : 'Buat Template' }}
+                    </a-button>
+                </div>
+            </a-form>
         </div>
     </AuthenticatedLayout>
 </template>
