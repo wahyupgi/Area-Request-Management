@@ -34,8 +34,6 @@ const introText = computed(() => props.memo.field_values?.pengantar || `Sehubung
 
 // Meta: editable header fields (KC/AM customizable)
 const memoMeta = computed(() => props.memo.field_values?.meta || {});
-const recipientName = computed(() => memoMeta.value.kepada || (isCashOut.value ? (cashOutValues.value.penerima || 'Bpk. / Ibu.') : (props.memo.area_manager?.name || 'Bpk. / Ibu.')));
-const recipientRole = computed(() => memoMeta.value.kepada_jabatan || (isCashOut.value ? (cashOutValues.value.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : 'Area Manager'));
 
 const configuredSignatures = computed(() => {
     const custom = props.memo.field_values?.custom_signers;
@@ -45,14 +43,10 @@ const configuredSignatures = computed(() => {
             if (slot.role === 'Kepala Cabang') user = props.memo.creator;
             else if (slot.role === 'Area Manager') user = props.showAmSignature ? props.memo.area_manager : null;
             
-            const name = slot.role === 'Area Manager'
-                ? (slot.name || props.memo.area_manager?.name || '')
-                : (slot.name || '');
-
             return {
                 ...slot,
                 label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (slot.role === 'Area Manager' ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
-                name,
+                name: slot.name || '',
                 role: slot.role || '',
                 location: slot.location || 'document',
                 user: user,
@@ -85,7 +79,6 @@ const configuredSignatures = computed(() => {
 
 const documentSignatures = computed(() => configuredSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
 const parafSignatures = computed(() => configuredSignatures.value.filter((slot) => slot.location === 'bottom_right'));
-const footerBoxCount = computed(() => Math.min(2, Math.max(1, Number(props.memo.field_values?.footer_box_count || 2))));
 
 const handleImgError = (event) => {
     event.target.style.display = 'none';
@@ -104,7 +97,7 @@ const handleImgError = (event) => {
         </div>
 
         <div class="text-center mb-5">
-            <h1 class="font-bold uppercase underline tracking-widest mb-0.5" style="font-size: 16px !important;">INTERNAL MEMO</h1>
+            <h1 class="text-[16px] font-extrabold uppercase underline tracking-widest mb-0.5">INTERNAL MEMO</h1>
             <p class="text-[11px] tracking-wider text-gray-800">{{ memo.code }}</p>
         </div>
 
@@ -123,8 +116,8 @@ const handleImgError = (event) => {
 
         <div class="text-xs mb-4 leading-normal">
             <p class="mb-0.5">Kepada Yth :</p>
-            <p class="text-xs">{{ recipientName }}</p>
-            <p class="font-medium">{{ recipientRole }}</p>
+            <p class="text-xs">{{ isCashOut ? (cashOutValues.penerima || 'Bpk. / Ibu.') : (memo.area_manager?.name || 'Bpk. / Ibu.') }}</p>
+            <p class="font-medium">{{ isCashOut ? (cashOutValues.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : 'Area Manager' }}</p>
             <p class="font-medium">Di tempat,</p>
         </div>
 
@@ -139,14 +132,17 @@ const handleImgError = (event) => {
             <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
         </div>
 
-        <div class="flex justify-end mt-4 pt-2 mb-1">
+        <div class="flex justify-end gap-2 mt-4 pt-2 mb-1">
             <template v-if="parafSignatures.length">
-                <div v-for="(slot, index) in parafSignatures" :key="'paraf-' + slot.name + slot.role" :class="['w-10 h-10 border border-black flex items-center justify-center', index > 0 ? '-ml-px' : '']">
-                    <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="max-w-full max-h-full object-contain" />
+                <div v-for="slot in parafSignatures" :key="'paraf-' + slot.name + slot.role" class="w-10 h-10">
+                    <div class="w-10 h-10 border border-black flex items-center justify-center">
+                        <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="max-w-full max-h-full object-contain" />
+                    </div>
                 </div>
             </template>
             <template v-else>
-                <div v-for="(box, index) in footerBoxCount" :key="'footer-box-' + box" :class="['w-7 h-7 border border-black', index > 0 ? '-ml-px' : '']"></div>
+                <div class="w-7 h-7 border border-black"></div>
+                <div class="w-7 h-7 border border-black"></div>
             </template>
         </div>
 

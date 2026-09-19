@@ -28,8 +28,6 @@ const form = useForm({
             divisi: props.memo.field_values?.meta?.divisi || 'Branch Leader',
             perihal: props.memo.field_values?.meta?.perihal || '',
             lampiran: props.memo.field_values?.meta?.lampiran || '',
-            kepada: props.memo.field_values?.meta?.kepada || props.memo.area_manager?.name || '',
-            kepada_jabatan: props.memo.field_values?.meta?.kepada_jabatan || 'Area Manager',
         },
     },
 });
@@ -178,7 +176,7 @@ const deleteMemo = async () => {
                         <!-- Nomor Memo -->
                         <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Memo</label>
-                            <input :value="form.code" type="text" readonly class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-slate-300 text-sm cursor-not-allowed" />
+                            <input v-model="form.code" type="text" placeholder="Masukkan nomor memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
                             <p v-if="form.errors.code" class="text-red-400 text-sm mt-2">{{ form.errors.code }}</p>
                         </div>
 
@@ -210,14 +208,6 @@ const deleteMemo = async () => {
                                 <div>
                                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Perihal <span class="text-slate-600">(opsional, jika beda dari judul)</span></label>
                                     <input v-model="form.field_values.meta.perihal" type="text" :placeholder="form.title || 'Mengikuti judul memo'" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Tujuan / Kepada Yth</label>
-                                    <input v-model="form.field_values.meta.kepada" type="text" placeholder="contoh: Bpk. / Ibu. Area Manager" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Jabatan / Divisi Tujuan</label>
-                                    <input v-model="form.field_values.meta.kepada_jabatan" type="text" placeholder="contoh: Area Manager / Kepala Divisi" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Lampiran <span class="text-slate-600">(keterangan teks)</span></label>

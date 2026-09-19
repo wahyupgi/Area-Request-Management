@@ -163,7 +163,7 @@ const formatDate = (dateString) => {
                     </button>
                     <button
                         @click="downloadMemo"
-                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold border border-indigo-500/30 transition-colors shadow-sm print:hidden"
+                        class="download-memo-button hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white text-xs font-semibold border border-indigo-500/30 transition-colors shadow-sm print:hidden"
                         title="Download memo sebagai PDF"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0l4-4m-4 4l-4-4M5 21h14"/></svg>

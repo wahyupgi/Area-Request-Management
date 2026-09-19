@@ -70,28 +70,24 @@ const handleImgError = (event) => {
         </tbody>
     </table>
 
-    <div v-if="documentSignatures.length" class="grid grid-cols-[0.8fr_0.8fr_1.4fr] justify-center gap-1 items-start text-xs w-full max-w-3xl mx-auto px-1 mb-4">
-        <div v-for="(slot, index) in documentSignatures" :key="slot.name + slot.role" class="flex min-w-0 flex-col items-center text-center">
+    <div v-if="documentSignatures.length" class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] justify-center gap-6 items-start text-xs w-full max-w-3xl mx-auto px-4 mb-4">
+        <div v-for="slot in documentSignatures" :key="slot.name + slot.role" class="flex min-w-0 flex-col items-center text-center">
             <p class="mb-1">{{ slot.label || (slot.location === 'bottom_right' ? 'Paraf' : 'Disetujui Oleh,') }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p :class="['w-full mt-1 text-black leading-tight', index === 2 ? 'whitespace-nowrap text-[8px]' : 'whitespace-normal break-words']">{{ slot.name }}</p>
-            <p v-if="index === 2" class="w-full font-bold text-[7px] text-gray-800 leading-tight">
-                <span class="block">Senior Executive Vice President</span>
-                <span class="block">Bisnis dan Operasional</span>
-            </p>
-            <p v-else class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.role }}</p>
+            <p class="w-full whitespace-normal break-words underline mt-1 text-black leading-tight">{{ slot.name }}</p>
+            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.role }}</p>
         </div>
     </div>
 
     <div v-else class="grid grid-cols-2 gap-6 items-start text-xs w-full max-w-lg mx-auto px-4 mb-4">
         <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1">Dibuat oleh,</p>
+            <p class="mb-1 font-semibold">Dibuat Oleh,</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="memo.creator?.digital_signature?.signature_image" :src="'/storage/' + memo.creator.digital_signature.signature_image" alt="Tanda Tangan KC" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="w-full whitespace-normal break-words mt-1 text-black leading-tight">{{ memo.creator?.name }}</p>
+            <p class="w-full whitespace-normal break-words underline mt-1 text-black leading-tight">{{ memo.creator?.name }}</p>
             <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Kepala Cabang</p>
         </div>
         <div class="flex min-w-0 flex-col items-center text-center">
@@ -102,7 +98,7 @@ const handleImgError = (event) => {
                     <img v-else-if="memo.area_manager?.digital_signature?.signature_image" :src="'/storage/' + memo.area_manager.digital_signature.signature_image" alt="Tanda Tangan AM" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
                 </template>
             </div>
-            <p class="w-full whitespace-normal break-words mt-1 text-black leading-tight">{{ memo.area_manager?.name || 'Area Manager' }}</p>
+            <p class="w-full whitespace-normal break-words underline mt-1 text-black leading-tight">{{ memo.area_manager?.name || 'Area Manager' }}</p>
             <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Area Manager</p>
         </div>
     </div>

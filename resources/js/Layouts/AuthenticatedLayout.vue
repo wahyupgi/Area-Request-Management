@@ -6,7 +6,7 @@ import { useSweetAlert } from '@/composables/useSweetAlert';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
-const unreadCount = computed(() => page.props.unreadNotificationsCount || 0);
+const unreadCount = ref(page.props.unreadNotificationsCount || 0);
 const { success, error } = useSweetAlert();
 
 watch(() => page.props.flash?.success, (message) => {
@@ -74,13 +74,17 @@ const fetchNotifications = async () => {
     try {
         const response = await fetch(route('notifications.index'));
         notifications.value = await response.json();
+        unreadCount.value = notifications.value.filter(notification => !notification.is_read).length;
     } catch (e) {}
 };
 
 const markAsRead = async (notification) => {
     try {
         await fetch(route('notifications.read', notification.id), { method: 'POST', headers: { 'X-CSRF-TOKEN': page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content } });
-        notification.is_read = true;
+        if (!notification.is_read) {
+            notification.is_read = true;
+            unreadCount.value = Math.max(0, unreadCount.value - 1);
+        }
         if (notification.memo_id) {
             router.visit(route('memos.show', notification.memo_id));
         }
@@ -91,6 +95,7 @@ const markAllRead = async () => {
     try {
         await fetch(route('notifications.readAll'), { method: 'POST', headers: { 'X-CSRF-TOKEN': page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content } });
         notifications.value.forEach(n => n.is_read = true);
+        unreadCount.value = 0;
     } catch (e) {}
 };
 

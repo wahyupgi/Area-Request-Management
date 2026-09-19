@@ -131,6 +131,8 @@ const filteredMemos = computed(() => {
             <h2 class="text-base font-bold text-white tracking-tight">Dashboard Kepala Cabang</h2>
         </template>
 
+        <div class="dashboard-kc-theme">
+
         <!-- Page Context Banner with Realtime Greeting & Live Clock -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
@@ -395,5 +397,23 @@ const filteredMemos = computed(() => {
                 <span class="hidden sm:inline">PT Pusat Gadai Indonesia</span>
             </div>
         </div>
+        </div>
     </AuthenticatedLayout>
 </template>
+
+    <style>
+    .dashboard-kc-theme .text-indigo-400 { color: #93c5fd !important; }
+    .dashboard-kc-theme .text-indigo-300 { color: #bfdbfe !important; }
+    .dashboard-kc-theme .bg-indigo-600 { background-color: #1f69a8 !important; }
+    .dashboard-kc-theme .hover\:bg-indigo-500:hover { background-color: #18598f !important; }
+    .dashboard-kc-theme .border-indigo-500\/20 { border-color: rgba(96, 165, 250, 0.2) !important; }
+    .dashboard-kc-theme .border-indigo-500\/30 { border-color: rgba(96, 165, 250, 0.35) !important; }
+    .dashboard-kc-theme .hover\:border-indigo-500\/20:hover { border-color: rgba(96, 165, 250, 0.2) !important; }
+    .dashboard-kc-theme .hover\:border-indigo-500\/25:hover { border-color: rgba(96, 165, 250, 0.25) !important; }
+    .dashboard-kc-theme .bg-indigo-500\/10 { background-color: rgba(31, 105, 168, 0.1) !important; }
+    .dashboard-kc-theme .bg-indigo-500\/20 { background-color: rgba(31, 105, 168, 0.2) !important; }
+    .dashboard-kc-theme .bg-indigo-500\/15 { background-color: rgba(31, 105, 168, 0.15) !important; }
+    .dashboard-kc-theme .text-purple-600 { color: #60a5fa !important; }
+    .dashboard-kc-theme .from-indigo-500 { --tw-gradient-from: #1f69a8 !important; }
+    .dashboard-kc-theme .to-purple-600 { --tw-gradient-to: #3b82f6 !important; }
+    </style>

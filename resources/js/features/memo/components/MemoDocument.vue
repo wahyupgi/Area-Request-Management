@@ -34,8 +34,6 @@ const introText = computed(() => props.memo.field_values?.pengantar || `Sehubung
 
 // Meta: editable header fields (KC/AM customizable)
 const memoMeta = computed(() => props.memo.field_values?.meta || {});
-const recipientName = computed(() => memoMeta.value.kepada || (isCashOut.value ? (cashOutValues.value.penerima || 'Bpk. / Ibu.') : (props.memo.area_manager?.name || 'Bpk. / Ibu.')));
-const recipientRole = computed(() => memoMeta.value.kepada_jabatan || (isCashOut.value ? (cashOutValues.value.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : 'Area Manager'));
 
 const configuredSignatures = computed(() => {
     const custom = props.memo.field_values?.custom_signers;
@@ -77,7 +75,7 @@ const handleImgError = (event) => {
         </div>
 
         <div class="text-center mb-5">
-            <h1 class="font-extrabold uppercase underline tracking-widest mb-0.5" style="font-size: 21px !important;">INTERNAL MEMO</h1>
+            <h1 class="text-[16px] font-extrabold uppercase underline tracking-widest mb-0.5">INTERNAL MEMO</h1>
             <p class="text-[11px] tracking-wider text-gray-800">{{ memo.code }}</p>
         </div>
 
@@ -96,8 +94,8 @@ const handleImgError = (event) => {
 
         <div class="text-xs mb-4 leading-normal">
             <p class="mb-0.5">Kepada Yth :</p>
-            <p class="text-xs">{{ recipientName }}</p>
-            <p class="font-medium">{{ recipientRole }}</p>
+            <p class="text-xs">{{ isCashOut ? (cashOutValues.penerima || 'Bpk. / Ibu.') : (memo.area_manager?.name || 'Bpk. / Ibu.') }}</p>
+            <p class="font-medium">{{ isCashOut ? (cashOutValues.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : 'Area Manager' }}</p>
             <p class="font-medium">Di tempat,</p>
         </div>
 

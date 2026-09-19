@@ -349,6 +349,46 @@ html.theme-light .bg-rose-600:hover {
     color: #ffffff !important;
 }
 
+/* Keep action text readable on solid buttons in light mode. */
+html.theme-light button.bg-slate-700,
+html.theme-light button.bg-slate-800,
+html.theme-light button.bg-indigo-600,
+html.theme-light button.bg-blue-600,
+html.theme-light button.bg-sky-600,
+html.theme-light button.bg-emerald-600,
+html.theme-light button.bg-rose-600,
+html.theme-light button.bg-red-600,
+html.theme-light button.bg-amber-600,
+html.theme-light a.bg-slate-700,
+html.theme-light a.bg-slate-800,
+html.theme-light a.bg-indigo-600,
+html.theme-light a.bg-blue-600,
+html.theme-light a.bg-sky-600,
+html.theme-light a.bg-emerald-600,
+html.theme-light a.bg-rose-600,
+html.theme-light a.bg-red-600,
+html.theme-light a.bg-amber-600,
+html.theme-light button.bg-slate-700:hover,
+html.theme-light button.bg-slate-800:hover,
+html.theme-light button.bg-indigo-600:hover,
+html.theme-light button.bg-blue-600:hover,
+html.theme-light button.bg-sky-600:hover,
+html.theme-light button.bg-emerald-600:hover,
+html.theme-light button.bg-rose-600:hover,
+html.theme-light button.bg-red-600:hover,
+html.theme-light button.bg-amber-600:hover,
+html.theme-light a.bg-slate-700:hover,
+html.theme-light a.bg-slate-800:hover,
+html.theme-light a.bg-indigo-600:hover,
+html.theme-light a.bg-blue-600:hover,
+html.theme-light a.bg-sky-600:hover,
+html.theme-light a.bg-emerald-600:hover,
+html.theme-light a.bg-rose-600:hover,
+html.theme-light a.bg-red-600:hover,
+html.theme-light a.bg-amber-600:hover {
+    color: #ffffff !important;
+}
+
 /* ==========================================================================
    Accent Text Contrast Enhancements in Light Mode
    ========================================================================== */
@@ -533,6 +573,18 @@ button.bg-blue-600:hover,
 a.bg-blue-600:hover,
 input[type="file"]:hover::file-selector-button {
     background-color: #18598f !important;
+}
+
+.download-memo-button {
+    background-color: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+.download-memo-button:hover,
+.download-memo-button:focus,
+.download-memo-button:active {
+    background-color: #18598f !important;
+    color: #ffffff !important;
 }
 
 html.theme-light .sidebar-pgi {
@@ -1395,15 +1447,32 @@ html:not(.theme-light) .bg-slate-800\/50:has(> div > .table-head-pgi) {
 /* Light mode tab overrides */
 html.theme-light .tab-active-pgi {
     background-color: #ffffff;
-    color: #0f172a;
+    color: #0f172a !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 html.theme-light .tab-inactive-pgi {
-    color: #64748b;
+    color: #64748b !important;
 }
 
 html.theme-light .tab-inactive-pgi:hover {
-    color: #334155;
+    color: #334155 !important;
     background-color: rgba(0, 0, 0, 0.03);
+}
+
+html.theme-light .tab-active-pgi:hover,
+html.theme-light .tab-active-pgi:focus,
+html.theme-light .tab-inactive-pgi:hover,
+html.theme-light .tab-inactive-pgi:focus {
+    color: #334155 !important;
+}
+
+html.theme-light .group-hover\:text-slate-700:hover,
+html.theme-light .group:hover .group-hover\:text-slate-700 {
+    color: #334155 !important;
+}
+
+html:not(.theme-light) .group-hover\:text-slate-700:hover,
+html:not(.theme-light) .group:hover .group-hover\:text-slate-700 {
+    color: #e2e8f0 !important;
 }

@@ -31,35 +31,44 @@ const signatures = computed(() => {
         label: 'Tanda tangan AM',
     };
 
-    const slot1 = props.documentSignatures[0] ? {
-        displayName: props.documentSignatures[0].name || creatorSig.displayName,
-        displayRole: props.documentSignatures[0].role || creatorSig.displayRole,
-        signature: props.documentSignatures[0].signature || creatorSig.signature,
-        label: props.documentSignatures[0].label || 'Dibuat oleh',
-    } : creatorSig;
+    if (props.documentSignatures && props.documentSignatures.length > 0) {
+        const slot1 = props.documentSignatures[0] ? {
+            displayName: props.documentSignatures[0].name || creatorSig.displayName,
+            displayRole: props.documentSignatures[0].role || creatorSig.displayRole,
+            signature: props.documentSignatures[0].signature || creatorSig.signature,
+            label: props.documentSignatures[0].label || 'Dibuat oleh',
+        } : creatorSig;
 
-    const slot2 = props.documentSignatures[1] ? {
-        displayName: props.documentSignatures[1].name || amSig.displayName,
-        displayRole: props.documentSignatures[1].role || amSig.displayRole,
-        signature: props.documentSignatures[1].signature || amSig.signature,
-        label: props.documentSignatures[1].label || 'Disetujui oleh',
-    } : amSig;
+        const slot2 = props.documentSignatures[1] ? {
+            displayName: props.documentSignatures[1].name || amSig.displayName,
+            displayRole: props.documentSignatures[1].role || amSig.displayRole,
+            signature: props.documentSignatures[1].signature || amSig.signature,
+            label: props.documentSignatures[1].label || 'Disetujui oleh',
+        } : amSig;
 
-    const primary = [slot1, slot2].filter((slot) => {
-        if (!slot) return false;
-        return slot.displayName || slot.displayRole || slot.signature || slot.label;
-    });
+        const slot3 = props.documentSignatures[2] ? {
+            displayName: props.documentSignatures[2].name || '',
+            displayRole: props.documentSignatures[2].role || '',
+            signature: props.documentSignatures[2].signature || '',
+            label: props.documentSignatures[2].label || 'Disetujui oleh',
+        } : { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 3' };
 
-    const secondary = [props.documentSignatures[2], props.documentSignatures[3]]
-        .filter((slot) => slot && (slot.name || slot.role || slot.user?.digital_signature?.signature_image || slot.signature))
-        .map((slot) => ({
-            displayName: slot.name || '',
-            displayRole: slot.role || '',
-            signature: slot.signature || slot.user?.digital_signature?.signature_image || '',
-            label: slot.label || 'Disetujui oleh',
-        }));
+        const slot4 = props.documentSignatures[3] ? {
+            displayName: props.documentSignatures[3].name || '',
+            displayRole: props.documentSignatures[3].role || '',
+            signature: props.documentSignatures[3].signature || '',
+            label: props.documentSignatures[3].label || 'Disetujui oleh',
+        } : { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 4' };
 
-    return { primary, secondary };
+        return [slot1, slot2, slot3, slot4];
+    }
+
+    return [
+        creatorSig,
+        amSig,
+        { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 3' },
+        { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 4' },
+    ];
 });
 
 // Flatten items into table rows with rowspan support for area sub-rows
@@ -131,27 +140,14 @@ const handleImgError = (event) => {
         </tbody>
     </table>
 
-    <div class="mb-4">
-        <div class="grid grid-cols-2 gap-6 items-start text-xs w-full">
-            <div v-for="(slot, index) in signatures.primary" :key="'kipas-signature-' + index" class="flex min-w-0 flex-col items-center text-center">
-                <p class="mb-1">{{ slot.label }}</p>
-                <div class="h-16 w-full flex items-end justify-center relative">
-                    <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label || slot.displayName" @error="handleImgError" class="max-w-full h-14 object-contain absolute bottom-0" />
-                </div>
-                <p v-if="slot.displayName" class="w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-1 leading-tight">{{ slot.displayName }}</p>
-                <p v-if="slot.displayRole" class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.displayRole }}</p>
+    <div class="grid grid-cols-4 gap-2 items-start text-xs w-full mb-4">
+        <div v-for="(slot, index) in signatures" :key="'kipas-signature-' + index" class="flex min-w-0 flex-col items-center text-center">
+            <p class="mb-1">{{ index === 0 ? 'Dibuat oleh,' : 'Disetujui oleh,' }}</p>
+            <div class="h-16 w-full flex items-end justify-center relative">
+                <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label || slot.displayName" @error="handleImgError" class="max-w-full h-14 object-contain absolute bottom-0" />
             </div>
-        </div>
-
-        <div v-if="signatures.secondary.length" class="mt-4 grid grid-cols-2 gap-3 items-start text-xs w-full">
-            <div v-for="(slot, index) in signatures.secondary" :key="'kipas-secondary-signature-' + index" class="flex min-w-0 flex-col items-center text-center">
-                <p class="mb-1">{{ slot.label }}</p>
-                <div class="h-16 w-full flex items-end justify-center relative">
-                    <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label || slot.displayName" @error="handleImgError" class="max-w-full h-14 object-contain absolute bottom-0" />
-                </div>
-                <p v-if="slot.displayName" class="w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-1 leading-tight">{{ slot.displayName }}</p>
-                <p v-if="slot.displayRole" class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.displayRole }}</p>
-            </div>
+            <p v-if="slot.displayName" class="w-full whitespace-normal break-words [overflow-wrap:anywhere] underline mt-1 leading-tight">{{ slot.displayName }}</p>
+            <p v-if="slot.displayRole" class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.displayRole }}</p>
         </div>
     </div>
 </template>

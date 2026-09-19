@@ -7,14 +7,21 @@ const props = defineProps({
     templates: Array,
 });
 
+const generateMemoNumber = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const months = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    return `INT/RBO/BRL/PGI/040/${months[d.getMonth()]}/${year}`;
+};
+
 const form = useForm({
-    code: '',
+    code: generateMemoNumber(),
     template_id: '',
     title: '',
     field_values: {
         pengantar: '',
         items: [{}],
-        meta: { direktorat: '', divisi: '', perihal: '', lampiran: '', kepada: '', kepada_jabatan: '' },
+        meta: { direktorat: '', divisi: '', perihal: '', lampiran: '' },
     },
     submit_after_save: false,
 });
@@ -50,8 +57,6 @@ watch(() => form.template_id, (val) => {
             divisi: 'Branch Leader',
             perihal: '',
             lampiran: '',
-            kepada: '',
-            kepada_jabatan: 'Area Manager',
         },
     };
 });
@@ -134,7 +139,8 @@ const submitAndSign = () => {
                         <!-- Nomor Memo -->
                         <div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
                             <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Memo</label>
-                            <div class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-slate-300 text-sm">Nomor dibuat otomatis saat memo disimpan</div>
+                            <input v-model="form.code" type="text" placeholder="Masukkan nomor memo..." class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                            <p v-if="form.errors.code" class="text-red-400 text-sm mt-2">{{ form.errors.code }}</p>
                         </div>
 
                         <!-- Title -->
@@ -165,14 +171,6 @@ const submitAndSign = () => {
                                 <div>
                                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Perihal <span class="text-slate-600">(opsional, jika beda dari judul)</span></label>
                                     <input v-model="form.field_values.meta.perihal" type="text" :placeholder="form.title || 'Mengikuti judul memo'" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Tujuan / Kepada Yth</label>
-                                    <input v-model="form.field_values.meta.kepada" type="text" placeholder="contoh: Bpk. / Ibu. Area Manager" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Jabatan / Divisi Tujuan</label>
-                                    <input v-model="form.field_values.meta.kepada_jabatan" type="text" placeholder="contoh: Area Manager / Kepala Divisi" class="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Lampiran <span class="text-slate-600">(keterangan teks)</span></label>
