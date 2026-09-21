@@ -14,7 +14,7 @@ class StoreMemoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['nullable', 'string', 'max:255', 'unique:memos,code'],
+            'code' => ['nullable', 'string', 'max:255'],
             'template_id' => ['required', 'exists:memo_templates,id'],
             'title' => ['required', 'string', 'max:255'],
             'field_values' => ['nullable', 'array'],

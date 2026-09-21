@@ -144,7 +144,7 @@ const filteredMemos = computed(() => {
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
-                    <span>{{ greeting.icon }} {{ greeting.text }}, <span class="text-indigo-400">{{ userDisplayName }}</span>!</span>
+                    <span>{{ greeting.icon }} {{ greeting.text }}, <span class="dashboard-greeting-name">{{ userDisplayName }}</span>!</span>
                 </h1>
                 <p class="text-xs md:text-sm text-slate-400 mt-1">
                     Kelola pembuatan dan pantau status persetujuan memo pengajuan unit <span class="text-slate-200 font-medium">{{ user?.branch?.name || 'kantor cabang' }}</span>.
@@ -301,7 +301,7 @@ const filteredMemos = computed(() => {
 
             <!-- Table -->
             <div class="overflow-x-auto -mx-6">
-                <table class="w-full text-left table-head-pgi">
+                <table class="memo-list-table w-full text-left table-head-pgi border border-white/10">
                     <thead>
                         <tr class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
                             <th class="px-6 py-3.5">Kode Memo</th>
@@ -316,7 +316,7 @@ const filteredMemos = computed(() => {
                         <tr
                             v-for="memo in filteredMemos"
                             :key="memo.id"
-                            class="hover:bg-white/[0.02] transition-colors group"
+                            class="border-b border-white/10 hover:bg-white/[0.02] transition-colors group"
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="font-mono text-xs font-semibold text-indigo-400 group-hover:text-indigo-300 transition-colors">
@@ -338,18 +338,19 @@ const filteredMemos = computed(() => {
                                 <span class="text-slate-600 block text-[11px]">{{ formatTime(memo.created_at) }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <a-tag :color="statusTagColor(memo.status)">
+                                <a-tag :class="{ 'dashboard-status-draft': memo.status === 'draft' }" :color="statusTagColor(memo.status)">
                                     {{ statusConfig[memo.status]?.label || memo.status }}
                                 </a-tag>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div v-if="memo.latest_approval?.signature" class="flex items-center gap-2">
+                                <div v-if="memo.status === 'approved' || memo.latest_approval?.signature" class="flex items-center gap-2">
                                     <img
+                                        v-if="memo.latest_approval?.signature"
                                         :src="'/storage/' + memo.latest_approval.signature.signature_image"
                                         alt="Tanda tangan digital AM"
                                         class="h-8 w-20 object-contain rounded bg-white/10 p-1"
                                     />
-                                    <span class="text-[11px] text-emerald-400">Tertanda</span>
+                                    <span class="text-[11px] text-emerald-400">Sudah ditandatangani</span>
                                 </div>
                                 <span v-else class="text-[11px] text-slate-500">Belum ditandatangani</span>
                             </td>
@@ -440,8 +441,33 @@ const filteredMemos = computed(() => {
     }
 
     html.theme-light .dashboard-kc-theme .border-white\/5,
-    html.theme-light .dashboard-kc-theme .border-white\/10 {
+    html.theme-light .dashboard-kc-theme .border-white\/10,
+    html.theme-light .dashboard-kc-theme .memo-list-table {
         border-color: #e2e8f0 !important;
+    }
+
+    html.theme-light .dashboard-kc-theme .memo-list-table tr {
+        border-bottom-color: #e2e8f0 !important;
+    }
+
+    .dashboard-kc-theme .memo-list-table td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dashboard-kc-theme .memo-list-table {
+        border-collapse: collapse;
+    }
+
+    .dashboard-kc-theme .memo-list-table tbody > tr > td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    html.theme-light .dashboard-kc-theme .memo-list-table td {
+        border-bottom-color: #e2e8f0 !important;
+    }
+
+    html.theme-light .dashboard-kc-theme .memo-list-table tbody > tr > td {
+        border-bottom-color: #e2e8f0 !important;
     }
 
     html.theme-light .dashboard-kc-theme .hover\:bg-white\/5:hover,

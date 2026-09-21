@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
@@ -26,6 +26,9 @@ import {
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const unreadCount = ref(page.props.unreadNotificationsCount || 0);
+const isNavigating = ref(false);
+let removeNavigationStart = null;
+let removeNavigationFinish = null;
 const { success, error } = useSweetAlert();
 const { theme } = useTheme();
 const isLightTheme = computed(() => theme.value === 'light');
@@ -49,6 +52,16 @@ const toggleSidebar = () => {
     sidebarCollapsed.value = !sidebarCollapsed.value;
     localStorage.setItem(sidebarStateKey, String(sidebarCollapsed.value));
 };
+
+onMounted(() => {
+    removeNavigationStart = router.on('start', () => { isNavigating.value = true; });
+    removeNavigationFinish = router.on('finish', () => { isNavigating.value = false; });
+});
+
+onUnmounted(() => {
+    removeNavigationStart?.();
+    removeNavigationFinish?.();
+});
 
 const roleLabel = computed(() => {
     const labels = { KC: 'Kepala Cabang', AM: 'Area Manager', ADMIN: 'Administrator' };
@@ -101,6 +114,14 @@ const onNavClick = (item) => {
     router.visit(route(item.route));
 };
 
+const onNavHover = (item) => {
+    router.prefetch(route(item.route), { cacheFor: 30000 });
+};
+
+const onNavPress = (item) => {
+    router.prefetch(route(item.route), { cacheFor: 30000 });
+};
+
 const fetchNotifications = async () => {
     try {
         const response = await fetch(route('notifications.index'));
@@ -145,6 +166,7 @@ const handleLogout = () => {
 
 <template>
     <a-layout :style="{ height: '100vh', overflow: 'hidden', background: isLightTheme ? '#f8fafc' : '#0f172a' }">
+        <div v-if="isNavigating" class="navigation-feedback" aria-live="polite" aria-label="Memuat halaman"></div>
         <!-- Sidebar -->
         <a-layout-sider
             v-model:collapsed="sidebarCollapsed"
@@ -158,10 +180,10 @@ const handleLogout = () => {
             <div class="flex items-center gap-3 px-5 py-4 border-b border-blue-500/80">
                 <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-10 h-10 rounded-lg object-contain border border-blue-700 bg-white p-0.5 shadow-sm flex-shrink-0" />
                 <div v-if="!sidebarCollapsed" class="flex flex-col min-w-0 text-white">
-                    <span class="sidebar-brand-title text-xs font-bold text-white tracking-wider uppercase leading-tight">SISTEM LAYANAN<br>PENGAJUAN</span>
+                    <span class="sidebar-brand-title text-xs font-bold text-white tracking-wider uppercase leading-tight">PUSAT GADAI INDONESIA</span>
                     <div class="flex items-center gap-1.5 mt-1 text-[10px] text-blue-100">
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-300 animate-pulse flex-shrink-0"></span>
-                        <span class="font-medium tracking-wide truncate">{{ portalSubtitle }}</span>
+                        <span class="font-medium tracking-wide truncate">E-Memo AM Fathur</span>
                     </div>
                 </div>
             </div>
@@ -177,6 +199,9 @@ const handleLogout = () => {
                     v-for="item in navItems"
                     :key="item.route"
                     @click="onNavClick(item)"
+                    @mouseenter="onNavHover(item)"
+                    @mousedown="onNavPress(item)"
+                    @touchstart.passive="onNavPress(item)"
                 >
                     <template #icon>
                         <component :is="item.icon" />
@@ -187,7 +212,7 @@ const handleLogout = () => {
         </a-layout-sider>
 
         <!-- Main Content -->
-        <a-layout class="main-layout" :style="{ background: isLightTheme ? '#f8fafc' : '#0f172a' }">
+        <a-layout class="main-layout" :class="{ 'is-navigating': isNavigating }" :style="{ background: isLightTheme ? '#f8fafc' : '#0f172a' }">
             <!-- Top Bar -->
             <a-layout-header
                 class="px-6 sticky top-0 z-10 border-b"
@@ -210,18 +235,21 @@ const handleLogout = () => {
                 </div>
 
                 <div class="header-right flex items-center gap-3 flex-shrink-0 self-center" :class="isLightTheme ? 'text-slate-700' : 'text-slate-200'">
-                    <div class="flex items-center justify-center">
-                        <ThemeToggle />
-                    </div>
+                    <div class="header-icon-group flex items-center gap-1">
+                        <div class="header-icon-slot flex items-center justify-center">
+                            <ThemeToggle />
+                        </div>
 
-                    <!-- Notifications -->
-                    <a-dropdown trigger="['click']" placement="bottomRight" @openChange="handleNotificationDropdown">
-                        <a-badge :count="unreadCount" :overflow-count="99" class="notification-badge cursor-pointer flex items-center justify-center">
-                            <bell-outlined
-                                class="text-lg transition-colors"
-                                :class="isLightTheme ? 'text-slate-600 hover:text-slate-900' : 'text-slate-300 hover:text-white'"
-                            />
-                        </a-badge>
+                        <!-- Notifications -->
+                        <a-dropdown trigger="['click']" placement="bottomRight" @openChange="handleNotificationDropdown" overlayClassName="header-notification-dropdown">
+                            <a-badge :count="unreadCount" :overflow-count="99" class="notification-badge cursor-pointer flex items-center justify-center">
+                                <span class="header-icon-slot flex items-center justify-center">
+                                    <bell-outlined
+                                        class="text-lg transition-colors"
+                                        :class="isLightTheme ? 'text-slate-600 hover:text-slate-900' : 'text-slate-300 hover:text-white'"
+                                    />
+                                </span>
+                            </a-badge>
                         <template #overlay>
                             <div class="bg-white rounded-lg shadow-lg border border-gray-100 w-80 overflow-hidden">
                                 <div class="flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
@@ -255,7 +283,8 @@ const handleLogout = () => {
                                 </div>
                             </div>
                         </template>
-                    </a-dropdown>
+                        </a-dropdown>
+                    </div>
 
                     <!-- User Menu -->
                     <a-dropdown placement="bottomRight" trigger="['click']" @openChange="handleUserDropdown">

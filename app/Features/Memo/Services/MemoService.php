@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Mail\MemoSubmitted;
 use Illuminate\Mail\Mailable;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -32,7 +33,7 @@ class MemoService
             ->where('area_id', $branch->area_id)
             ->first();
 
-        $memo = Memo::create([
+        $memoData = [
             'code' => null,
             'template_id' => $request->template_id,
             'title' => $request->title,
@@ -41,7 +42,20 @@ class MemoService
             'created_by' => $user->id,
             'area_manager_id' => $areaManager?->id,
             'status' => 'draft',
-        ]);
+        ];
+
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            try {
+                $memo = Memo::create($memoData);
+                break;
+            } catch (QueryException $exception) {
+                $isUniqueViolation = in_array((string) $exception->getCode(), ['23000', '23505'], true);
+
+                if (!$isUniqueViolation || $attempt === 2) {
+                    throw $exception;
+                }
+            }
+        }
 
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');

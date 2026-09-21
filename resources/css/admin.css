@@ -189,6 +189,83 @@ html.theme-light .admin-master-page .ant-card-head .text-white {
 }
 
 /* Memo Saya table header follows the PGI blue table style. */
+.memo-page-title {
+    color: #0f172a !important;
+}
+
+html:not(.theme-light) .memo-page-title {
+    color: #f8fafc !important;
+}
+
+.memo-breadcrumb-back {
+    color: #2563eb !important;
+}
+
+.memo-breadcrumb-back:hover {
+    color: #1d4ed8 !important;
+}
+
+html:not(.theme-light) .memo-breadcrumb-back {
+    color: #93c5fd !important;
+}
+
+html:not(.theme-light) .memo-breadcrumb-back:hover {
+    color: #bfdbfe !important;
+}
+
+.memo-index-card {
+    background: #ffffff !important;
+}
+
+html:not(.theme-light) .memo-index-card,
+html:not(.theme-light) .memo-index-card .ant-card-body {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .memo-index-card .ant-radio-button-wrapper,
+html:not(.theme-light) .memo-index-card .ant-pagination-item,
+html:not(.theme-light) .memo-index-card .ant-pagination-prev,
+html:not(.theme-light) .memo-index-card .ant-pagination-next {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .memo-index-card .ant-pagination-item,
+html:not(.theme-light) .memo-index-card .ant-pagination-prev .ant-pagination-item-link,
+html:not(.theme-light) .memo-index-card .ant-pagination-next .ant-pagination-item-link {
+    background: #334155 !important;
+    border-color: #475569 !important;
+}
+
+html:not(.theme-light) .memo-index-card .ant-pagination-item-active {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+html:not(.theme-light) .memo-index-card .ant-table-tbody > tr > td,
+html:not(.theme-light) .memo-index-card .ant-table-tbody > tr > td a {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .memo-index-card .ant-table-tbody > tr > td .ant-btn {
+    color: #bfdbfe !important;
+}
+
+html.theme-light .memo-index-card,
+html.theme-light .memo-index-card .ant-card-body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+.memo-table-pgi .ant-table-container {
+    border: 1px solid #c8ced8 !important;
+}
+
+.memo-table-pgi .ant-table-tbody > tr > td {
+    border-bottom: 1px solid #c8ced8 !important;
+    border-right: 1px solid #c8ced8 !important;
+}
+
 .memo-table-pgi .ant-table-thead > tr > th {
     background: #344f82 !important;
     color: #ffffff !important;
@@ -207,14 +284,46 @@ html.theme-light .admin-master-page .ant-card-head .text-white {
 html:not(.theme-light) .memo-table-pgi .ant-table-thead > tr > th {
     background: #123762 !important;
     border-color: #334155 !important;
+    color: #f8fafc !important;
 }
 
 html:not(.theme-light) .memo-table-pgi .ant-table-tbody > tr > td {
     background: #1e293b !important;
     color: #e2e8f0 !important;
     border-color: #334155 !important;
+    border-bottom: 1px solid #334155 !important;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-table,
+html:not(.theme-light) .memo-table-pgi .ant-table-container,
+html:not(.theme-light) .memo-table-pgi .ant-table-content {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-table-container {
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-table-tbody > tr > td {
+    border-bottom-color: #334155 !important;
+    border-right-color: #334155 !important;
 }
 
 html:not(.theme-light) .memo-table-pgi .ant-table-tbody > tr:hover > td {
     background: #26364d !important;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-empty-description {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-empty-image {
+    opacity: 0.8;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-tag-default {
+    background: #334155 !important;
+    border-color: #64748b !important;
+    color: #e2e8f0 !important;
 }

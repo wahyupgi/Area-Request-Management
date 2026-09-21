@@ -116,8 +116,8 @@ const handleImgError = (event) => {
 
         <div class="text-xs mb-4 leading-normal">
             <p class="mb-0.5">Kepada Yth :</p>
-            <p class="text-xs">{{ isCashOut ? (cashOutValues.penerima || 'Bpk. / Ibu.') : (memo.area_manager?.name || 'Bpk. / Ibu.') }}</p>
-            <p class="font-medium">{{ isCashOut ? (cashOutValues.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : 'Area Manager' }}</p>
+            <p class="text-xs">{{ isCashOut ? (cashOutValues.penerima || 'Bpk. / Ibu.') : (memoMeta.kepada || memo.area_manager?.name || 'Bpk. / Ibu.') }}</p>
+            <p class="font-medium">{{ isCashOut ? (cashOutValues.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : (memoMeta.kepada_jabatan || 'Area Manager') }}</p>
             <p class="font-medium">Di tempat,</p>
         </div>
 

@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Memo;
 use App\Models\MemoTemplate;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 class DashboardStatsService
@@ -114,6 +115,16 @@ class DashboardStatsService
             ];
         })->values();
 
+        $chartMemos = Memo::query()
+            ->where('created_at', '>=', now()->startOfYear())
+            ->get(['status', 'created_at']);
+
+        $chartData = [
+            'week' => $this->buildChartPeriod($chartMemos, 'week'),
+            'month' => $this->buildChartPeriod($chartMemos, 'month'),
+            'year' => $this->buildChartPeriod($chartMemos, 'year'),
+        ];
+
         return [
             'stats' => [
                 'total_memos' => (int) ($memoStats->total ?? 0),
@@ -128,6 +139,62 @@ class DashboardStatsService
             ],
             'recentMemos' => $recentMemos,
             'activity' => $activity,
+            'chartData' => $chartData,
         ];
+    }
+
+    private function buildChartPeriod(Collection $memos, string $period): array
+    {
+        if ($period === 'week') {
+            $periods = collect(range(6, 0))->map(function (int $daysAgo) {
+                $date = now()->subDays($daysAgo);
+
+                return [
+                    'key' => $date->toDateString(),
+                    'label' => $date->locale('id')->isoFormat('ddd'),
+                ];
+            });
+        } elseif ($period === 'month') {
+            $periods = collect(range(4, 0))->map(function (int $weeksAgo) {
+                $date = now()->subWeeks($weeksAgo)->startOfWeek();
+
+                return [
+                    'key' => $date->format('o-W'),
+                    'label' => 'M' . (5 - $weeksAgo),
+                ];
+            });
+        } else {
+            $periods = collect(range(1, 12))->map(function (int $month) {
+                $date = Carbon::create(now()->year, $month, 1);
+
+                return [
+                    'key' => $date->format('Y-m'),
+                    'label' => $date->locale('id')->isoFormat('MMM'),
+                ];
+            });
+        }
+
+        $grouped = $memos->groupBy(function (Memo $memo) use ($period) {
+            $date = $memo->created_at;
+
+            return match ($period) {
+                'week' => $date->toDateString(),
+                'month' => $date->format('o-W'),
+                default => $date->format('Y-m'),
+            };
+        });
+
+        return $periods->map(function (array $periodItem) use ($grouped) {
+            $counts = $grouped->get($periodItem['key'], collect())
+                ->countBy('status')
+                ->all();
+
+            return [
+                'label' => $periodItem['label'],
+                'approved' => (int) ($counts['approved'] ?? 0),
+                'submitted' => (int) ($counts['submitted'] ?? 0),
+                'rejected' => (int) ($counts['rejected'] ?? 0),
+            ];
+        })->values()->all();
     }
 }

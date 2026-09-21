@@ -7,6 +7,7 @@ const props = defineProps({
     stats: Object,
     recentMemos: Array,
     activity: Array,
+    chartData: Object,
 });
 
 const page = usePage();
@@ -52,6 +53,7 @@ const formattedTime = computed(() => {
 
 const searchQuery = ref('');
 const statusFilter = ref('all');
+const chartPeriod = ref('year');
 
 const statusConfig = {
     draft: { 
@@ -151,7 +153,22 @@ const activityDays = computed(() => {
     }));
 });
 
-const maxActivity = computed(() => Math.max(...activityDays.value.map((day) => day.count), 1));
+const chartPoints = computed(() => props.chartData?.[chartPeriod.value] || []);
+
+const chartMax = computed(() => Math.max(...chartPoints.value.map((point) => point.approved + point.submitted + point.rejected), 1));
+
+const chartTicks = computed(() => {
+    const step = Math.max(Math.ceil(chartMax.value / 4), 1);
+    return [step * 4, step * 3, step * 2, step, 0];
+});
+
+const chartBars = computed(() => chartPoints.value.map((point) => ({
+    ...point,
+    total: point.approved + point.submitted + point.rejected,
+    approvedHeight: (point.approved / chartMax.value) * 100,
+    submittedHeight: (point.submitted / chartMax.value) * 100,
+    rejectedHeight: (point.rejected / chartMax.value) * 100,
+})));
 
 const statusChartData = computed(() => [
     { status: 'Disetujui', value: approvedCount.value },
@@ -174,7 +191,7 @@ const statusChartData = computed(() => [
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
-                    <span>{{ greeting.icon }} {{ greeting.text }}, <span class="text-indigo-400">{{ userDisplayName }}</span>!</span>
+                    <span>{{ greeting.icon }} {{ greeting.text }}, <span class="dashboard-greeting-name">{{ userDisplayName }}</span>!</span>
                 </h1>
                 <p class="text-base font-medium text-slate-400 tracking-tight">Monitoring pergerakan memo antar cabang dan tata kelola master data sistem.</p>
             </div>
@@ -294,27 +311,36 @@ const statusChartData = computed(() => [
         <!-- Activity Overview -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <a-card :bordered="false" class="lg:col-span-2 dashboard-ant-card">
-                <div class="flex items-start justify-between gap-4 mb-6">
+                <div class="flex items-start justify-between gap-4 mb-5">
                     <div>
                         <h2 class="text-base font-bold text-white tracking-tight">Aktivitas Pengajuan</h2>
-                        <p class="text-xs text-slate-400 mt-1">Jumlah memo yang masuk dalam 7 hari terakhir.</p>
+                        <div class="dashboard-chart-legend">
+                            <span><i class="dashboard-chart-dot dashboard-chart-dot-approved"></i>Disetujui</span>
+                            <span><i class="dashboard-chart-dot dashboard-chart-dot-submitted"></i>Menunggu</span>
+                            <span><i class="dashboard-chart-dot dashboard-chart-dot-rejected"></i>Ditolak</span>
+                        </div>
                     </div>
-                    <span class="text-xs font-semibold text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-2.5 py-1.5 whitespace-nowrap">
-                        {{ activityDays.reduce((total, day) => total + day.count, 0) }} memo
-                    </span>
+                    <div class="dashboard-chart-periods" role="group" aria-label="Periode grafik">
+                        <button v-for="period in ['week', 'month', 'year']" :key="period" type="button" :class="{ active: chartPeriod === period }" @click="chartPeriod = period">
+                            {{ period === 'week' ? 'Week' : period === 'month' ? 'Month' : 'Year' }}
+                        </button>
+                    </div>
                 </div>
 
-                <div class="dashboard-bar-chart">
-                    <div v-for="day in activityDays" :key="day.date" class="dashboard-bar-column">
-                        <span class="dashboard-bar-value">{{ day.count }}</span>
-                        <div class="dashboard-bar-track">
-                            <div
-                                class="dashboard-bar-fill"
-                                :style="{ height: `${Math.max((day.count / maxActivity) * 100, day.count ? 8 : 2)}%` }"
-                                :title="`${day.date}: ${day.count} memo`"
-                            ></div>
+                <div class="dashboard-stacked-chart">
+                    <div class="dashboard-chart-axis">
+                        <span v-for="tick in chartTicks" :key="tick">{{ tick }}</span>
+                    </div>
+                    <div class="dashboard-chart-plot">
+                        <div v-for="bar in chartBars" :key="bar.label" class="dashboard-stacked-column">
+                            <span class="dashboard-bar-value">{{ bar.total || '' }}</span>
+                            <div class="dashboard-stacked-track" :title="`${bar.label}: ${bar.total} memo`">
+                                <div class="dashboard-stacked-segment approved" :style="{ height: `${bar.approvedHeight}%` }"></div>
+                                <div class="dashboard-stacked-segment submitted" :style="{ height: `${bar.submittedHeight}%` }"></div>
+                                <div class="dashboard-stacked-segment rejected" :style="{ height: `${bar.rejectedHeight}%` }"></div>
+                            </div>
+                            <span class="dashboard-bar-label">{{ bar.label }}</span>
                         </div>
-                        <span class="dashboard-bar-label">{{ day.label }}</span>
                     </div>
                 </div>
             </a-card>
@@ -511,7 +537,7 @@ const statusChartData = computed(() => [
                                     </td>
 
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap" :class="statusConfig[memo.status]?.badgeClass || 'bg-slate-500/15 text-slate-300 border-slate-500/30'">
+                                        <div class="dashboard-status-badge inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap" :class="[statusConfig[memo.status]?.badgeClass || 'bg-slate-500/15 text-slate-300 border-slate-500/30', { 'dashboard-status-draft': memo.status === 'draft' }]">
                                             <span>{{ statusConfig[memo.status]?.label || memo.status }}</span>
                                         </div>
                                     </td>

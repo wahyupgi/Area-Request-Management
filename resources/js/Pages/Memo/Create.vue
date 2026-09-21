@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref, watch, computed } from 'vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 import { 
     PlusOutlined, 
     DeleteOutlined, 
@@ -13,27 +14,22 @@ const props = defineProps({
     templates: Array,
 });
 
-const generateMemoNumber = () => {
-    const d = new Date();
-    const year = d.getFullYear();
-    const months = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
-    return `INT/RBO/BRL/PGI/040/${months[d.getMonth()]}/${year}`;
-};
-
 const form = useForm({
-    code: generateMemoNumber(),
+    code: null,
     template_id: undefined,
     title: '',
     field_values: {
         pengantar: '',
         items: [{}],
-        meta: { direktorat: '', divisi: '', perihal: '', lampiran: '' },
+        meta: { direktorat: '', divisi: '', perihal: '', kepada: '', kepada_jabatan: '', lampiran: '' },
     },
     submit_after_save: false,
 });
 
 const selectedTemplate = ref(null);
 const attachment = ref(null);
+const autoPerihal = ref('');
+const { success } = useSweetAlert();
 
 const groupedTemplates = computed(() => {
     const groups = {};
@@ -69,10 +65,20 @@ watch(() => form.template_id, (val) => {
         meta: {
             direktorat: 'Regional Branch Office',
             divisi: 'Branch Leader',
-            perihal: '',
+            perihal: form.title,
+            kepada: '',
+            kepada_jabatan: '',
             lampiran: '',
         },
     };
+    autoPerihal.value = form.title;
+});
+
+watch(() => form.title, (title) => {
+    if (!form.field_values.meta.perihal || form.field_values.meta.perihal === autoPerihal.value) {
+        form.field_values.meta.perihal = title;
+        autoPerihal.value = title;
+    }
 });
 
 const addItem = () => {
@@ -109,13 +115,22 @@ const ensureTableRows = (item, fieldKey, columns) => {
     return item[fieldKey];
 };
 
+const hasFieldValue = (value) => {
+    if (Array.isArray(value)) return value.some((row) => hasFieldValue(row));
+    if (value && typeof value === 'object') return Object.values(value).some((entry) => hasFieldValue(entry));
+    return value !== undefined && value !== null && String(value).trim() !== '';
+};
+
 const selectAttachment = (event) => {
     attachment.value = event.target.files[0] || null;
 };
 
 const submit = () => {
     form.submit_after_save = false;
-    form.transform((data) => ({ ...data, attachment: attachment.value })).post(route('memos.store'), { forceFormData: true });
+    form.transform((data) => ({ ...data, attachment: attachment.value })).post(route('memos.store'), {
+        forceFormData: true,
+        onSuccess: () => success('Draft memo berhasil disimpan.'),
+    });
 };
 
 const submitAndSign = () => {
@@ -128,7 +143,7 @@ const submitAndSign = () => {
     <Head title="Buat Memo Baru" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-gray-800 mb-0">Buat Memo Baru</h1>
+            <h1 class="memo-page-title text-xl font-bold mb-0">Buat Memo Baru</h1>
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
@@ -155,32 +170,26 @@ const submitAndSign = () => {
             <a-row :gutter="24" v-if="selectedTemplate">
                 <a-col :xs="24" :lg="10" class="mb-6">
                     <div class="flex flex-col gap-6">
-                        <!-- Nomor Memo -->
-                        <a-card :bordered="false" class="rounded-lg shadow-sm">
+                        <!-- Informasi Memo -->
+                        <a-card :bordered="false" class="memo-compact-field-card rounded-lg shadow-sm">
+                            <h2 class="text-sm font-semibold mb-4">Informasi Memo</h2>
                             <a-form-item 
                                 label="Nomor Memo" 
+                                extra="Nomor memo otomatis dikelola oleh Area Manager (AM)."
                                 :validateStatus="form.errors.code ? 'error' : ''" 
                                 :help="form.errors.code"
-                                class="mb-0"
+                                class="mb-3"
                             >
-                                <a-input v-model:value="form.code" placeholder="Masukkan nomor memo..." size="large" />
+                                <a-input v-model:value="form.code" placeholder="Diatur otomatis oleh AM" size="large" />
                             </a-form-item>
-                        </a-card>
-
-                        <!-- Title -->
-                        <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <a-form-item 
                                 label="Judul Memo" 
                                 :validateStatus="form.errors.title ? 'error' : ''" 
                                 :help="form.errors.title"
-                                class="mb-0"
+                                class="mb-3"
                             >
                                 <a-input v-model:value="form.title" placeholder="Masukkan judul memo..." size="large" />
                             </a-form-item>
-                        </a-card>
-
-                        <!-- Isi Memo -->
-                        <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <a-form-item 
                                 label="Isi Memo" 
                                 class="mb-0"
@@ -203,6 +212,12 @@ const submitAndSign = () => {
                             </a-form-item>
                             <a-form-item label="Perihal" extra="opsional, jika beda dari judul" class="mb-3">
                                 <a-input v-model:value="form.field_values.meta.perihal" :placeholder="form.title || 'Mengikuti judul memo'" />
+                            </a-form-item>
+                            <a-form-item label="Kepada (Yth.)" extra="Nama penerima memo. Kosongkan untuk memakai Area Manager." class="mb-3">
+                                <a-input v-model:value="form.field_values.meta.kepada" placeholder="Nama penerima" />
+                            </a-form-item>
+                            <a-form-item label="Jabatan Penerima" extra="Jabatan penerima memo." class="mb-3">
+                                <a-input v-model:value="form.field_values.meta.kepada_jabatan" placeholder="Contoh: Area Manager" />
                             </a-form-item>
                             <a-form-item label="Lampiran" extra="keterangan teks" class="mb-0">
                                 <a-input v-model:value="form.field_values.meta.lampiran" placeholder="contoh: 1 Lembar, 3 Berkas" />
@@ -233,7 +248,7 @@ const submitAndSign = () => {
                             <div v-for="field in selectedTemplate.field_schema" :key="field.key" class="mb-4">
                                 <a-form-item 
                                     :label="field.label" 
-                                    :required="field.required"
+                                    :required="field.required && !hasFieldValue(item[field.key])"
                                     :validateStatus="form.errors['field_values.items.' + itemIndex + '.' + field.key] ? 'error' : ''"
                                     :help="form.errors['field_values.items.' + itemIndex + '.' + field.key]"
                                     class="mb-0"
@@ -271,11 +286,11 @@ const submitAndSign = () => {
                         </a-button>
 
                         <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
-                            <a-button size="large" type="default" @click="submit" :loading="form.processing && !form.submit_after_save">
+                            <a-button size="large" type="default" class="memo-save-draft-button" @click="submit" :loading="form.processing && !form.submit_after_save">
                                 <template #icon><save-outlined /></template>
                                 Simpan Draft
                             </a-button>
-                            <a-button size="large" type="primary" @click="submitAndSign" :loading="form.processing && form.submit_after_save" class="bg-green-600 hover:bg-green-500 border-green-600">
+                            <a-button size="large" type="primary" @click="submitAndSign" :loading="form.processing && form.submit_after_save" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
                                 <template #icon><send-outlined /></template>
                                 Tanda Tangani &amp; Kirim ke AM
                             </a-button>

@@ -41,7 +41,7 @@ const handleImgError = (event) => {
                 <th class="border border-black px-3 py-1.5 text-left font-bold">
                     {{ isItemBased ? (memo.field_values?.items?.[0]?.nama_barang || memo.field_values?.nama_barang ? 'Nama Barang' : 'Permintaan') : 'Permintaan' }}
                 </th>
-                <th v-if="isItemBased" class="border border-black px-2.5 py-1.5 text-center font-bold w-24">Jumlah</th>
+                <th v-if="isItemBased" class="border border-black px-2.5 py-1.5 text-center font-bold w-32 min-w-[8rem] whitespace-nowrap">Jumlah</th>
                 <th class="border border-black px-3 py-1.5 text-left font-bold">Keterangan</th>
             </tr>
         </thead>
@@ -50,7 +50,7 @@ const handleImgError = (event) => {
                 <tr v-for="(item, index) in items" :key="'item-' + index">
                     <td class="border border-black px-2.5 py-1.5 text-center font-medium">{{ index + 1 }}.</td>
                     <td class="border border-black px-3 py-1.5 font-medium">{{ item?.nama_barang || item?.permintaan || memo.title }}</td>
-                    <td class="border border-black px-2.5 py-1.5 text-center font-medium">{{ formatValue(item?.jumlah || item?.nominal) }}</td>
+                    <td class="border border-black px-2.5 py-1.5 text-center font-medium w-32 min-w-[8rem] whitespace-nowrap">{{ formatValue(item?.jumlah || item?.nominal) }}</td>
                     <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ item?.keterangan || item?.deskripsi || '-' }}</td>
                 </tr>
             </template>

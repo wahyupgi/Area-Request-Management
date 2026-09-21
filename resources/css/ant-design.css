@@ -57,6 +57,35 @@ button > span > .anticon {
 }
 
 /* Dark mode: modal, input, select */
+html:not(.theme-light) .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):not(.ant-btn-link):not(.ant-btn-text) {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):not(.ant-btn-link):not(.ant-btn-text):hover,
+html:not(.theme-light) .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):not(.ant-btn-link):not(.ant-btn-text):focus {
+    background: #475569 !important;
+    border-color: #64748b !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .ant-radio-button-wrapper {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .ant-radio-button-wrapper:not(:first-child)::before {
+    background-color: #475569 !important;
+}
+
+html:not(.theme-light) .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
 html:not(.theme-light) .ant-modal-content,
 html:not(.theme-light) .ant-modal-header,
 html:not(.theme-light) .ant-modal-body,

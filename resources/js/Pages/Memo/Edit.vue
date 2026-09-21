@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import {
     PlusOutlined,
@@ -33,7 +33,9 @@ const form = useForm({
         meta: {
             direktorat: props.memo.field_values?.meta?.direktorat || 'Regional Branch Office',
             divisi: props.memo.field_values?.meta?.divisi || 'Branch Leader',
-            perihal: props.memo.field_values?.meta?.perihal || '',
+            perihal: props.memo.field_values?.meta?.perihal || props.memo.title || '',
+            kepada: props.memo.field_values?.meta?.kepada || '',
+            kepada_jabatan: props.memo.field_values?.meta?.kepada_jabatan || '',
             lampiran: props.memo.field_values?.meta?.lampiran || '',
         },
     },
@@ -45,10 +47,20 @@ const showSignatureDialog = ref(props.openSignature);
 const signatureFile = ref(null);
 const signaturePreview = ref(null);
 const submittingMemo = ref(false);
-const { confirm } = useSweetAlert();
+const autoPerihal = ref(props.memo.field_values?.meta?.perihal || props.memo.title || '');
+const { confirm, success } = useSweetAlert();
+
+watch(() => form.title, (title) => {
+    if (!form.field_values.meta.perihal || form.field_values.meta.perihal === autoPerihal.value) {
+        form.field_values.meta.perihal = title;
+        autoPerihal.value = title;
+    }
+});
 
 const save = () => {
-    form.put(route('memos.update', props.memo.id));
+    form.put(route('memos.update', props.memo.id), {
+        onSuccess: () => success('Draft memo berhasil disimpan.'),
+    });
 };
 
 const submitMemo = () => {
@@ -60,6 +72,11 @@ const removeItem = (index) => { if (form.field_values.items.length > 1) { form.f
 const addTableRow = (item, fieldKey, columns) => { if (!Array.isArray(item[fieldKey])) { item[fieldKey] = []; } const emptyRow = {}; columns.forEach(col => { emptyRow[col.key] = ''; }); item[fieldKey].push(emptyRow); };
 const removeTableRow = (item, fieldKey, rowIndex) => { if (Array.isArray(item[fieldKey]) && item[fieldKey].length > 1) { item[fieldKey].splice(rowIndex, 1); } };
 const ensureTableRows = (item, fieldKey, columns) => { if (!Array.isArray(item[fieldKey]) || item[fieldKey].length === 0) { const emptyRow = {}; columns.forEach(col => { emptyRow[col.key] = ''; }); item[fieldKey] = [emptyRow]; } return item[fieldKey]; };
+const hasFieldValue = (value) => {
+    if (Array.isArray(value)) return value.some((row) => hasFieldValue(row));
+    if (value && typeof value === 'object') return Object.values(value).some((entry) => hasFieldValue(entry));
+    return value !== undefined && value !== null && String(value).trim() !== '';
+};
 
 const selectSignature = (event) => {
     const file = event.target.files[0];
@@ -110,10 +127,16 @@ const deleteMemo = async () => {
     <Head :title="'Edit: ' + memo.title" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-gray-800 mb-0">Edit Memo</h1>
+            <div class="flex items-center gap-2">
+                <Link :href="route('memos.index')" class="memo-breadcrumb-back inline-flex items-center gap-1 text-sm transition-colors">
+                    <span>Memo Saya</span>
+                </Link>
+                <span class="text-gray-400">/</span>
+                <h1 class="memo-page-title text-xl font-bold mb-0">Edit Memo</h1>
+            </div>
         </template>
 
-        <div class="space-y-6">
+        <div class="memo-create-page space-y-6">
             <!-- Rejection Notes -->
             <a-alert 
                 v-if="memo.status === 'rejected' && memo.approvals?.length > 0" 
@@ -131,9 +154,16 @@ const deleteMemo = async () => {
             </a-alert>
 
             <a-card :bordered="false" class="rounded-lg shadow-sm">
-                <div class="flex items-center gap-3 mb-2">
-                    <a-tag color="default" class="font-mono">{{ memo.code }}</a-tag>
-                    <a-tag :color="memo.status === 'rejected' ? 'error' : 'default'" class="font-semibold uppercase">{{ memo.status }}</a-tag>
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-3">
+                        <a-tag color="default" class="memo-code-tag font-mono">{{ memo.code }}</a-tag>
+                        <a-tag :color="memo.status === 'rejected' ? 'error' : 'default'" class="memo-status-tag font-semibold uppercase">{{ memo.status }}</a-tag>
+                    </div>
+                    <div v-if="memo.status === 'draft'" class="delete-memo-wrapper">
+                        <a-button danger type="text" size="small" @click="deleteMemo">
+                            Hapus Memo
+                        </a-button>
+                    </div>
                 </div>
                 <p class="text-sm text-gray-500 mb-0">Template: <span class="font-medium text-gray-800">{{ memo.template?.name }}</span></p>
             </a-card>
@@ -143,22 +173,15 @@ const deleteMemo = async () => {
                 <a-row :gutter="24">
                     <a-col :xs="24" :lg="10" class="mb-6">
                         <div class="flex flex-col gap-6">
-                            <!-- Nomor Memo -->
-                            <a-card :bordered="false" class="rounded-lg shadow-sm">
-                                <a-form-item label="Nomor Memo" :validateStatus="form.errors.code ? 'error' : ''" :help="form.errors.code" class="mb-0">
-                                    <a-input v-model:value="form.code" placeholder="Masukkan nomor memo..." size="large" />
+                            <!-- Informasi Memo -->
+                            <a-card v-if="memo.template" :bordered="false" class="memo-compact-field-card rounded-lg shadow-sm">
+                                <h2 class="text-sm font-semibold mb-4">Informasi Memo</h2>
+                                <a-form-item label="Nomor Memo" extra="Nomor memo otomatis dikelola oleh Area Manager (AM)." :validateStatus="form.errors.code ? 'error' : ''" :help="form.errors.code" class="mb-3">
+                                    <a-input v-model:value="form.code" placeholder="Diatur otomatis oleh AM" size="large" />
                                 </a-form-item>
-                            </a-card>
-
-                            <!-- Title -->
-                            <a-card :bordered="false" class="rounded-lg shadow-sm">
-                                <a-form-item label="Judul Memo" :validateStatus="form.errors.title ? 'error' : ''" :help="form.errors.title" class="mb-0">
+                                <a-form-item label="Judul Memo" :validateStatus="form.errors.title ? 'error' : ''" :help="form.errors.title" class="mb-3">
                                     <a-input v-model:value="form.title" placeholder="Masukkan judul memo..." size="large" />
                                 </a-form-item>
-                            </a-card>
-
-                            <!-- Isi Memo -->
-                            <a-card v-if="memo.template" :bordered="false" class="rounded-lg shadow-sm">
                                 <a-form-item label="Isi Memo" class="mb-0" extra="Teks ini akan tampil pada bagian “Sehubungan dengan” dan dapat diubah sesuai kebutuhan pengajuan.">
                                     <a-textarea v-model:value="form.field_values.pengantar" :rows="5" />
                                 </a-form-item>
@@ -176,6 +199,12 @@ const deleteMemo = async () => {
                                 </a-form-item>
                                 <a-form-item label="Perihal" extra="opsional, jika beda dari judul" class="mb-3">
                                     <a-input v-model:value="form.field_values.meta.perihal" :placeholder="form.title || 'Mengikuti judul memo'" />
+                                </a-form-item>
+                                <a-form-item label="Kepada (Yth.)" extra="Nama penerima memo. Kosongkan untuk memakai Area Manager." class="mb-3">
+                                    <a-input v-model:value="form.field_values.meta.kepada" placeholder="Nama penerima" />
+                                </a-form-item>
+                                <a-form-item label="Jabatan Penerima" extra="Jabatan penerima memo." class="mb-3">
+                                    <a-input v-model:value="form.field_values.meta.kepada_jabatan" placeholder="Contoh: Area Manager" />
                                 </a-form-item>
                                 <a-form-item label="Lampiran" extra="keterangan teks" class="mb-0">
                                     <a-input v-model:value="form.field_values.meta.lampiran" placeholder="contoh: 1 Lembar, 3 Berkas" />
@@ -222,7 +251,7 @@ const deleteMemo = async () => {
                                 <div v-for="field in memo.template.field_schema" :key="field.key" class="mb-4">
                                     <a-form-item 
                                         :label="field.label" 
-                                        :required="field.required"
+                                        :required="field.required && !hasFieldValue(item[field.key])"
                                         :validateStatus="form.errors['field_values.items.' + itemIndex + '.' + field.key] ? 'error' : ''"
                                         :help="form.errors['field_values.items.' + itemIndex + '.' + field.key]"
                                         class="mb-0"
@@ -259,11 +288,11 @@ const deleteMemo = async () => {
                             </a-button>
 
                             <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
-                                <a-button size="large" type="default" @click="save" :loading="form.processing && !showSignatureDialog">
+                                <a-button size="large" type="default" class="memo-save-draft-button" @click="save" :loading="form.processing && !showSignatureDialog">
                                     <template #icon><save-outlined /></template>
                                     Simpan Perubahan
                                 </a-button>
-                                <a-button size="large" type="primary" @click="submitMemo" class="bg-green-600 hover:bg-green-500 border-green-600">
+                                <a-button size="large" type="primary" @click="submitMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
                                     <template #icon><send-outlined /></template>
                                     Tanda Tangani &amp; Kirim ke AM
                                 </a-button>
@@ -273,9 +302,6 @@ const deleteMemo = async () => {
                 </a-row>
             </a-form>
 
-            <div v-if="memo.status === 'draft'" class="flex justify-end mt-4">
-                <a-button danger type="dashed" @click="deleteMemo">Hapus Memo</a-button>
-            </div>
         </div>
 
         <!-- Digital signature confirmation before submission -->

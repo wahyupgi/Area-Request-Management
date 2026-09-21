@@ -10,17 +10,17 @@ const handleImgError = (event) => {
 </script>
 
 <template>
-    <table class="w-full border-collapse border border-black text-xs mb-5">
+    <table class="w-full table-fixed border-collapse border border-black text-xs mb-5">
         <thead>
             <tr class="bg-[#b4c7e7] text-black">
-                <th class="border border-black px-3 py-2 text-left font-bold w-1/2">Uraian</th>
-                <th class="border border-black px-3 py-2 text-left font-bold">Nominal</th>
+                <th class="border border-black px-3 py-2 text-left font-bold w-[55%]">Uraian</th>
+                <th class="border border-black px-3 py-2 text-left font-bold w-[45%] whitespace-nowrap">Nominal</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td class="border border-black px-3 py-2 font-bold">Nominal kas keluar</td>
-                <td class="border border-black px-3 py-2">Rp. {{ Number(values.nominal_kas_keluar || 0).toLocaleString('id-ID') }}</td>
+                <td class="border border-black px-3 py-2 whitespace-nowrap" style="white-space: nowrap;">Rp. {{ Number(values.nominal_kas_keluar || 0).toLocaleString('id-ID') }}</td>
             </tr>
         </tbody>
     </table>

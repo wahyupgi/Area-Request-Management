@@ -33,7 +33,12 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => fn () => $request->user() ? $request->user()->load(['branch', 'area']) : null,
+                'user' => fn () => $request->user()
+                    ? $request->user()->load([
+                        'branch:id,name,area_id',
+                        'area:id,name',
+                    ])
+                    : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

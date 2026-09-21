@@ -52,10 +52,10 @@ const onFilterChange = (e) => {
     <Head title="Daftar Memo" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-gray-800 mb-0">Daftar Memo</h1>
+            <h1 class="memo-page-title text-xl font-bold mb-0">Daftar Memo</h1>
         </template>
 
-        <a-card :bordered="false" class="rounded-lg shadow-sm">
+        <a-card :bordered="false" class="memo-index-card rounded-lg shadow-sm">
             <div class="flex items-center justify-between mb-4">
                 <a-radio-group :value="filters?.status || ''" @change="onFilterChange" button-style="solid">
                     <a-radio-button value="">Semua</a-radio-button>

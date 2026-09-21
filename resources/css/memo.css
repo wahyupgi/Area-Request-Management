@@ -22,6 +22,13 @@ html:not(.theme-light) .memo-create-page .text-gray-500 {
     color: #94a3b8 !important;
 }
 
+html:not(.theme-light) .memo-create-page .text-gray-800,
+html:not(.theme-light) .memo-create-page .text-gray-700,
+html:not(.theme-light) .memo-create-page .ant-form-item-explain,
+html:not(.theme-light) .memo-create-page .ant-form-item-extra {
+    color: #e2e8f0 !important;
+}
+
 html:not(.theme-light) .memo-create-page .ant-input,
 html:not(.theme-light) .memo-create-page .ant-input-affix-wrapper,
 html:not(.theme-light) .memo-create-page .ant-select-selector,
@@ -65,6 +72,66 @@ html.theme-light .memo-create-page .text-gray-500 {
     color: #64748b !important;
 }
 
+.memo-compact-field-card .ant-card-body {
+    padding: 1rem 1.25rem !important;
+}
+
+.memo-code-tag,
+.memo-status-tag {
+    font-weight: 600 !important;
+}
+
+html:not(.theme-light) .memo-code-tag,
+html:not(.theme-light) .memo-status-tag {
+    background: #334155 !important;
+    border-color: #64748b !important;
+    color: #f8fafc !important;
+}
+
+html.theme-light .memo-code-tag,
+html.theme-light .memo-status-tag {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+.delete-memo-wrapper {
+    padding: 0.15rem;
+    border: 1px solid #fecaca;
+    border-radius: 0.45rem;
+    background: #fef2f2;
+}
+
+.delete-memo-wrapper .ant-btn {
+    color: #dc2626 !important;
+    font-weight: 600;
+    border-radius: 0.35rem !important;
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.delete-memo-wrapper .ant-btn:hover,
+.delete-memo-wrapper .ant-btn:focus {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #b91c1c !important;
+}
+
+html:not(.theme-light) .delete-memo-wrapper {
+    border-color: #7f1d1d;
+    background: rgba(127, 29, 29, 0.35);
+}
+
+html:not(.theme-light) .delete-memo-wrapper .ant-btn {
+    color: #fca5a5 !important;
+}
+
+html:not(.theme-light) .delete-memo-wrapper .ant-btn:hover,
+html:not(.theme-light) .delete-memo-wrapper .ant-btn:focus {
+    background: #991b1b !important;
+    border-color: #f87171 !important;
+    color: #ffffff !important;
+}
+
 /* Template select dropdown */
 html:not(.theme-light) .memo-template-dropdown {
     background: #1e293b !important;
@@ -89,6 +156,46 @@ html:not(.theme-light) .memo-template-dropdown .ant-select-item-option-selected 
 html.theme-light .memo-template-dropdown .ant-select-item-group {
     color: #1f69a8 !important;
     font-weight: 700;
+}
+
+.memo-save-draft-button {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+.memo-save-draft-button:hover,
+.memo-save-draft-button:focus {
+    background: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
+}
+
+.memo-submit-button,
+.memo-submit-button:hover,
+.memo-submit-button:focus {
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+    color: #ffffff !important;
+}
+
+.memo-submit-button:hover,
+.memo-submit-button:focus {
+    background: #15803d !important;
+    border-color: #15803d !important;
+}
+
+html:not(.theme-light) .memo-save-draft-button {
+    background: #334155 !important;
+    border-color: #64748b !important;
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) .memo-save-draft-button:hover,
+html:not(.theme-light) .memo-save-draft-button:focus {
+    background: #475569 !important;
+    border-color: #94a3b8 !important;
+    color: #ffffff !important;
 }
 
 /* Official memo typography */

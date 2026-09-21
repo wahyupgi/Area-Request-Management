@@ -54,6 +54,7 @@ class DashboardController extends Controller
             'stats' => $dashboard['stats'],
             'recentMemos' => $dashboard['recentMemos'],
             'activity' => $dashboard['activity'],
+            'chartData' => $dashboard['chartData'],
         ]);
     }
 }
