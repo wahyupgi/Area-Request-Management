@@ -76,19 +76,19 @@ const handleImgError = (event) => {
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="w-full whitespace-normal break-words underline mt-1 text-black leading-tight">{{ slot.name }}</p>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.role }}</p>
+            <p class="relative top-2 w-full whitespace-normal break-words mt-2 text-black leading-none">{{ slot.name }}</p>
+            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.role }}</p>
         </div>
     </div>
 
     <div v-else class="grid grid-cols-2 gap-6 items-start text-xs w-full max-w-lg mx-auto px-4 mb-4">
         <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1 font-semibold">Dibuat Oleh,</p>
+            <p class="mb-1">Dibuat Oleh,</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="memo.creator?.digital_signature?.signature_image" :src="'/storage/' + memo.creator.digital_signature.signature_image" alt="Tanda Tangan KC" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="w-full whitespace-normal break-words underline mt-1 text-black leading-tight">{{ memo.creator?.name }}</p>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Kepala Cabang</p>
+            <p class="relative top-2 w-full whitespace-normal break-words mt-2 text-black leading-none">{{ memo.creator?.name }}</p>
+            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Kepala Cabang</p>
         </div>
         <div class="flex min-w-0 flex-col items-center text-center">
             <p class="mb-1">Diketahui Oleh,</p>
@@ -98,8 +98,8 @@ const handleImgError = (event) => {
                     <img v-else-if="memo.area_manager?.digital_signature?.signature_image" :src="'/storage/' + memo.area_manager.digital_signature.signature_image" alt="Tanda Tangan AM" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
                 </template>
             </div>
-            <p class="w-full whitespace-normal break-words underline mt-1 text-black leading-tight">{{ memo.area_manager?.name || 'Area Manager' }}</p>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Area Manager</p>
+            <p class="relative top-2 w-full whitespace-normal break-words mt-2 text-black leading-none">{{ memo.area_manager?.name || 'Area Manager' }}</p>
+            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Area Manager</p>
         </div>
     </div>
 </template>

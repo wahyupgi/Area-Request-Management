@@ -1,0 +1,117 @@
+/* ==========================================================================
+   Memo — Create Form, Template Dropdown, Document Typography
+   ========================================================================== */
+
+/* Theme-aware memo creation form surfaces. */
+html:not(.theme-light) .memo-create-page .ant-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-form-item-label > label,
+html:not(.theme-light) .memo-create-page h2,
+html:not(.theme-light) .memo-create-page h3 {
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-form-item-extra,
+html:not(.theme-light) .memo-create-page p,
+html:not(.theme-light) .memo-create-page .text-gray-400,
+html:not(.theme-light) .memo-create-page .text-gray-500 {
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-input,
+html:not(.theme-light) .memo-create-page .ant-input-affix-wrapper,
+html:not(.theme-light) .memo-create-page .ant-select-selector,
+html:not(.theme-light) .memo-create-page textarea {
+    background: #17233a !important;
+    border-color: #475569 !important;
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-input::placeholder,
+html:not(.theme-light) .memo-create-page textarea::placeholder,
+html:not(.theme-light) .memo-create-page .ant-select-selection-placeholder {
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) .memo-create-page .border-gray-200,
+html:not(.theme-light) .memo-create-page .border-b {
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .memo-create-page .bg-gray-50 {
+    background: #17233a !important;
+}
+
+html.theme-light .memo-create-page .ant-card {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+html.theme-light .memo-create-page .ant-form-item-label > label,
+html.theme-light .memo-create-page h2,
+html.theme-light .memo-create-page h3 {
+    color: #0f172a !important;
+}
+
+html.theme-light .memo-create-page .ant-form-item-extra,
+html.theme-light .memo-create-page p,
+html.theme-light .memo-create-page .text-gray-400,
+html.theme-light .memo-create-page .text-gray-500 {
+    color: #64748b !important;
+}
+
+/* Template select dropdown */
+html:not(.theme-light) .memo-template-dropdown {
+    background: #1e293b !important;
+    border: 1px solid #475569 !important;
+}
+
+html:not(.theme-light) .memo-template-dropdown .ant-select-item-group {
+    color: #93c5fd !important;
+    font-weight: 700;
+}
+
+html:not(.theme-light) .memo-template-dropdown .ant-select-item-option {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .memo-template-dropdown .ant-select-item-option-active,
+html:not(.theme-light) .memo-template-dropdown .ant-select-item-option-selected {
+    background: #334f7d !important;
+    color: #ffffff !important;
+}
+
+html.theme-light .memo-template-dropdown .ant-select-item-group {
+    color: #1f69a8 !important;
+    font-weight: 700;
+}
+
+/* Official memo typography */
+.memo-document,
+.memo-document * {
+    font-family: Tahoma, Arial, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+}
+
+.memo-document h1 {
+    font-size: 16px !important;
+}
+
+/* Download button */
+.download-memo-button {
+    background-color: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+.download-memo-button:hover,
+.download-memo-button:focus,
+.download-memo-button:active {
+    background-color: #18598f !important;
+    color: #ffffff !important;
+}

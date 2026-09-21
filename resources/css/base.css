@@ -1,0 +1,55 @@
+/* ==========================================================================
+   Base — Font Variables, Global Resets, Color Scheme
+   ========================================================================== */
+
+:root {
+    --arm-font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color-scheme: dark;
+}
+
+html.theme-light {
+    color-scheme: light;
+}
+
+html,
+body,
+button,
+input,
+textarea,
+select,
+.ant-app,
+.ant-layout,
+.ant-menu,
+.ant-btn,
+.ant-input,
+.ant-select,
+.ant-form,
+.ant-table,
+.ant-card,
+.ant-modal,
+.ant-dropdown,
+.ant-tabs {
+    font-family: var(--arm-font-family) !important;
+}
+
+.ant-btn,
+.ant-menu-item,
+.ant-form-item-label > label,
+.ant-table,
+.ant-card-head-title,
+.ant-tabs-tab-btn {
+    letter-spacing: 0 !important;
+}
+
+/* Keep every authenticated page title identical to the dashboard header. */
+.header-left h1,
+.header-left h2,
+.header-left h3,
+.header-left .page-header-title {
+    margin: 0 !important;
+    font-family: var(--arm-font-family) !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0 !important;
+}

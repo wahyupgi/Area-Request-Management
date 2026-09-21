@@ -1,0 +1,220 @@
+/* ==========================================================================
+   Admin — Action Buttons & Master Data Tables
+   ========================================================================== */
+
+.admin-action-button {
+    min-width: 34px !important;
+    height: 34px !important;
+    padding: 0 9px !important;
+    border: 1px solid #475569 !important;
+    border-radius: 7px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+}
+
+html:not(.theme-light) .admin-action-edit {
+    background: #1e4b76 !important;
+    border-color: #2f6da1 !important;
+    color: #dbeafe !important;
+}
+
+html:not(.theme-light) .admin-action-edit:hover {
+    background: #2563a0 !important;
+    border-color: #60a5fa !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .admin-action-delete {
+    background: #7f1d2d !important;
+    border-color: #be4055 !important;
+    color: #ffe4e6 !important;
+}
+
+html:not(.theme-light) .admin-action-delete:hover {
+    background: #be123c !important;
+    border-color: #fb7185 !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .admin-action-success {
+    background: #166534 !important;
+    border-color: #22c55e !important;
+    color: #dcfce7 !important;
+}
+
+html:not(.theme-light) .admin-action-success:hover {
+    background: #15803d !important;
+    color: #ffffff !important;
+}
+
+html.theme-light .admin-action-edit {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+}
+
+html.theme-light .admin-action-edit:hover {
+    background: #dbeafe !important;
+    border-color: #3b82f6 !important;
+    color: #1e40af !important;
+}
+
+html.theme-light .admin-action-delete {
+    background: #fff1f2 !important;
+    border-color: #fda4af !important;
+    color: #be123c !important;
+}
+
+html.theme-light .admin-action-delete:hover {
+    background: #ffe4e6 !important;
+    border-color: #fb7185 !important;
+    color: #9f1239 !important;
+}
+
+html.theme-light .admin-action-success {
+    background: #f0fdf4 !important;
+    border-color: #86efac !important;
+    color: #15803d !important;
+}
+
+html.theme-light .admin-action-success:hover {
+    background: #dcfce7 !important;
+    border-color: #4ade80 !important;
+    color: #166534 !important;
+}
+
+/* Theme-aware Ant Design surfaces used by the admin master-data pages. */
+html:not(.theme-light) .admin-master-page .ant-card,
+html:not(.theme-light) .admin-master-page .ant-table-container,
+html:not(.theme-light) .admin-master-page .ant-table-content,
+html:not(.theme-light) .admin-master-page .ant-table-body {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-card {
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-table {
+    border: 1px solid #0e7490 !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-card-head,
+html:not(.theme-light) .admin-master-page .ant-table-thead > tr > th {
+    background: #123762 !important;
+    color: #f8fafc !important;
+    border-color: #334f7d !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-table-tbody > tr > td {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-table-thead > tr > th,
+html:not(.theme-light) .admin-master-page .ant-table-tbody > tr > td {
+    border-right: 1px solid #334155 !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-table-thead > tr > th:last-child,
+html:not(.theme-light) .admin-master-page .ant-table-tbody > tr > td:last-child {
+    border-right: 0 !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-table-tbody > tr:hover > td {
+    background: #26364d !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-table-placeholder {
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+}
+
+html.theme-light .admin-master-page .ant-card,
+html.theme-light .admin-master-page .ant-table-container,
+html.theme-light .admin-master-page .ant-table-content,
+html.theme-light .admin-master-page .ant-table-body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+html.theme-light .admin-master-page .ant-card {
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .admin-master-page .ant-table {
+    border: 1px solid #7dd3fc !important;
+}
+
+html.theme-light .admin-master-page .ant-card-head {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .admin-master-page .ant-table-thead > tr > th {
+    background: #f3f6fb !important;
+    color: #334155 !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .admin-master-page .ant-table-tbody > tr > td {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .admin-master-page .ant-table-thead > tr > th,
+html.theme-light .admin-master-page .ant-table-tbody > tr > td {
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+html.theme-light .admin-master-page .ant-table-thead > tr > th:last-child,
+html.theme-light .admin-master-page .ant-table-tbody > tr > td:last-child {
+    border-right: 0 !important;
+}
+
+html.theme-light .admin-master-page .ant-table-tbody > tr:hover > td {
+    background: #f8fafc !important;
+}
+
+html.theme-light .header-left .text-white,
+html.theme-light .admin-master-page .ant-card-head .text-white {
+    color: #0f172a !important;
+}
+
+/* Memo Saya table header follows the PGI blue table style. */
+.memo-table-pgi .ant-table-thead > tr > th {
+    background: #344f82 !important;
+    color: #ffffff !important;
+    border-color: #c8ced8 !important;
+    font-weight: 700 !important;
+}
+
+.memo-table-pgi .ant-table-tbody > tr > td {
+    border-color: #c8ced8 !important;
+}
+
+.memo-table-pgi .ant-table-tbody > tr:hover > td {
+    background: #f3f6fb !important;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-table-thead > tr > th {
+    background: #123762 !important;
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-table-tbody > tr > td {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .memo-table-pgi .ant-table-tbody > tr:hover > td {
+    background: #26364d !important;
+}

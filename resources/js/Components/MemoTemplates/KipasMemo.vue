@@ -146,8 +146,8 @@ const handleImgError = (event) => {
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label || slot.displayName" @error="handleImgError" class="max-w-full h-14 object-contain absolute bottom-0" />
             </div>
-            <p v-if="slot.displayName" class="w-full whitespace-normal break-words [overflow-wrap:anywhere] underline mt-1 leading-tight">{{ slot.displayName }}</p>
-            <p v-if="slot.displayRole" class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.displayRole }}</p>
+            <p v-if="slot.displayName" class="relative top-2 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-2 leading-none">{{ slot.displayName }}</p>
+            <p v-if="slot.displayRole" class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.displayRole }}</p>
         </div>
     </div>
 </template>

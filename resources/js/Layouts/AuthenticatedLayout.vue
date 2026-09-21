@@ -217,9 +217,10 @@ const handleLogout = () => {
                     <!-- Notifications -->
                     <a-dropdown trigger="['click']" placement="bottomRight" @openChange="handleNotificationDropdown">
                         <a-badge :count="unreadCount" :overflow-count="99" class="notification-badge cursor-pointer flex items-center justify-center">
-                            <a-avatar shape="square" class="bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-                                <template #icon><bell-outlined /></template>
-                            </a-avatar>
+                            <bell-outlined
+                                class="text-lg transition-colors"
+                                :class="isLightTheme ? 'text-slate-600 hover:text-slate-900' : 'text-slate-300 hover:text-white'"
+                            />
                         </a-badge>
                         <template #overlay>
                             <div class="bg-white rounded-lg shadow-lg border border-gray-100 w-80 overflow-hidden">

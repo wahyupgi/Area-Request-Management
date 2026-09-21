@@ -1,0 +1,284 @@
+/* ==========================================================================
+   Sidebar & Header — PGI Blue Shell
+   ========================================================================== */
+
+/* PGI blue utility classes */
+.bg-pgi-blue { background-color: #1f69a8 !important; }
+.bg-pgi-blue-dark { background-color: #18598f !important; }
+
+/* Keep primary actions aligned with the sidebar palette. */
+button.bg-indigo-600,
+a.bg-indigo-600,
+button.bg-blue-600,
+a.bg-blue-600,
+input[type="file"]::file-selector-button {
+    background-color: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+button.bg-indigo-600:hover,
+a.bg-indigo-600:hover,
+button.bg-blue-600:hover,
+a.bg-blue-600:hover,
+input[type="file"]:hover::file-selector-button {
+    background-color: #18598f !important;
+}
+
+/* Ant Design sidebar menu */
+.sidebar-pgi {
+    background-color: #2474ad !important;
+    border-right: 1px solid #1d6498 !important;
+    box-shadow: none;
+}
+
+.ant-layout-sider .ant-menu-dark,
+.ant-layout-sider .ant-menu-dark .ant-menu-sub {
+    background: #2474ad !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item {
+    color: rgba(255, 255, 255, 0.86) !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item .anticon {
+    color: #8ed9ec !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item-selected {
+    background: #2bb8d4 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item-selected .anticon {
+    color: #ffffff !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item:hover {
+    background: rgba(43, 184, 212, 0.22) !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .ant-layout-sider .ant-menu-dark,
+html:not(.theme-light) .ant-layout-sider .ant-menu-dark .ant-menu-sub {
+    background: #155080 !important;
+}
+
+html:not(.theme-light) .ant-layout-sider .ant-menu-dark .ant-menu-item-selected {
+    background: #239dbb !important;
+}
+
+/* Sidebar text and links */
+.sidebar-pgi .sidebar-brand-title,
+html.theme-light .sidebar-pgi .sidebar-brand-title,
+.sidebar-pgi .sidebar-user-name,
+html.theme-light .sidebar-pgi .sidebar-user-name {
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-brand-subtitle,
+html.theme-light .sidebar-pgi .sidebar-brand-subtitle {
+    color: #d8eefb !important;
+}
+
+.sidebar-pgi .sidebar-nav-inactive,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive {
+    color: #ffffff !important;
+    background-color: #2b78b8 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar-pgi .sidebar-nav-inactive:hover,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover {
+    color: #ffffff !important;
+    background-color: #246aa5 !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.sidebar-pgi .sidebar-nav-inactive svg,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive svg {
+    color: #29b8d5 !important;
+    transition: color 0.2s ease;
+}
+
+.sidebar-pgi .sidebar-nav-inactive:hover svg,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-nav-item {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.theme-light .sidebar-pgi .sidebar-nav-item {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar-pgi .sidebar-nav-active,
+html.theme-light .sidebar-pgi .sidebar-nav-active {
+    background-color: #0d4f87 !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    box-shadow: inset 3px 0 0 #8ed8ff !important;
+}
+
+.sidebar-pgi .sidebar-nav-active svg,
+html.theme-light .sidebar-pgi .sidebar-nav-active svg {
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-user-card,
+html.theme-light .sidebar-pgi .sidebar-user-card {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.sidebar-pgi .sidebar-user-avatar,
+html.theme-light .sidebar-pgi .sidebar-user-avatar {
+    background-color: #1a5690 !important;
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-divider,
+html.theme-light .sidebar-pgi .sidebar-divider {
+    border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Sidebar all-in-one color lock */
+.sidebar-pgi .sidebar-brand-title,
+html.theme-light .sidebar-pgi .sidebar-brand-title,
+.sidebar-pgi .sidebar-user-name,
+html.theme-light .sidebar-pgi .sidebar-user-name,
+.sidebar-pgi .sidebar-nav-inactive,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive,
+.sidebar-pgi .sidebar-nav-active,
+html.theme-light .sidebar-pgi .sidebar-nav-active {
+    color: #ffffff !important;
+}
+
+.sidebar-pgi .sidebar-nav-inactive svg,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive svg {
+    color: #29b8d5 !important;
+}
+
+.sidebar-pgi .sidebar-nav-active svg,
+html.theme-light .sidebar-pgi .sidebar-nav-active svg,
+.sidebar-pgi .sidebar-nav-inactive:hover svg,
+html.theme-light .sidebar-pgi .sidebar-nav-inactive:hover svg {
+    color: #ffffff !important;
+}
+
+/* Dark mode sidebar */
+html:not(.theme-light) .sidebar-pgi {
+    background-color: #155080 !important;
+    border-right-color: #103d63 !important;
+}
+
+html:not(.theme-light) .sidebar-pgi .sidebar-brand-subtitle {
+    color: #bae6fd !important;
+}
+
+html:not(.theme-light) .sidebar-pgi .sidebar-nav-inactive:hover {
+    background-color: #174f82 !important;
+}
+
+html:not(.theme-light) .sidebar-pgi .sidebar-nav-active {
+    background-color: #1f69a8 !important;
+}
+
+html:not(.theme-light) .sidebar-pgi .sidebar-nav-inactive svg {
+    color: #38bdf8 !important;
+}
+
+html.theme-light .sidebar-pgi {
+    background-color: #1f69a8 !important;
+    border-right-color: #18598f !important;
+    box-shadow: none;
+}
+
+/* App Header */
+.app-header-pgi {
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+    color: #ffffff;
+}
+
+html.theme-light .app-header-pgi {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-bottom-color: rgba(15, 23, 42, 0.1) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+    color: #0f172a;
+}
+
+.app-header-pgi button,
+.app-header-pgi a {
+    color: inherit;
+}
+
+.app-header-pgi .app-header-control {
+    background-color: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+.app-header-pgi .app-header-control:hover {
+    background-color: #18598f !important;
+    color: #ffffff !important;
+}
+
+.app-header-pgi button:hover,
+.app-header-pgi a:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+}
+
+html.theme-light .app-header-pgi button:hover,
+html.theme-light .app-header-pgi a:hover {
+    background-color: rgba(15, 23, 42, 0.06) !important;
+    color: #0f172a !important;
+}
+
+/* User menu popover */
+.user-menu-popover {
+    left: auto !important;
+    right: 0 !important;
+    top: calc(100% + 0.5rem) !important;
+    margin-top: 0 !important;
+    text-align: left;
+    max-height: calc(100vh - 5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.user-menu-popover > div,
+.user-menu-popover > a,
+.user-menu-popover > button {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.user-menu-popover > div:first-child {
+    align-items: flex-start;
+}
+
+.user-menu-popover > a,
+.user-menu-popover > button {
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .user-menu-popover { right: 0 !important; }
+}
+
+/* Notification popover */
+.notification-popover {
+    max-height: calc(100vh - 5.25rem);
+}
+
+@media (max-width: 640px) {
+    .notification-popover {
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+    }
+}

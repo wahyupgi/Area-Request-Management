@@ -97,7 +97,7 @@ const handleImgError = (event) => {
         </div>
 
         <div class="text-center mb-5">
-            <h1 class="text-[16px] font-extrabold uppercase underline tracking-widest mb-0.5">INTERNAL MEMO</h1>
+            <h1 class="text-[21px] font-extrabold uppercase underline tracking-widest mb-0.5">INTERNAL MEMO</h1>
             <p class="text-[11px] tracking-wider text-gray-800">{{ memo.code }}</p>
         </div>
 
@@ -141,8 +141,10 @@ const handleImgError = (event) => {
                 </div>
             </template>
             <template v-else>
-                <div class="w-7 h-7 border border-black"></div>
-                <div class="w-7 h-7 border border-black"></div>
+                <div class="flex">
+                    <div class="w-7 h-7 border border-black"></div>
+                    <div class="w-7 h-7 border border-black border-l-0"></div>
+                </div>
             </template>
         </div>
 
