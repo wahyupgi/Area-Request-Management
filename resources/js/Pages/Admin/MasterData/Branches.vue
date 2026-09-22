@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue';
@@ -57,7 +57,11 @@ const columns = [
     <Head title="Kelola Cabang" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-white">Kelola Cabang</h1>
+            <div class="flex items-center gap-3">
+                <Link :href="route('dashboard')" class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white">Menu Admin</Link>
+                <span class="text-slate-400 dark:text-slate-500">/</span>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Kelola Cabang</h1>
+            </div>
         </template>
 
         <div class="admin-master-page max-w-5xl">

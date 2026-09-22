@@ -10,10 +10,11 @@ class MemoTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'category', 'field_schema', 'signature_schema', 'is_active', 'created_by'];
+    protected $fillable = ['name', 'category', 'field_schema', 'document_defaults', 'signature_schema', 'is_active', 'created_by'];
 
     protected $casts = [
         'field_schema' => 'array',
+        'document_defaults' => 'array',
         'signature_schema' => 'array',
         'is_active' => 'boolean',
     ];
@@ -62,13 +63,7 @@ class MemoTemplate extends Model
                 'field_schema' => [
                     ['key' => 'nominal_kas_keluar', 'label' => 'Nominal Kas Keluar (Rp)', 'type' => 'number', 'required' => true],
                     ['key' => 'cabang', 'label' => 'Kode / Nama Cabang', 'type' => 'text', 'required' => true],
-                    ['key' => 'direktorat', 'label' => 'Direktorat', 'type' => 'text', 'required' => true],
-                    ['key' => 'divisi', 'label' => 'Divisi', 'type' => 'text', 'required' => true],
-                    ['key' => 'penerima', 'label' => 'Nama Penerima', 'type' => 'text', 'required' => true],
-                    ['key' => 'penerima_jabatan', 'label' => 'Jabatan Penerima', 'type' => 'text', 'required' => true],
-                    ['key' => 'penyetuju_akhir', 'label' => 'Penyetuju Akhir', 'type' => 'text', 'required' => false],
                     ['key' => 'alasan', 'label' => 'Alasan Pengeluaran Kas', 'type' => 'textarea', 'required' => true],
-                    ['key' => 'lampiran', 'label' => 'Lampiran Pendukung', 'type' => 'text', 'required' => false],
                 ],
             ],
             [

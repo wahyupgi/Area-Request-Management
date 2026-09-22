@@ -16,6 +16,8 @@ class UpdateTemplateRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:100'],
+            'document_defaults' => ['nullable', 'array'],
+            'document_defaults.*' => ['nullable', 'string', 'max:255'],
             'field_schema' => ['required', 'array', 'min:1'],
             'field_schema.*.key' => ['required', 'string'],
             'field_schema.*.label' => ['required', 'string'],

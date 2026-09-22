@@ -33,14 +33,14 @@ class TemplateController extends Controller
             'name' => $request->name,
             'category' => $request->category,
             'field_schema' => $request->field_schema,
+            'document_defaults' => $request->document_defaults,
             'is_active' => true,
             'created_by' => auth()->id(),
         ]);
 
         Cache::forget('active_memo_templates');
 
-        return redirect()->route('admin.templates.index')
-            ->with('success', 'Template berhasil dibuat.');
+        return redirect()->route('admin.templates.index');
     }
 
     public function edit(MemoTemplate $template)
@@ -56,12 +56,12 @@ class TemplateController extends Controller
             'name' => $request->name,
             'category' => $request->category,
             'field_schema' => $request->field_schema,
+            'document_defaults' => $request->document_defaults,
         ]);
 
         Cache::forget('active_memo_templates');
 
-        return redirect()->route('admin.templates.index')
-            ->with('success', 'Template berhasil diperbarui.');
+        return redirect()->route('admin.templates.index');
     }
 
     public function toggleActive(MemoTemplate $template)

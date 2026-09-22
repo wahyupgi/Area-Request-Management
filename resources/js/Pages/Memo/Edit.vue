@@ -8,7 +8,8 @@ import {
     DeleteOutlined,
     SaveOutlined,
     SendOutlined,
-    PaperClipOutlined
+    PaperClipOutlined,
+    ArrowLeftOutlined
 } from '@ant-design/icons-vue';
 
 const props = defineProps({
@@ -36,6 +37,7 @@ const form = useForm({
             perihal: props.memo.field_values?.meta?.perihal || props.memo.title || '',
             kepada: props.memo.field_values?.meta?.kepada || '',
             kepada_jabatan: props.memo.field_values?.meta?.kepada_jabatan || '',
+            penyetuju_akhir: props.memo.field_values?.meta?.penyetuju_akhir || '',
             lampiran: props.memo.field_values?.meta?.lampiran || '',
         },
     },
@@ -128,8 +130,9 @@ const deleteMemo = async () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-2">
-                <Link :href="route('memos.index')" class="memo-breadcrumb-back inline-flex items-center gap-1 text-sm transition-colors">
-                    <span>Memo Saya</span>
+                <Link :href="route('memos.index')" class="memo-breadcrumb-back inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm transition-colors">
+                    <ArrowLeftOutlined />
+                    <span>Kembali</span>
                 </Link>
                 <span class="text-gray-400">/</span>
                 <h1 class="memo-page-title text-xl font-bold mb-0">Edit Memo</h1>
@@ -205,6 +208,9 @@ const deleteMemo = async () => {
                                 </a-form-item>
                                 <a-form-item label="Jabatan Penerima" extra="Jabatan penerima memo." class="mb-3">
                                     <a-input v-model:value="form.field_values.meta.kepada_jabatan" placeholder="Contoh: Area Manager" />
+                                </a-form-item>
+                                <a-form-item label="Penyetuju Akhir" extra="Nama penyetuju akhir. Nantinya dapat diatur otomatis oleh admin." class="mb-3">
+                                    <a-input v-model:value="form.field_values.meta.penyetuju_akhir" placeholder="Nama penyetuju akhir" />
                                 </a-form-item>
                                 <a-form-item label="Lampiran" extra="keterangan teks" class="mb-0">
                                     <a-input v-model:value="form.field_values.meta.lampiran" placeholder="contoh: 1 Lembar, 3 Berkas" />

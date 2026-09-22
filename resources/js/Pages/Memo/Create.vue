@@ -21,7 +21,7 @@ const form = useForm({
     field_values: {
         pengantar: '',
         items: [{}],
-        meta: { direktorat: '', divisi: '', perihal: '', kepada: '', kepada_jabatan: '', lampiran: '' },
+        meta: { direktorat: '', divisi: '', perihal: '', kepada: '', kepada_jabatan: '', penyetuju_akhir: '', lampiran: '' },
     },
     submit_after_save: false,
 });
@@ -30,6 +30,16 @@ const selectedTemplate = ref(null);
 const attachment = ref(null);
 const autoPerihal = ref('');
 const { success } = useSweetAlert();
+
+const defaultDocumentMeta = {
+    direktorat: 'Regional Branch Office',
+    divisi: 'Branch Leader',
+    perihal: '',
+    kepada: '',
+    kepada_jabatan: '',
+    penyetuju_akhir: '',
+    lampiran: '',
+};
 
 const groupedTemplates = computed(() => {
     const groups = {};
@@ -63,12 +73,9 @@ watch(() => form.template_id, (val) => {
             : '',
         items: [{}],
         meta: {
-            direktorat: 'Regional Branch Office',
-            divisi: 'Branch Leader',
-            perihal: form.title,
-            kepada: '',
-            kepada_jabatan: '',
-            lampiran: '',
+            ...defaultDocumentMeta,
+            ...(selectedTemplate.value?.document_defaults || {}),
+            perihal: selectedTemplate.value?.document_defaults?.perihal || form.title,
         },
     };
     autoPerihal.value = form.title;
@@ -218,6 +225,9 @@ const submitAndSign = () => {
                             </a-form-item>
                             <a-form-item label="Jabatan Penerima" extra="Jabatan penerima memo." class="mb-3">
                                 <a-input v-model:value="form.field_values.meta.kepada_jabatan" placeholder="Contoh: Area Manager" />
+                            </a-form-item>
+                            <a-form-item label="Penyetuju Akhir" extra="Nama penyetuju akhir. Nantinya dapat diatur otomatis oleh admin." class="mb-3">
+                                <a-input v-model:value="form.field_values.meta.penyetuju_akhir" placeholder="Nama penyetuju akhir" />
                             </a-form-item>
                             <a-form-item label="Lampiran" extra="keterangan teks" class="mb-0">
                                 <a-input v-model:value="form.field_values.meta.lampiran" placeholder="contoh: 1 Lembar, 3 Berkas" />

@@ -2,6 +2,7 @@
 const props = defineProps({
     memo: { type: Object, required: true },
     values: { type: Object, required: true },
+    approverName: { type: String, default: '' },
 });
 
 const handleImgError = (event) => {
@@ -45,7 +46,7 @@ const handleImgError = (event) => {
         <div class="flex min-w-0 flex-col items-center text-center">
             <p class="mb-1 font-semibold">Disetujui oleh,</p>
             <div class="h-16 w-full"></div>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] underline mt-1 text-black leading-tight">{{ values.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko' }}</p>
+            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] underline mt-1 text-black leading-tight">{{ approverName || values.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko' }}</p>
             <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Senior Executive Vice President Bisnis dan Operasional</p>
         </div>
     </div>

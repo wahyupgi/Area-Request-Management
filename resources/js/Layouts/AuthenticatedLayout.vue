@@ -174,12 +174,16 @@ const handleLogout = () => {
             collapsible
             theme="dark"
             :style="{ background: isLightTheme ? '#2474ad' : '#155080', height: '100vh', position: 'sticky', top: 0 }"
-            :class="isLightTheme ? 'border-r border-blue-600' : 'border-r border-slate-800'"
+            :class="[
+                isLightTheme ? 'border-r border-blue-600' : 'border-r border-slate-800',
+                { 'sidebar-is-collapsed': sidebarCollapsed }
+            ]"
             :width="280"
+            :collapsedWidth="80"
         >
             <div class="flex items-center gap-3 px-5 py-4 border-b border-blue-500/80">
                 <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-10 h-10 rounded-lg object-contain border border-blue-700 bg-white p-0.5 shadow-sm flex-shrink-0" />
-                <div v-if="!sidebarCollapsed" class="flex flex-col min-w-0 text-white">
+                <div class="sidebar-brand-details flex flex-col min-w-0 text-white" :class="{ 'is-hidden': sidebarCollapsed }">
                     <span class="sidebar-brand-title text-xs font-bold text-white tracking-wider uppercase leading-tight">PUSAT GADAI INDONESIA</span>
                     <div class="flex items-center gap-1.5 mt-1 text-[10px] text-blue-100">
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-300 animate-pulse flex-shrink-0"></span>
@@ -422,6 +426,28 @@ html.theme-light .ant-layout-header {
 
 .ant-layout-sider {
     overflow: hidden;
+    transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.ant-layout-sider .ant-layout-sider-children,
+.ant-layout-sider .ant-menu,
+.ant-layout-sider .ant-menu-inline-collapsed {
+    transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.sidebar-brand-details {
+    max-width: 210px;
+    opacity: 1;
+    overflow: hidden;
+    transform: translateX(0);
+    transition: max-width 360ms ease, opacity 280ms ease, transform 360ms ease;
+    white-space: nowrap;
+}
+
+.sidebar-brand-details.is-hidden {
+    max-width: 0;
+    opacity: 0;
+    transform: translateX(-8px);
 }
 .ant-layout-content {
     scrollbar-width: thin;

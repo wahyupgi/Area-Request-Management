@@ -1,15 +1,26 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons-vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 
 const props = defineProps({ template: { type: Object, default: null } });
 
 const isEdit = !!props.template;
+const { success } = useSweetAlert();
 
 const form = useForm({
     name: props.template?.name || '',
     category: props.template?.category || '',
+    document_defaults: {
+        direktorat: props.template?.document_defaults?.direktorat || '',
+        divisi: props.template?.document_defaults?.divisi || '',
+        perihal: props.template?.document_defaults?.perihal || '',
+        kepada: props.template?.document_defaults?.kepada || '',
+        kepada_jabatan: props.template?.document_defaults?.kepada_jabatan || '',
+        penyetuju_akhir: props.template?.document_defaults?.penyetuju_akhir || '',
+        lampiran: props.template?.document_defaults?.lampiran || '',
+    },
     field_schema: props.template?.field_schema || [{ key: '', label: '', type: 'text', required: false }],
 });
 
@@ -30,9 +41,13 @@ const autoKey = (index) => {
 
 const submit = () => {
     if (isEdit) {
-        form.put(route('admin.templates.update', props.template.id));
+        form.put(route('admin.templates.update', props.template.id), {
+            onSuccess: () => success('Template berhasil diperbarui.'),
+        });
     } else {
-        form.post(route('admin.templates.store'));
+        form.post(route('admin.templates.store'), {
+            onSuccess: () => success('Template berhasil dibuat.'),
+        });
     }
 };
 </script>
@@ -41,7 +56,13 @@ const submit = () => {
     <Head :title="isEdit ? 'Edit Template' : 'Buat Template'" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-white">{{ isEdit ? 'Edit Template' : 'Buat Template Baru' }}</h1>
+            <div class="flex items-center gap-3">
+                <Link :href="route('admin.templates.index')" class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white">
+                    <span>Template Memo</span>
+                </Link>
+                <span class="text-slate-400 dark:text-slate-500">/</span>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ isEdit ? 'Edit Memo' : 'Buat Memo' }}</h1>
+            </div>
         </template>
 
         <div class="max-w-4xl">
@@ -56,6 +77,26 @@ const submit = () => {
                         </a-form-item>
                         <a-form-item label="Kategori" :validateStatus="form.errors.category ? 'error' : ''" :help="form.errors.category">
                             <a-input v-model:value="form.category" placeholder="Contoh: SDM, Keuangan, Fasilitas" />
+                        </a-form-item>
+                    </div>
+                </a-card>
+
+                <a-card :bordered="false" class="bg-slate-800/50 border border-white/5 mb-6">
+                    <template #title>
+                        <span class="text-white font-medium">Default Informasi Dokumen</span>
+                    </template>
+                    <p class="text-slate-400 text-sm mb-4">Nilai ini otomatis diisi saat user memilih template dan dapat disesuaikan saat membuat memo.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <a-form-item v-for="field in [
+                            { key: 'direktorat', label: 'Direktorat' },
+                            { key: 'divisi', label: 'Divisi' },
+                            { key: 'perihal', label: 'Perihal' },
+                            { key: 'kepada', label: 'Kepada (Yth.)' },
+                            { key: 'kepada_jabatan', label: 'Jabatan Penerima' },
+                            { key: 'penyetuju_akhir', label: 'Penyetuju Akhir' },
+                            { key: 'lampiran', label: 'Lampiran' },
+                        ]" :key="field.key" :label="field.label" class="mb-0">
+                            <a-input v-model:value="form.document_defaults[field.key]" />
                         </a-form-item>
                     </div>
                 </a-card>

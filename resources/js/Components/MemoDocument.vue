@@ -106,18 +106,18 @@ const handleImgError = (event) => {
         </div>
 
         <div class="grid grid-cols-[120px_12px_1fr] text-xs gap-y-1 mb-3">
-            <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div class="font-bold text-gray-900">{{ memoMeta.direktorat || (isCashOut ? (cashOutValues.direktorat || 'Regional Branch Office') : 'Operasional') }}</div>
-            <div class="text-gray-900">Divisi</div><div>:</div><div>{{ memoMeta.divisi || (isCashOut ? (cashOutValues.divisi || 'Branch Leader') : (memo.template?.category || 'Support')) }}</div>
+            <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div class="font-bold text-gray-900">{{ memoMeta.direktorat || 'Operasional' }}</div>
+            <div class="text-gray-900">Divisi</div><div>:</div><div>{{ memoMeta.divisi || (memo.template?.category || 'Support') }}</div>
             <div class="text-gray-900">Perihal</div><div>:</div><div>{{ memoMeta.perihal || memo.title }}</div>
-            <div class="text-gray-900">Lampiran</div><div>:</div><div>{{ memoMeta.lampiran || (isCashOut ? (cashOutValues.lampiran || '-') : (memo.attachments?.length ? memo.attachments.length + ' Berkas' : '-')) }}</div>
+            <div class="text-gray-900">Lampiran</div><div>:</div><div>{{ memoMeta.lampiran || (memo.attachments?.length ? memo.attachments.length + ' Berkas' : '-') }}</div>
         </div>
 
         <hr class="border-t-2 border-black my-3" />
 
         <div class="text-xs mb-4 leading-normal">
             <p class="mb-0.5">Kepada Yth :</p>
-            <p class="text-xs">{{ isCashOut ? (cashOutValues.penerima || 'Bpk. / Ibu.') : (memoMeta.kepada || memo.area_manager?.name || 'Bpk. / Ibu.') }}</p>
-            <p class="font-medium">{{ isCashOut ? (cashOutValues.penerima_jabatan || 'Senior Executive Vice President Bisnis dan Operasional') : (memoMeta.kepada_jabatan || 'Area Manager') }}</p>
+            <p class="text-xs">{{ memoMeta.kepada || (isCashOut ? cashOutValues.penerima : memo.area_manager?.name) || 'Bpk. / Ibu.' }}</p>
+            <p class="font-medium">{{ memoMeta.kepada_jabatan || (isCashOut ? cashOutValues.penerima_jabatan : 'Area Manager') || 'Area Manager' }}</p>
             <p class="font-medium">Di tempat,</p>
         </div>
 
@@ -128,7 +128,7 @@ const handleImgError = (event) => {
 
         <div class="mb-10">
             <KipasMemo v-if="isKipas" :memo="memo" :items="memoItems" :document-signatures="documentSignatures" />
-            <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" />
+            <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" :approver-name="memoMeta.penyetuju_akhir" />
             <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
         </div>
 
