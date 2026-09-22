@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import MemoDocument from '@/Components/MemoDocument.vue';
+import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import {
     ArrowLeftOutlined,
@@ -30,6 +31,48 @@ const formatDate = (dateString) => {
         year: 'numeric'
     });
 };
+
+const attachmentUrl = (attachment) => '/storage/' + attachment.file_path;
+
+const printMemo = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const memo = document.querySelector('#printable-memo')?.outerHTML || '';
+    const attachments = document.querySelector('.memo-print-attachments')?.outerHTML || '';
+    const stylesheetUrls = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.href);
+    const activeStyles = Array.from(document.querySelectorAll('style')).map((style) => style.textContent).join('\n');
+
+    const waitForDocx = new Promise((resolve) => {
+        const startedAt = Date.now();
+        const check = () => {
+            const isReady = !document.querySelector('[data-attachment-loading]');
+            if (isReady || Date.now() - startedAt > 5000) {
+                resolve();
+                return;
+            }
+            window.setTimeout(check, 100);
+        };
+        check();
+    });
+
+    waitForDocx.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
+        printWindow.document.write(`<!doctype html><html><head><title>Memo-${props.memo.code || 'Dokumen'}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
+            @page { size: A4 portrait; margin: 0; }
+            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+            body * { visibility: visible !important; }
+            #printable-memo { position: relative !important; width: 210mm !important; min-height: 297mm !important; page-break-after: always !important; break-after: page !important; box-sizing: border-box !important; }
+            .memo-print-attachments { display: block !important; width: 210mm !important; }
+            .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 297mm !important; page-break-before: always !important; break-before: page !important; box-sizing: border-box !important; }
+        </style></head><body>${memo}${attachments}</body></html>`);
+        printWindow.onload = () => {
+            printWindow.onafterprint = () => printWindow.close();
+            printWindow.focus();
+            printWindow.print();
+        };
+        printWindow.document.close();
+    });
+};
 </script>
 
 <template>
@@ -56,7 +99,7 @@ const formatDate = (dateString) => {
                         {{ statusConfig[memo.status]?.label }}
                     </a-tag>
 
-                    <a-button class="hidden sm:inline-flex print:hidden" onclick="window.print()">
+                    <a-button class="hidden sm:inline-flex print:hidden" @click="printMemo">
                         <template #icon><printer-outlined /></template>
                         Cetak
                     </a-button>
@@ -73,11 +116,11 @@ const formatDate = (dateString) => {
             </div>
         </template>
 
-        <div class="max-w-7xl mx-auto py-2 print:p-0 print:m-0 print:max-w-none print:w-full">
+        <div :class="['memo-print-root max-w-7xl mx-auto py-2 print:p-0 print:m-0 print:max-w-none print:w-full', { 'has-memo-attachments': memo.attachments?.length }]">
             <a-row :gutter="[24, 24]" class="print:block print:w-full print:m-0 print:p-0">
                 
                 <!-- Left: Document Preview Stage -->
-                <a-col :xs="24" :lg="16" class="flex justify-center print:block print:w-full print:m-0 print:p-0">
+                <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start print:block print:w-full print:m-0 print:p-0">
                     <div class="w-full max-w-[210mm] print:max-w-none print:w-full shadow-md print:shadow-none bg-white">
                         <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
                     </div>
@@ -89,7 +132,7 @@ const formatDate = (dateString) => {
                     <!-- Card 1: Metadata Summary -->
                     <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
                         <template #extra>
-                            <a-button type="link" size="small" onclick="window.print()">
+                            <a-button type="link" size="small" @click="printMemo">
                                 <template #icon><printer-outlined /></template>
                                 Cetak
                             </a-button>
@@ -140,7 +183,7 @@ const formatDate = (dateString) => {
                                 <a-list-item>
                                     <a-list-item-meta>
                                         <template #title>
-                                            <a :href="'/storage/' + item.file_path" target="_blank" class="text-blue-600 hover:underline text-sm truncate block max-w-[200px]">
+                                            <a :href="attachmentUrl(item)" target="_blank" class="text-blue-600 hover:underline text-sm truncate block max-w-[200px]">
                                                 {{ item.original_name || item.file_path }}
                                             </a>
                                         </template>
@@ -177,6 +220,7 @@ const formatDate = (dateString) => {
                 </a-col>
 
             </a-row>
+            <MemoAttachments :attachments="memo.attachments" :subject="memo.field_values?.meta?.perihal || memo.title" />
         </div>
     </AuthenticatedLayout>
 </template>

@@ -31,6 +31,24 @@ const getApprovedSignature = () => {
 const handleImgError = (event) => {
     event.target.style.display = 'none';
 };
+
+const roleLines = (role) => {
+    const value = String(role || '').trim();
+    const suffix = 'Bisnis dan Operasional';
+    const suffixIndex = value.toLowerCase().indexOf(suffix.toLowerCase());
+
+    if (suffixIndex > 0) {
+        return [value.slice(0, suffixIndex).trim(), value.slice(suffixIndex).trim()];
+    }
+
+    return [value];
+};
+
+const signatureGridStyle = (count) => ({
+    gridTemplateColumns: count > 3
+        ? '17% 21% 21% 41%'
+        : `repeat(${Math.max(count, 1)}, minmax(0, 1fr))`,
+});
 </script>
 
 <template>
@@ -70,14 +88,16 @@ const handleImgError = (event) => {
         </tbody>
     </table>
 
-    <div v-if="documentSignatures.length" class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] justify-center gap-6 items-start text-xs w-full max-w-3xl mx-auto px-4 mb-4">
+    <div v-if="documentSignatures.length" class="relative -left-1 grid justify-start gap-6 items-start text-xs w-full max-w-none mx-0 px-0 mb-4 [break-inside:avoid]" :style="signatureGridStyle(documentSignatures.length)">
         <div v-for="slot in documentSignatures" :key="slot.name + slot.role" class="flex min-w-0 flex-col items-center text-center">
             <p class="mb-1">{{ slot.label || (slot.location === 'bottom_right' ? 'Paraf' : 'Disetujui Oleh,') }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-2 w-full whitespace-normal break-words mt-2 text-black leading-none">{{ slot.name }}</p>
-            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.role }}</p>
+            <p class="relative top-2 w-full whitespace-nowrap text-[10px] mt-2 text-black leading-none">{{ slot.name || slot.user?.name || memo.area_manager?.name || (slot.role === 'Area Manager' ? 'Bpk. Fathurrahman M' : '') }}</p>
+            <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
+                <span v-for="(line, roleIndex) in roleLines(slot.role)" :key="roleIndex" class="block whitespace-nowrap">{{ line }}</span>
+            </p>
         </div>
     </div>
 

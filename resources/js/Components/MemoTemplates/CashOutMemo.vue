@@ -28,26 +28,29 @@ const handleImgError = (event) => {
 
     <div class="grid grid-cols-3 gap-3 items-start text-xs w-full max-w-3xl mx-auto px-1 mb-4">
         <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1 font-semibold">Dibuat oleh,</p>
+            <p class="mb-1">Dibuat oleh,</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="memo.creator?.digital_signature?.signature_image" :src="'/storage/' + memo.creator.digital_signature.signature_image" alt="Tanda tangan pembuat" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] underline mt-1 text-black leading-tight">{{ memo.creator?.name }}</p>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Kepala Cabang</p>
+            <p class="relative top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-0 text-black leading-none">{{ memo.creator?.name }}</p>
+            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Kepala Cabang</p>
         </div>
         <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1 font-semibold">Disetujui oleh,</p>
+            <p class="mb-1">Disetujui oleh,</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="memo.status === 'approved' && memo.area_manager?.digital_signature?.signature_image" :src="'/storage/' + memo.area_manager.digital_signature.signature_image" alt="Tanda tangan AM" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] underline mt-1 text-black leading-tight">{{ memo.area_manager?.name || 'Bpk. Fathurrahman M' }}</p>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Manager</p>
+            <p class="relative top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-0 text-black leading-none">{{ memo.area_manager?.name || 'Bpk. Fathurrahman M' }}</p>
+            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Manager</p>
         </div>
         <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1 font-semibold">Disetujui oleh,</p>
+            <p class="mb-1">Disetujui oleh,</p>
             <div class="h-16 w-full"></div>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] underline mt-1 text-black leading-tight">{{ approverName || values.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko' }}</p>
-            <p class="w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Senior Executive Vice President Bisnis dan Operasional</p>
+            <p class="relative top-1 w-full whitespace-nowrap text-[10px] mt-0 text-black leading-none">{{ approverName || values.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko' }}</p>
+            <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
+                <span class="block whitespace-nowrap">Senior Executive Vice President</span>
+                <span class="block whitespace-nowrap">Bisnis dan Operasional</span>
+            </p>
         </div>
     </div>
 </template>

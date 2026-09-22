@@ -21,7 +21,7 @@ class UpdateTemplateRequest extends FormRequest
             'field_schema' => ['required', 'array', 'min:1'],
             'field_schema.*.key' => ['required', 'string'],
             'field_schema.*.label' => ['required', 'string'],
-            'field_schema.*.type' => ['required', 'in:text,textarea,number,date,select'],
+            'field_schema.*.type' => ['required', 'in:text,textarea,number,date,select,table'],
             'field_schema.*.required' => ['required', 'boolean'],
         ];
     }

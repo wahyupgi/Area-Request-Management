@@ -22,7 +22,7 @@ const signatures = computed(() => {
 
     const isApproved = props.memo.status === 'approved';
     const amSig = {
-        displayName: props.memo.area_manager?.name || '',
+        displayName: props.memo.area_manager?.name || 'Bpk. Fathurrahman M',
         displayRole: 'Area Manager',
         // Only show AM signature after memo is approved
         signature: isApproved
@@ -40,7 +40,7 @@ const signatures = computed(() => {
         } : creatorSig;
 
         const slot2 = props.documentSignatures[1] ? {
-            displayName: props.documentSignatures[1].name || amSig.displayName,
+            displayName: props.documentSignatures[1].name || props.documentSignatures[1].user?.name || amSig.displayName,
             displayRole: props.documentSignatures[1].role || amSig.displayRole,
             signature: props.documentSignatures[1].user?.digital_signature?.signature_image || amSig.signature,
             label: props.documentSignatures[1].label || 'Disetujui oleh',
@@ -70,6 +70,13 @@ const signatures = computed(() => {
         { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 4' },
     ];
 });
+
+const signatureCount = computed(() => props.documentSignatures.length || 4);
+const signatureGridStyle = computed(() => ({
+    gridTemplateColumns: signatureCount.value >= 4
+        ? '17% 21% 21% 41%'
+        : `repeat(${Math.min(signatureCount.value, 4)}, minmax(0, 1fr))`,
+}));
 
 // Flatten items into table rows with rowspan support for area sub-rows
 const tableRows = computed(() => {
@@ -111,6 +118,18 @@ const tableRows = computed(() => {
 const handleImgError = (event) => {
     event.target.style.display = 'none';
 };
+
+const roleLines = (role) => {
+    const value = String(role || '').trim();
+    const suffix = 'Bisnis dan Operasional';
+    const suffixIndex = value.toLowerCase().indexOf(suffix.toLowerCase());
+
+    if (suffixIndex > 0) {
+        return [value.slice(0, suffixIndex).trim(), value.slice(suffixIndex).trim()];
+    }
+
+    return [value];
+};
 </script>
 
 <template>
@@ -130,24 +149,26 @@ const handleImgError = (event) => {
         </thead>
         <tbody>
             <tr v-for="(row, index) in tableRows" :key="'kipas-row-' + index">
-                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 align-top">{{ row.cabang }}</td>
-                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 align-top">{{ row.permintaan }}</td>
-                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 align-top">{{ row.tujuan }}</td>
-                <td class="border border-black px-2 py-1.5 align-top">{{ row.area }}</td>
-                <td class="border border-black px-2 py-1.5 text-center align-top">{{ row.qty }}</td>
-                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 align-top whitespace-pre-wrap">{{ row.keterangan }}</td>
+                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 text-left align-middle">{{ row.cabang }}</td>
+                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 text-left align-middle">{{ row.permintaan }}</td>
+                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 text-left align-middle">{{ row.tujuan }}</td>
+                <td class="border border-black px-2 py-1.5 text-left align-middle">{{ row.area }}</td>
+                <td class="border border-black px-2 py-1.5 text-center align-middle">{{ row.qty }}</td>
+                <td v-if="row.isFirstRow" :rowspan="row.rowSpan" class="border border-black px-2 py-1.5 text-left align-middle whitespace-pre-wrap">{{ row.keterangan }}</td>
             </tr>
         </tbody>
     </table>
 
-    <div class="grid grid-cols-4 gap-2 items-start text-xs w-full mb-4">
-        <div v-for="(slot, index) in signatures" :key="'kipas-signature-' + index" class="flex min-w-0 flex-col items-center text-center">
+    <div class="grid gap-2 items-start text-xs w-full mb-4" :style="signatureGridStyle">
+        <div v-for="(slot, index) in signatures.slice(0, signatureCount)" :key="'kipas-signature-' + index" class="flex min-w-0 flex-col items-center text-center">
             <p class="mb-1">{{ slot.label }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label || slot.displayName" @error="handleImgError" class="max-w-full h-14 object-contain absolute bottom-0" />
             </div>
             <p v-if="slot.displayName" class="relative top-2 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-2 leading-none">{{ slot.displayName }}</p>
-            <p v-if="slot.displayRole" class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.displayRole }}</p>
+            <p v-if="slot.displayRole" class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
+                <span v-for="(line, roleIndex) in roleLines(slot.displayRole)" :key="roleIndex" class="block whitespace-nowrap">{{ line }}</span>
+            </p>
         </div>
     </div>
 </template>

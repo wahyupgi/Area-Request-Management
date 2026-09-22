@@ -79,6 +79,7 @@ const configuredSignatures = computed(() => {
 
 const documentSignatures = computed(() => configuredSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
 const parafSignatures = computed(() => configuredSignatures.value.filter((slot) => slot.location === 'bottom_right'));
+const footerBoxCount = computed(() => Number(props.memo.field_values?.footer_box_count) === 1 ? 1 : 2);
 
 const handleImgError = (event) => {
     event.target.style.display = 'none';
@@ -114,11 +115,11 @@ const handleImgError = (event) => {
 
         <hr class="border-t-2 border-black my-3" />
 
-        <div class="text-xs mb-4 leading-normal">
-            <p class="mb-0.5">Kepada Yth :</p>
-            <p class="text-xs">{{ memoMeta.kepada || (isCashOut ? cashOutValues.penerima : memo.area_manager?.name) || 'Bpk. / Ibu.' }}</p>
-            <p class="font-medium">{{ memoMeta.kepada_jabatan || (isCashOut ? cashOutValues.penerima_jabatan : 'Area Manager') || 'Area Manager' }}</p>
-            <p class="font-medium">Di tempat,</p>
+        <div class="text-xs mb-4 leading-tight">
+            <p class="m-0">Kepada Yth :</p>
+            <p class="m-0">{{ memoMeta.kepada || (isCashOut ? cashOutValues.penerima : memo.area_manager?.name) || 'Bpk. / Ibu.' }}</p>
+            <p class="m-0 font-medium">{{ memoMeta.kepada_jabatan || (isCashOut ? cashOutValues.penerima_jabatan : 'Area Manager') || 'Area Manager' }}</p>
+            <p class="m-0 font-medium">Di tempat,</p>
         </div>
 
         <div class="text-xs mb-3 leading-normal text-justify">
@@ -142,8 +143,11 @@ const handleImgError = (event) => {
             </template>
             <template v-else>
                 <div class="flex">
-                    <div class="w-7 h-7 border border-black"></div>
-                    <div class="w-7 h-7 border border-black border-l-0"></div>
+                    <div
+                        v-for="box in footerBoxCount"
+                        :key="'footer-box-' + box"
+                        :class="['w-7 h-7 border border-black', box > 1 ? 'border-l-0' : '']"
+                    ></div>
                 </div>
             </template>
         </div>

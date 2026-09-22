@@ -511,15 +511,27 @@ html:not(.theme-light) .bg-slate-800\/50:has(> div > .table-head-pgi) {
         visibility: hidden !important;
     }
 
-    #printable-memo,
-    #printable-memo * {
-        visibility: visible !important;
+    #printable-memo {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
     }
 
-    #printable-memo {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
+    .memo-print-root {
+        position: static !important;
+        display: block !important;
+        width: 210mm !important;
+        max-width: 210mm !important;
+        margin: 0 !important;
+    }
+
+    .memo-print-root > .ant-row,
+    .memo-print-root .ant-row,
+    .memo-print-root .ant-col {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        float: none !important;
     }
 
     .app-shell {
@@ -533,6 +545,11 @@ html:not(.theme-light) .bg-slate-800\/50:has(> div > .table-head-pgi) {
     .print\:hidden,
     button:not(.allow-print) {
         display: none !important;
+    }
+
+    .memo-print-root,
+    .memo-print-root * {
+        visibility: visible !important;
     }
 
     .pl-72,
@@ -562,6 +579,31 @@ html:not(.theme-light) .bg-slate-800\/50:has(> div > .table-head-pgi) {
         color: #000000 !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
-        page-break-after: avoid !important;
+        page-break-after: auto !important;
+    }
+
+    .memo-print-attachment {
+        display: block !important;
+        width: 210mm !important;
+        max-width: 210mm !important;
+        page-break-before: always !important;
+        break-before: page !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+    }
+
+    .memo-print-attachments {
+        display: block !important;
+        clear: both !important;
+        width: 210mm !important;
+        max-width: 210mm !important;
+        margin: 0 !important;
+        break-before: page !important;
+        page-break-before: always !important;
+    }
+
+    .has-memo-attachments #printable-memo {
+        page-break-after: always !important;
+        break-after: page !important;
     }
 }
