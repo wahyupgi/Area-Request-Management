@@ -3,7 +3,8 @@ import { Head, useForm } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import { useTheme } from '@/composables/useTheme';
 import { computed, ref } from 'vue';
-import { LoginOutlined } from '@ant-design/icons-vue';
+import { CheckCircleOutlined, LoadingOutlined, LoginOutlined } from '@ant-design/icons-vue';
+import axios from 'axios';
 
 const watermarkPositions = [
     {
@@ -46,7 +47,8 @@ const form = useForm({
 
 const { theme } = useTheme();
 const isLightTheme = computed(() => theme.value === 'light');
-const showPassword = ref(false);
+const loginStatus = ref(null);
+const isSubmitting = ref(false);
 
 const inputClass = computed(() => (
     isLightTheme.value
@@ -60,18 +62,50 @@ const passwordToggleClass = computed(() => (
         : 'absolute inset-y-0 right-3 flex items-center justify-center text-slate-400 hover:text-white transition-colors'
 ));
 
-const submit = () => {
-    if (form.processing) return;
+const submit = async () => {
+    if (isSubmitting.value) return;
 
-    form.post(route('login'), {
-        onFinish: () => form.reset('password'),
-    });
+    isSubmitting.value = true;
+    loginStatus.value = null;
+    form.clearErrors();
+
+    try {
+        const response = await axios.post(route('login'), form.data(), {
+            headers: {
+                Accept: 'application/json',
+                'X-Login-Flow': 'popup',
+            },
+        });
+
+        loginStatus.value = 'success';
+        form.reset('password');
+
+        window.setTimeout(() => {
+            window.location.assign(response.data.redirect);
+        }, 20);
+    } catch (error) {
+        loginStatus.value = null;
+        isSubmitting.value = false;
+
+        const errors = error.response?.data?.errors ?? {};
+        Object.entries(errors).forEach(([field, messages]) => {
+            form.setError(field, messages[0]);
+        });
+
+        if (!Object.keys(errors).length) {
+            form.setError('username', 'Login gagal. Silakan coba lagi.');
+        }
+    }
 };
 </script>
 
 <template>
     <Head title="Login - Sistem Layanan Pengajuan" />
     <div class="app-login-surface relative min-h-screen overflow-hidden flex items-center justify-center p-6 font-sans">
+        <div v-if="loginStatus === 'success'" class="login-status-toast" :class="['is-success', isLightTheme ? 'is-light' : 'is-dark']" role="status" aria-live="polite">
+            <CheckCircleOutlined />
+            <span>Login berhasil</span>
+        </div>
         <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
             <img
                 v-for="(watermark, index) in watermarkPositions"
@@ -94,7 +128,7 @@ const submit = () => {
                     <h1 class="text-3xl font-bold text-white mb-2 leading-tight">SISTEM LAYANAN PENGAJUAN</h1>
                     <h2 class="text-xl font-medium text-indigo-400">Area Manager</h2>
                     <p class="text-slate-400 mt-6 max-w-sm leading-relaxed text-sm">
-                        Kelola seluruh pengajuan memo antar area dan cabang dengan lebih mudah, aman, dan terintegrasi secara digital.
+                       Kelola pengajuan memo cabang secara mudah, cepat, dan terintegrasi.
                     </p>
                 </div>
             </div>
@@ -150,13 +184,18 @@ const submit = () => {
                         type="primary" 
                         html-type="button"
                         @click="submit"
-                        :loading="form.processing" 
+                        :disabled="isSubmitting"
                         size="large" 
                         block
                         class="login-submit-button mt-4"
+                        :class="isLightTheme ? 'light-login-button' : 'dark-login-button'"
                         style="height: 52px; border-radius: 0.75rem; font-weight: 600;"
                     >
-                        Login <template #icon><LoginOutlined v-if="!form.processing" /></template>
+                        Login
+                        <template #icon>
+                            <LoadingOutlined v-if="isSubmitting" spin />
+                            <LoginOutlined v-else />
+                        </template>
                     </a-button>
                 </a-form>
             </div>
@@ -234,6 +273,39 @@ const submit = () => {
     line-height: 1 !important;
 }
 
+:deep(.login-submit-button.dark-login-button),
+:deep(.login-submit-button.dark-login-button:hover),
+:deep(.login-submit-button.dark-login-button:focus),
+:deep(.login-submit-button.dark-login-button:disabled) {
+    border-color: #6366f1 !important;
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+}
+
+:deep(.login-submit-button.dark-login-button:hover),
+:deep(.login-submit-button.dark-login-button:focus) {
+    background: #4338ca !important;
+}
+
+:deep(.login-submit-button.light-login-button),
+:deep(.login-submit-button.light-login-button:hover),
+:deep(.login-submit-button.light-login-button:focus),
+:deep(.login-submit-button.light-login-button:disabled) {
+    border-color: #4f46e5 !important;
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+}
+
+:deep(.login-submit-button.light-login-button:hover),
+:deep(.login-submit-button.light-login-button:focus) {
+    background: #4338ca !important;
+}
+
+:deep(.login-submit-button:disabled) {
+    cursor: wait;
+    opacity: 0.78;
+}
+
 :deep(.login-submit-button .ant-btn-icon),
 :deep(.login-submit-button .anticon) {
     display: inline-flex !important;
@@ -243,6 +315,72 @@ const submit = () => {
     height: 1.25rem;
     line-height: 1 !important;
     margin: 0 !important;
-    transform: none !important;
+}
+
+:deep(.login-submit-button .anticon-spin) {
+    animation: login-button-spin 1s linear infinite !important;
+}
+
+.login-status-toast {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 15rem;
+    padding: 0.8rem 1.1rem 0.8rem 0.9rem;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-left: 3px solid #4ade80;
+    border-radius: 0.5rem;
+    background: rgba(30, 41, 59, 0.96);
+    box-shadow: 0 10px 30px rgba(2, 6, 23, 0.24);
+    color: #e2e8f0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.login-status-toast .anticon {
+    color: #4ade80;
+    font-size: 1.15rem;
+}
+
+.login-status-toast.is-success {
+    border-color: rgba(74, 222, 128, 0.28);
+}
+
+.login-status-toast.is-success .anticon {
+    color: #4ade80;
+}
+
+.login-status-toast.is-light {
+    border-color: #cbd5e1;
+    border-left-color: #16a34a;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+    color: #334155;
+}
+
+.login-status-toast.is-light .anticon {
+    color: #16a34a;
+}
+
+.login-status-toast.is-light.is-success {
+    border-color: #bbf7d0;
+}
+
+@keyframes login-button-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+    .login-status-toast {
+        top: 1rem;
+        right: 1rem;
+        left: 1rem;
+        justify-content: center;
+    }
 }
 </style>
