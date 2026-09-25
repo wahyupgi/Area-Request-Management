@@ -17,4 +17,5 @@ Route::middleware('role:KC')->group(function () {
 });
 
 // KC & AM can both view a memo
+Route::get('/export-memos-csv', [MemoController::class, 'exportCsv'])->name('memos.export-csv');
 Route::get('/memos/{memo}', [MemoController::class, 'show'])->name('memos.show');

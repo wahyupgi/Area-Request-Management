@@ -21,3 +21,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+// Public endpoint for Google Sheets CSV sync
+Route::get('/public/export-memos-csv', [App\Features\Memo\Controllers\MemoController::class, 'exportCsvPublic'])
+    ->name('memos.export-csv-public');

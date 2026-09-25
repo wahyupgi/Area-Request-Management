@@ -20,7 +20,8 @@ import {
     BankOutlined,
     TeamOutlined,
     LogoutOutlined,
-    DownOutlined
+    DownOutlined,
+    BarChartOutlined,
 } from '@ant-design/icons-vue';
 
 const page = usePage();
@@ -94,6 +95,7 @@ const navItems = computed(() => {
         { name: 'Kotak Masuk', route: 'approvals.pending', icon: InboxOutlined, roles: ['AM'] },
         { name: 'Tanda Tangan', route: 'signature.index', icon: EditOutlined, roles: ['AM'] },
         { name: 'Pengaturan TTD', route: 'signature.settings', icon: SettingOutlined, roles: ['AM'] },
+        { name: 'Report GA', route: 'reports.ga', icon: BarChartOutlined, roles: ['AM'] },
         { name: 'Template Memo', route: 'admin.templates.index', icon: AppstoreOutlined, roles: ['ADMIN'] },
         { name: 'Kelola Area', route: 'admin.areas.index', icon: EnvironmentOutlined, roles: ['ADMIN'] },
         { name: 'Kelola Cabang', route: 'admin.branches.index', icon: BankOutlined, roles: ['ADMIN'] },
@@ -239,21 +241,18 @@ const handleLogout = () => {
                 </div>
 
                 <div class="header-right flex items-center gap-3 flex-shrink-0 self-center" :class="isLightTheme ? 'text-slate-700' : 'text-slate-200'">
-                    <div class="header-icon-group flex items-center gap-1">
+                    <div class="header-icon-group flex items-center gap-2">
                         <div class="header-icon-slot flex items-center justify-center">
                             <ThemeToggle />
                         </div>
 
                         <!-- Notifications -->
+                        <div class="flex items-center self-center">
                         <a-dropdown trigger="['click']" placement="bottomRight" @openChange="handleNotificationDropdown" overlayClassName="header-notification-dropdown">
-                            <a-badge :count="unreadCount" :overflow-count="99" class="notification-badge cursor-pointer flex items-center justify-center">
-                                <span class="header-icon-slot flex items-center justify-center">
-                                    <bell-outlined
-                                        class="text-lg transition-colors"
-                                        :class="isLightTheme ? 'text-slate-600 hover:text-slate-900' : 'text-slate-300 hover:text-white'"
-                                    />
-                                </span>
-                            </a-badge>
+                            <div class="notif-icon-wrap cursor-pointer" :class="isLightTheme ? 'text-slate-600 hover:text-slate-900' : 'text-slate-300 hover:text-white'">
+                                <bell-outlined class="text-xl transition-colors" />
+                                <span v-if="unreadCount > 0" class="notif-count">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+                            </div>
                         <template #overlay>
                             <div class="bg-white rounded-lg shadow-lg border border-gray-100 w-80 overflow-hidden">
                                 <div class="flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
@@ -288,23 +287,24 @@ const handleLogout = () => {
                             </div>
                         </template>
                         </a-dropdown>
+                        </div>
                     </div>
 
                     <!-- User Menu -->
-                    <a-dropdown placement="bottomRight" trigger="['click']" @openChange="handleUserDropdown">
-                                <div class="user-menu-trigger flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2.5 py-1.5 rounded-lg transition-colors self-center">
+                    <a-dropdown placement="bottomRight" trigger="['click']" @openChange="handleUserDropdown" overlayClassName="header-user-dropdown">
+                        <div class="user-menu-trigger flex items-center gap-2 cursor-pointer px-2.5 py-1.5 rounded-lg transition-colors self-center" :class="isLightTheme ? 'hover:bg-gray-50 text-slate-700' : 'hover:bg-slate-700/70 text-slate-200'">
                             <a-avatar size="small" class="bg-blue-500 flex items-center justify-center">
                                 <template #icon><user-outlined /></template>
                             </a-avatar>
                             <span class="text-sm font-medium hidden sm:block leading-none">{{ user?.name }}</span>
-                                    <down-outlined :class="['user-menu-arrow text-[10px] opacity-70', { 'is-open': userMenuOpen }]" />
+                            <down-outlined :class="['user-menu-arrow text-[10px] opacity-70', { 'is-open': userMenuOpen }]" />
                         </div>
                         <template #overlay>
                             <a-menu>
                                 <a-menu-item key="info" disabled class="py-2">
-                                    <div class="flex flex-col text-gray-800">
+                                    <div class="flex flex-col" :class="isLightTheme ? 'text-gray-800' : 'text-slate-100'">
                                         <span class="font-medium">{{ user?.name }}</span>
-                                        <span class="text-xs text-gray-500">{{ roleLabel }}</span>
+                                        <span class="text-xs" :class="isLightTheme ? 'text-gray-500' : 'text-slate-400'">{{ roleLabel }}</span>
                                     </div>
                                 </a-menu-item>
                                 <a-menu-divider />
@@ -464,4 +464,103 @@ html.theme-light .ant-layout-header {
     color: #ffffff !important;
     font-weight: 700 !important;
 }
+
+.header-icon-group .ant-dropdown-trigger {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.notif-icon-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    margin-top: -3px;
+    transition: background 0.2s;
+}
+
+.notif-icon-wrap:hover {
+    background: rgba(100, 116, 139, 0.1);
+}
+
+.notif-count {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    border-radius: 999px;
+    text-align: center;
+    pointer-events: none;
+    box-shadow: 0 0 0 1.5px #fff;
+}
+
+html:not(.theme-light) .header-notification-dropdown,
+html:not(.theme-light) .header-notification-dropdown .ant-dropdown-menu,
+html:not(.theme-light) .header-notification-dropdown .ant-dropdown-menu-item,
+html:not(.theme-light) .header-notification-dropdown .ant-dropdown-menu-item:hover,
+html:not(.theme-light) .header-notification-dropdown .ant-list-item,
+html:not(.theme-light) .header-notification-dropdown .ant-list-item-meta-title,
+html:not(.theme-light) .header-notification-dropdown .ant-list-item-meta-description,
+html:not(.theme-light) .header-notification-dropdown .ant-empty-description,
+html:not(.theme-light) .header-notification-dropdown .ant-btn-link,
+html:not(.theme-light) .header-user-dropdown,
+html:not(.theme-light) .header-user-dropdown .ant-dropdown-menu,
+html:not(.theme-light) .header-user-dropdown .ant-dropdown-menu-item,
+html:not(.theme-light) .header-user-dropdown .ant-dropdown-menu-item:hover,
+html:not(.theme-light) .header-user-dropdown .ant-dropdown-menu-item-divider,
+html:not(.theme-light) .header-user-dropdown .ant-menu-item,
+html:not(.theme-light) .header-user-dropdown .ant-menu-item * {
+    background: #17233a !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .ant-list-item:hover,
+html:not(.theme-light) .header-notification-dropdown .ant-dropdown-menu-item:hover,
+html:not(.theme-light) .header-user-dropdown .ant-dropdown-menu-item:hover,
+html:not(.theme-light) .header-user-dropdown .ant-menu-item:hover {
+    background: rgba(59, 130, 246, 0.12) !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .ant-btn-link,
+html:not(.theme-light) .header-user-dropdown .ant-menu-item .text-red-500,
+html:not(.theme-light) .header-user-dropdown .ant-menu-item.text-red-500 {
+    color: #fca5a5 !important;
+}
+
+html:not(.theme-light) .header-user-dropdown .ant-menu-item .anticon,
+html:not(.theme-light) .header-user-dropdown .ant-menu-item .anticon + span,
+html:not(.theme-light) .header-user-dropdown .ant-menu-item span,
+html:not(.theme-light) .header-user-dropdown .ant-menu-item * {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .ant-dropdown-menu,
+html:not(.theme-light) .ant-dropdown-menu-item,
+html:not(.theme-light) .ant-dropdown-menu-item * {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .ant-dropdown-menu-item:hover,
+html:not(.theme-light) .ant-dropdown-menu-item-selected {
+    background: rgba(59, 130, 246, 0.12) !important;
+}
+
+html:not(.theme-light) .ant-menu-item,
+html:not(.theme-light) .ant-menu-submenu-title,
+html:not(.theme-light) .ant-menu-item * {
+    color: #e2e8f0 !important;
+}
+
 </style>

@@ -138,7 +138,7 @@ const submit = async () => {
                 <div class="md:hidden flex flex-col items-center mb-10">
                     <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-24 h-24 mb-4 rounded-xl shadow-lg object-contain bg-white p-1" />
                     <h1 class="text-2xl font-bold text-white text-center leading-tight">SISTEM LAYANAN<br>PENGAJUAN</h1>
-                    <h2 class="text-sm font-medium text-indigo-400 text-center mt-1">Area Manager</h2>
+                    <h2 class="text-sm font-medium text-blue-400 text-center mt-1">Area Manager</h2>
                 </div>
 
                 <div class="mb-10 text-center md:text-left">
@@ -146,7 +146,12 @@ const submit = async () => {
                     <p class="text-slate-400 mt-2 text-sm">Silakan masuk menggunakan kredensial akun Anda.</p>
                 </div>
 
-                <a-form layout="vertical" @finish="submit" class="login-custom-form">
+                <a-form
+                    layout="vertical"
+                    @finish="submit"
+                    class="login-custom-form"
+                    :class="isLightTheme ? 'light-login-form' : ''"
+                >
                     <a-form-item 
                         label="Username" 
                         :validateStatus="form.errors.username ? 'error' : ''" 
@@ -244,10 +249,29 @@ const submit = async () => {
     color: white;
 }
 
+:deep(.light-login-form .ant-form-item-label > label) {
+    color: #334155 !important;
+}
+:deep(.light-login-form .ant-input::placeholder),
+:deep(.light-login-form .ant-input-affix-wrapper .ant-input::placeholder) {
+    color: #475569 !important;
+}
+:deep(.light-login-form .ant-input-password-icon) {
+    color: #475569 !important;
+}
+
 :deep(.light-login-input),
 :deep(.light-login-input .ant-input-affix-wrapper) {
     background-color: #ffffff !important;
     border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+:deep(.light-login-input.ant-input),
+:deep(.light-login-input .ant-input) {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+}
+:deep(.light-login-input.ant-input-affix-wrapper .ant-input) {
     color: #0f172a !important;
 }
 :deep(.light-login-input .ant-input::placeholder),

@@ -65,6 +65,7 @@ class DashboardStatsService
 
         $actionStats = Memo::where('area_manager_id', $user->id)
             ->selectRaw(
+                "SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending, ".
                 "SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved, ".
                 "SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected"
             )
@@ -74,7 +75,7 @@ class DashboardStatsService
             'pendingMemos' => $pendingMemos,
             'recentActions' => $recentActions,
             'stats' => [
-                'pending' => $pendingMemos->count(),
+                'pending' => (int) ($actionStats->pending ?? 0),
                 'approved' => (int) ($actionStats->approved ?? 0),
                 'rejected' => (int) ($actionStats->rejected ?? 0),
             ],

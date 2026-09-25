@@ -250,4 +250,38 @@ class MemoController extends Controller
         return redirect()->route('memos.index')
             ->with('success', 'Memo berhasil dihapus.');
     }
+    /**
+     * Download exported CSV.
+     */
+    public function exportCsv()
+    {
+        $path = storage_path('app/exports/rekap_memo.csv');
+
+        if (!file_exists($path)) {
+            return back()->with('error', 'File CSV belum tersedia. Silakan tunggu beberapa saat atau buat memo baru.');
+        }
+
+        return response()->download($path);
+    }
+
+    /**
+     * Download exported CSV (Publicly accessible with token).
+     */
+    public function exportCsvPublic(Request $request)
+    {
+        $token = $request->query('token');
+        $secret = env('CSV_EXPORT_TOKEN', 'secret-pgi-2026');
+
+        if ($token !== $secret) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $path = storage_path('app/exports/rekap_memo.csv');
+
+        if (!file_exists($path)) {
+            abort(404, 'File CSV belum tersedia.');
+        }
+
+        return response()->download($path);
+    }
 }
