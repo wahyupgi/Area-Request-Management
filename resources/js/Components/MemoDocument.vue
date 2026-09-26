@@ -90,7 +90,7 @@ const handleImgError = (event) => {
     <div id="printable-memo" class="memo-document bg-white text-black pt-[3cm] pl-[2.54cm] pr-[2cm] pb-[2cm] print:p-0 rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] mx-auto print:max-w-full print:min-h-0 text-xs leading-normal border border-slate-200 print:border-none transition-all">
         <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
-                <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-14 h-14 object-contain" />
+                <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-14 h-14 object-contain" />
             </div>
             <div class="border border-black px-3 py-1 text-xs font-bold tracking-tight bg-white">
                 {{ memo.creator?.name }}

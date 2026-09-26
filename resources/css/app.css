@@ -1,6 +1,8 @@
 @import './base.css';
 @import './ant-design.css';
 @import './dashboard.css';
+@import './dashboard-am.css';
+@import './dashboard-kc.css';
 @import './admin.css';
 @import './memo.css';
 @import './approval.css';

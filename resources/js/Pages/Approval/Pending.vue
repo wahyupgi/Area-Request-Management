@@ -7,7 +7,6 @@ import {
     CheckCircleOutlined, 
     CloseCircleOutlined, 
     HistoryOutlined,
-    RightOutlined,
     DownloadOutlined
 } from '@ant-design/icons-vue';
 
@@ -18,40 +17,54 @@ const downloadCsv = () => {
 const props = defineProps({
     allMemos: Object,
     defaultTab: String,
+    pendingBA: { type: Array, default: () => [] },
 });
 
 const activeTab = ref(props.defaultTab || 'masuk');
 
-const memoList = computed(() => props.allMemos?.data ?? []);
-const memos = computed(() => memoList.value.filter(m => m.status === 'submitted'));
-const approvedMemos = computed(() => memoList.value.filter(m => m.status === 'approved'));
-const rejectedMemos = computed(() => memoList.value.filter(m => m.status === 'rejected'));
-const history = computed(() => memoList.value);
-const paginationLinks = computed(() => props.allMemos?.links ?? []);
-const displayedMemos = computed(() => ({ masuk: memos, approved: approvedMemos, rejected: rejectedMemos, riwayat: history }[activeTab.value] || memos).value);
+const combinedItems = computed(() => {
+    const memoItems = (props.allMemos?.data || []).map(m => ({
+        ...m,
+        _itemType: 'memo',
+        _date: m.submitted_at || m.created_at,
+    }));
+    
+    const baItems = (props.pendingBA || []).map(ba => ({
+        ...ba,
+        _itemType: 'ba',
+        _date: ba.submitted_at || ba.created_at,
+    }));
+    
+    return [...memoItems, ...baItems].sort((a, b) => new Date(b._date) - new Date(a._date));
+});
 
-const tableColumns = [
-    { title: 'Kode Memo', dataIndex: 'code', key: 'code' },
-    { title: 'Memo & Template', key: 'memo' },
-    { title: 'Pembuat', key: 'creator' },
-    { title: 'Cabang', key: 'branch' },
-    { title: 'Status', key: 'status' },
-    { title: 'Aksi', key: 'action', align: 'center' },
-];
+const itemsPending = computed(() => combinedItems.value.filter(i => i.status === 'submitted'));
+const itemsApproved = computed(() => combinedItems.value.filter(i => i.status === 'approved'));
+const itemsRejected = computed(() => combinedItems.value.filter(i => i.status === 'rejected'));
+const itemsHistory = computed(() => combinedItems.value);
+
+const displayedItems = computed(() => {
+    if (activeTab.value === 'masuk') return itemsPending.value;
+    if (activeTab.value === 'approved') return itemsApproved.value;
+    if (activeTab.value === 'rejected') return itemsRejected.value;
+    if (activeTab.value === 'riwayat') return itemsHistory.value;
+    return itemsPending.value;
+});
+
+const unifiedColumns = computed(() => [
+    { title: 'Nomor Dokumen', dataIndex: 'code', key: 'code', width: '18%' },
+    { title: 'Perihal & Tipe', dataIndex: 'title', key: 'title_type', width: '24%' },
+    { title: 'Pembuat', dataIndex: 'creator', key: 'creator', width: '11%' },
+    { title: 'Cabang', dataIndex: 'branch', key: 'branch', width: '15%' },
+    { title: 'Status', dataIndex: 'status', key: 'status', width: '10%' },
+    { title: 'Tanggal', dataIndex: '_date', key: 'date', width: '10%' },
+    { title: 'Aksi', dataIndex: 'action', key: 'action', align: 'center', width: '12%' },
+]);
 
 const historyStatusConfig = {
-    submitted: {
-        label: 'Menunggu',
-        color: 'warning',
-    },
-    approved: {
-        label: 'Disetujui',
-        color: 'success',
-    },
-    rejected: {
-        label: 'Ditolak',
-        color: 'error',
-    },
+    submitted: { label: 'Menunggu', color: 'warning' },
+    approved:  { label: 'Disetujui', color: 'success' },
+    rejected:  { label: 'Ditolak',   color: 'error' },
 };
 
 const formatDate = (dateStr) => {
@@ -60,6 +73,14 @@ const formatDate = (dateStr) => {
         day: 'numeric', month: 'short', year: 'numeric',
     });
 };
+
+const goToDetail = (record) => {
+    if (record._itemType === 'memo') {
+        router.visit(record.status === 'submitted' ? route('approvals.review', record.id) : route('approvals.history', record.id));
+    } else {
+        router.visit(record.status === 'submitted' ? route('approvals.ba.review', record.id) : route('approvals.ba.history', record.id));
+    }
+};
 </script>
 
 <template>
@@ -67,7 +88,7 @@ const formatDate = (dateStr) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center w-full">
-                <h1 class="am-approval-header-title text-xl font-bold mb-0">Kotak Masuk & Riwayat Memo</h1>
+                <h1 class="am-approval-header-title text-xl font-bold mb-0">Kotak Masuk & Riwayat Dokumen</h1>
                 <a-button type="default" @click="downloadCsv">
                     <template #icon><download-outlined /></template>
                     Export/Download CSV
@@ -77,38 +98,57 @@ const formatDate = (dateStr) => {
 
         <a-card :bordered="false" class="am-approval-page rounded-lg shadow-sm">
             <a-tabs v-model:activeKey="activeTab" size="large" :animated="false">
-                <a-tab-pane key="masuk"><template #tab><span><inbox-outlined /> Masuk</span></template></a-tab-pane>
+                <a-tab-pane key="masuk">
+                    <template #tab>
+                        <span>
+                            <inbox-outlined /> Pengajuan Masuk
+                        </span>
+                    </template>
+                </a-tab-pane>
                 <a-tab-pane key="approved"><template #tab><span><check-circle-outlined /> Disetujui</span></template></a-tab-pane>
-                <a-tab-pane key="rejected"><template #tab><span><close-circle-outlined /> Ditolak / Revisi</span></template></a-tab-pane>
+                <a-tab-pane key="rejected"><template #tab><span><close-circle-outlined /> Ditolak</span></template></a-tab-pane>
                 <a-tab-pane key="riwayat"><template #tab><span><history-outlined /> Semua Riwayat</span></template></a-tab-pane>
             </a-tabs>
 
             <Transition name="inbox-table" mode="out-in">
                 <div :key="activeTab" class="am-inbox-table-shell">
                     <a-table
-                        :data-source="displayedMemos"
-                        :columns="tableColumns"
+                        :data-source="displayedItems"
+                        :columns="unifiedColumns"
+                        table-layout="fixed"
                         row-key="id"
                         :pagination="false"
                         class="am-inbox-table"
                     >
-                <template #bodyCell="{ column, record }">
-                    <template v-if="column.key === 'memo'">
-                        <div class="font-semibold">{{ record.title }}</div>
-                        <div class="text-xs opacity-70">{{ record.template?.name || '-' }}</div>
-                    </template>
-                    <template v-else-if="column.key === 'creator'">{{ record.creator?.name || '-' }}</template>
-                    <template v-else-if="column.key === 'branch'">{{ record.branch?.name || '-' }}</template>
-                    <template v-else-if="column.key === 'status'">
-                        <a-tag :color="historyStatusConfig[record.status]?.color || 'default'">{{ historyStatusConfig[record.status]?.label || record.status }}</a-tag>
-                    </template>
-                    <template v-else-if="column.key === 'action'">
-                        <a-button type="primary" ghost size="small" @click="router.visit(record.status === 'submitted' ? route('approvals.review', record.id) : route('approvals.history', record.id))">
-                            {{ record.status === 'submitted' ? 'Review' : 'Detail' }}
-                            <template #icon><right-outlined /></template>
-                        </a-button>
-                    </template>
-                </template>
+                        <template #bodyCell="{ column, record }">
+                            <template v-if="column.key === 'title_type' || column.dataIndex === 'title'">
+                                <div class="font-semibold">{{ record.title }}</div>
+                                <div class="text-xs opacity-70 mt-1 flex items-center gap-2">
+                                    <a-tag :color="record._itemType === 'memo' ? 'blue' : 'purple'" style="margin-right: 0;">
+                                        {{ record._itemType === 'memo' ? 'Memo' : 'Berita Acara' }}
+                                    </a-tag>
+                                    <span v-if="record._itemType === 'memo'">{{ record.template?.name || '' }}</span>
+                                </div>
+                            </template>
+                            <template v-if="column.key === 'creator' || column.dataIndex === 'creator'">{{ record.creator?.name || '-' }}</template>
+                            <template v-if="column.key === 'branch' || column.dataIndex === 'branch'">{{ record.branch?.name || '-' }}</template>
+                            <template v-if="column.key === 'status' || column.dataIndex === 'status'">
+                                <a-tag :color="historyStatusConfig[record.status]?.color || 'default'">
+                                    {{ historyStatusConfig[record.status]?.label || record.status }}
+                                </a-tag>
+                            </template>
+                            <template v-if="column.key === 'date' || column.dataIndex === '_date'">
+                                {{ formatDate(record._date) }}
+                            </template>
+                            <template v-if="column.key === 'action'">
+                                <a-button type="primary" style="background-color: #1677ff; color: white;" size="small" @click="goToDetail(record)">
+                                    {{ record.status === 'submitted' ? 'Review' : 'Detail' }}
+                                </a-button>
+                            </template>
+                        </template>
+                        <template #emptyText>
+                            <a-empty description="Tidak ada dokumen pada kategori ini." />
+                        </template>
                     </a-table>
                 </div>
             </Transition>

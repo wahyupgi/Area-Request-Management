@@ -13,46 +13,75 @@ const form = useForm({
 });
 
 const preview = ref(null);
+const selectedFile = ref(null);
 
-const beforeUpload = (file) => {
+const assignSignatureFile = (file) => {
+    if (!file) {
+        selectedFile.value = null;
+        form.signature_image = null;
+        preview.value = null;
+        return;
+    }
+
     const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
     if (!isJpgOrPng) {
         message.error('Hanya bisa mengunggah file JPG/PNG!');
-        return false;
+        return;
     }
+
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
         message.error('Gambar harus lebih kecil dari 2MB!');
-        return false;
+        return;
     }
-    
+
+    selectedFile.value = file;
     form.signature_image = file;
+
     const reader = new FileReader();
     reader.onload = (e) => {
         preview.value = e.target.result;
     };
     reader.readAsDataURL(file);
-    
-    return false; // Prevent automatic upload
+};
+
+const beforeUpload = (file) => {
+    assignSignatureFile(file);
+    return false;
 };
 
 const handleRemoveImage = () => {
+    selectedFile.value = null;
     form.signature_image = null;
     preview.value = null;
 };
 
 const save = () => {
-    if (!form.signature_image) {
+    if (!selectedFile.value && !form.signature_image) {
         message.error('Silakan unggah gambar tanda tangan terlebih dahulu.');
         return;
     }
-    form.post(route('signature.store'), {
+
+    const payload = new FormData();
+    payload.append('signature_image', selectedFile.value || form.signature_image);
+    if (form.certificate_no) {
+        payload.append('certificate_no', form.certificate_no);
+    }
+
+    router.post(route('signature.store'), payload, {
         forceFormData: true,
         onSuccess: () => {
             message.success('Tanda tangan berhasil disimpan.');
             preview.value = null;
+            selectedFile.value = null;
             form.reset();
-        }
+        },
+        onError: (errors) => {
+            const firstError = Array.isArray(errors?.signature_image) ? errors.signature_image[0] : null;
+            if (firstError) {
+                message.error(firstError);
+            }
+        },
     });
 };
 
@@ -161,7 +190,7 @@ const remove = () => {
                     </a-form-item>
 
                     <div class="pt-2">
-                        <a-button type="primary" html-type="submit" :loading="form.processing" size="large" :disabled="!form.signature_image">
+                        <a-button type="primary" html-type="button" :loading="form.processing" size="large" :disabled="!selectedFile && !form.signature_image" @click.prevent="save">
                             <template #icon><SaveOutlined /></template>
                             Simpan Tanda Tangan
                         </a-button>

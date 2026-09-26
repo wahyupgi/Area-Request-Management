@@ -237,8 +237,13 @@ const submitAndSign = () => {
                         <!-- Lampiran -->
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <h2 class="text-sm font-semibold mb-2">Lampiran Dokumen</h2>
-                            <input type="file" @change="selectAttachment" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                            <p class="text-xs text-gray-400 mt-2">Maksimal 10MB. Lampiran akan tersimpan bersama draft memo.</p>
+                            <input
+                                type="file"
+                                @change="selectAttachment"
+                                accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                            <p class="text-xs text-gray-400 mt-2">Format: .doc atau .docx. Maksimal 10MB.</p>
                         </a-card>
                     </div>
                 </a-col>

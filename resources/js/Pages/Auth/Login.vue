@@ -124,7 +124,7 @@ const submit = async () => {
             <!-- Left Side / Branding -->
             <div class="hidden md:flex flex-col items-center justify-center w-1/2 p-12 bg-white/5 relative overflow-hidden">
                 <div class="relative z-10 flex flex-col items-center text-center">
-                    <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-28 h-28 mb-8 rounded-2xl shadow-2xl shadow-indigo-500/20 object-contain bg-white p-2" />
+                    <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-28 h-28 mb-8 rounded-2xl shadow-2xl shadow-indigo-500/20 object-contain bg-white p-2" />
                     <h1 class="text-3xl font-bold text-white mb-2 leading-tight">SISTEM LAYANAN PENGAJUAN</h1>
                     <h2 class="text-xl font-medium text-indigo-400">Area Manager</h2>
                     <p class="text-slate-400 mt-6 max-w-sm leading-relaxed text-sm">
@@ -136,7 +136,7 @@ const submit = async () => {
             <!-- Right Side / Form -->
             <div class="w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center">
                 <div class="md:hidden flex flex-col items-center mb-10">
-                    <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-24 h-24 mb-4 rounded-xl shadow-lg object-contain bg-white p-1" />
+                    <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-24 h-24 mb-4 rounded-xl shadow-lg object-contain bg-white p-1" />
                     <h1 class="text-2xl font-bold text-white text-center leading-tight">SISTEM LAYANAN<br>PENGAJUAN</h1>
                     <h2 class="text-sm font-medium text-blue-400 text-center mt-1">Area Manager</h2>
                 </div>

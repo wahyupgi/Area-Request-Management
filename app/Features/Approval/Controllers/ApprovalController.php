@@ -9,6 +9,7 @@ use App\Features\Approval\Requests\UpdateSignersRequest;
 use App\Http\Controllers\Controller;
 use App\Features\Approval\Services\ApprovalService;
 use App\Features\Memo\Repositories\MemoRepository;
+use App\Models\BeritaAcara;
 use App\Models\Memo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -32,9 +33,16 @@ class ApprovalController extends Controller
             $request->input('per_page', 12),
         );
 
+        // Ambil Berita Acara yang masuk ke AM ini
+        $pendingBA = BeritaAcara::with(['branch:id,name', 'creator:id,name'])
+            ->where('area_manager_id', $user->id)
+            ->orderByDesc('updated_at')
+            ->get();
+
         return Inertia::render('Approval/Pending', [
             'allMemos'   => $allMemos,
             'defaultTab' => $request->query('tab', 'masuk'),
+            'pendingBA'  => $pendingBA,
         ]);
     }
 

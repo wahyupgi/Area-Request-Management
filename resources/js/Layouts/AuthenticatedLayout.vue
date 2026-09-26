@@ -22,6 +22,7 @@ import {
     LogoutOutlined,
     DownOutlined,
     BarChartOutlined,
+    AuditOutlined,
 } from '@ant-design/icons-vue';
 
 const page = usePage();
@@ -92,6 +93,8 @@ const navItems = computed(() => {
         { name: 'Profil Saya', route: 'profile.edit', icon: UserOutlined, roles: ['KC', 'AM', 'ADMIN'] },
         { name: 'Memo Saya', route: 'memos.index', icon: FileTextOutlined, roles: ['KC'] },
         { name: 'Buat Memo', route: 'memos.create', icon: FormOutlined, roles: ['KC'] },
+        { name: 'Berita Acara', route: 'berita-acara.index', icon: AuditOutlined, roles: ['KC'] },
+        { name: 'Pengajuan BA', route: 'berita-acara.create', icon: FormOutlined, roles: ['KC'] },
         { name: 'Kotak Masuk', route: 'approvals.pending', icon: InboxOutlined, roles: ['AM'] },
         { name: 'Tanda Tangan', route: 'signature.index', icon: EditOutlined, roles: ['AM'] },
         { name: 'Pengaturan TTD', route: 'signature.settings', icon: SettingOutlined, roles: ['AM'] },
@@ -184,7 +187,7 @@ const handleLogout = () => {
             :collapsedWidth="80"
         >
             <div class="flex items-center gap-3 px-5 py-4 border-b border-blue-500/80">
-                <img src="/logo-pgi.jpg" alt="Logo PGI" class="w-10 h-10 rounded-lg object-contain border border-blue-700 bg-white p-0.5 shadow-sm flex-shrink-0" />
+                <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-10 h-10 rounded-lg object-contain border border-blue-700 bg-white p-0.5 shadow-sm flex-shrink-0" />
                 <div class="sidebar-brand-details flex flex-col min-w-0 text-white" :class="{ 'is-hidden': sidebarCollapsed }">
                     <span class="sidebar-brand-title text-xs font-bold text-white tracking-wider uppercase leading-tight">PUSAT GADAI INDONESIA</span>
                     <div class="flex items-center gap-1.5 mt-1 text-[10px] text-blue-100">

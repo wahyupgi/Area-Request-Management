@@ -23,6 +23,14 @@
     vertical-align: middle !important;
 }
 
+/* Kembalikan gaya tombol agar tidak di-reset oleh Tailwind */
+button.ant-btn {
+    background-color: transparent;
+}
+button.ant-btn-primary {
+    background-color: #1677ff;
+}
+
 .ant-btn > .ant-btn-icon + span,
 .ant-btn > .anticon + span,
 .ant-btn > span + .anticon,

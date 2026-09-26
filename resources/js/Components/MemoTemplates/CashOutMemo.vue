@@ -26,7 +26,12 @@ const handleImgError = (event) => {
         </tbody>
     </table>
 
-    <div class="grid grid-cols-3 gap-3 items-start text-xs w-full max-w-3xl mx-auto px-1 mb-4">
+    <div class="mt-2 text-[11px] leading-[1.5] text-black" style="font-family: Tahoma, sans-serif;">
+        <p class="m-0">Demikianlah Internal Memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
+        <p class="mt-1 m-0">Terima kasih atas perhatiannya.</p>
+    </div>
+
+    <div class="mt-4 grid grid-cols-3 gap-3 items-start text-xs w-full max-w-3xl mx-auto px-1 mb-4">
         <div class="flex min-w-0 flex-col items-center text-center">
             <p class="mb-1">Dibuat oleh,</p>
             <div class="h-16 w-full flex items-end justify-center relative">
@@ -53,4 +58,6 @@ const handleImgError = (event) => {
             </p>
         </div>
     </div>
+
+    
 </template>

@@ -159,7 +159,12 @@ const roleLines = (role) => {
         </tbody>
     </table>
 
-    <div class="grid gap-2 items-start text-xs w-full mb-4" :style="signatureGridStyle">
+    <div class="mt-2 text-[11px] leading-[1.5] text-black" style="font-family: Tahoma, sans-serif;">
+        <p class="m-0">Demikianlah Internal Memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
+        <p class="mt-1 m-0">Terima kasih atas perhatiannya.</p>
+    </div>
+
+    <div class="mt-4 grid gap-2 items-start text-xs w-full mb-4" :style="signatureGridStyle">
         <div v-for="(slot, index) in signatures.slice(0, signatureCount)" :key="'kipas-signature-' + index" class="flex min-w-0 flex-col items-center text-center">
             <p class="mb-1">{{ slot.label }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">

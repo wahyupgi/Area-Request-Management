@@ -233,11 +233,11 @@ const formatDate = (dateString) => {
                             </p>
 
                             <a-button type="primary" block size="large" class="bg-green-600 hover:bg-green-500 border-green-600" @click="showApproveConfirm = true">
-                                <template #icon><check-circle-outlined /></template> Setujui & Tanda Tangani Memo
+                                <template #icon></template> Setujui & Tanda Tangani Memo
                             </a-button>
 
                             <a-button danger block size="large" @click="showRejectModal = true">
-                                <template #icon><close-circle-outlined /></template> Tolak / Minta Revisi Cabang
+                                <template #icon></template> Tolak / Minta Revisi Cabang
                             </a-button>
 
                             <Link :href="route('approvals.pending')" class="block text-center mt-2 text-sm text-gray-400 hover:text-gray-600">
