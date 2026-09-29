@@ -110,6 +110,18 @@ const removeTemplateRow = (index) => {
     form.meta.data.rows.splice(index, 1);
 };
 
+const formatNominalInput = (value) => {
+    if (value === undefined || value === null || value === '') return '';
+    const digits = String(value).replace(/\D/g, '');
+    if (!digits) return '';
+    return `Rp ${Number(digits).toLocaleString('id-ID')}`;
+};
+
+const parseNominalInput = (value) => {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    return digits ? Number(digits) : null;
+};
+
 const submit = () => {
     form.submit_after_save = false;
     form.transform(data => ({ ...data, attachment: form.attachment }))
@@ -260,7 +272,7 @@ const submitAndSign = () => {
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nama_nasabah" placeholder="Nama Nasabah" class="mb-2" /></a-col>
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.no_faktur" placeholder="No. Faktur" class="mb-2" /></a-col>
                                             <a-col :xs="24" :sm="12" :md="12"><a-input v-model:value="row.barang" placeholder="Barang" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="12"><a-input v-model:value="row.nominal_pinjaman" placeholder="Nominal Pinjaman" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="12"><a-input-number v-model:value="row.nominal_pinjaman" :precision="0" :formatter="formatNominalInput" :parser="parseNominalInput" placeholder="Nominal Pinjaman" class="mb-2 w-full" /></a-col>
                                         </a-row>
                                     </template>
                                 </div>

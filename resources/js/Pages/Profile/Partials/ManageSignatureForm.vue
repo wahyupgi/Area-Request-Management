@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { DeleteOutlined, SaveOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import { message, Modal } from 'ant-design-vue';
 
-defineProps({
+const props = defineProps({
     signature: {
         type: Object,
         default: null,
@@ -13,7 +13,7 @@ defineProps({
 
 const form = useForm({
     signature_image: null,
-    certificate_no: '',
+    certificate_no: props.signature?.certificate_no || '',
 });
 const preview = ref(null);
 

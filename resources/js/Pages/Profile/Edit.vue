@@ -36,7 +36,7 @@ defineProps({
             </a-card>
 
             <ManageSignatureForm
-                v-if="page.props.auth.user.role === 'KC'"
+                v-if="['AM', 'KC'].includes(page.props.auth.user.role)"
                 :signature="page.props.signature"
             />
 

@@ -59,7 +59,7 @@ class ApprovalController extends Controller
 
         $this->service->markNotificationsRead($memo, $user->id);
 
-        $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
+        $memo->load(['template', 'branch.area', 'creator.digitalSignature', 'areaManager.digitalSignature', 'attachments', 'approvals.approver', 'approvals.signature']);
         $this->service->loadSignaturePeople($memo);
 
         $signature = $this->service->getUserSignature($user->id);

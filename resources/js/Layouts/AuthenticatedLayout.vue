@@ -13,8 +13,6 @@ import {
     FileTextOutlined,
     FormOutlined,
     InboxOutlined,
-    EditOutlined,
-    SettingOutlined,
     AppstoreOutlined,
     EnvironmentOutlined,
     BankOutlined,
@@ -23,6 +21,7 @@ import {
     RightOutlined,
     BarChartOutlined,
     AuditOutlined,
+    SettingOutlined,
 } from '@ant-design/icons-vue';
 
 const page = usePage();
@@ -118,7 +117,6 @@ const navItems = computed(() => {
             ],
         },
         { name: 'Kotak Masuk', route: 'approvals.pending', icon: InboxOutlined, roles: ['AM'] },
-        { name: 'Tanda Tangan', route: 'signature.index', icon: EditOutlined, roles: ['AM'] },
         { name: 'Pengaturan TTD', route: 'signature.settings', icon: SettingOutlined, roles: ['AM'] },
         { name: 'Report GA', route: 'reports.ga', icon: BarChartOutlined, roles: ['AM'] },
         { name: 'Template Memo', route: 'admin.templates.index', icon: AppstoreOutlined, roles: ['ADMIN'] },

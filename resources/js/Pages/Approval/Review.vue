@@ -249,7 +249,7 @@ const formatDate = (dateString) => {
                     <!-- Card 2: Digital Signature Status -->
                     <a-card title="Tanda Tangan Digital Anda" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
                         <template #extra>
-                            <Link :href="route('signature.index')" class="text-blue-500 text-xs hover:underline">Ubah</Link>
+                            <Link :href="route('profile.edit')" class="text-blue-500 text-xs hover:underline">Ubah</Link>
                         </template>
 
                         <div v-if="signature" class="flex items-center gap-4">

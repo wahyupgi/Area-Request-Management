@@ -141,13 +141,13 @@ const printBA = () => {
 
                     <!-- Meta Data -->
                     <a-card title="Informasi Meta Dokumen" :bordered="false" class="rounded-lg shadow-sm" size="small">
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between"><span class="text-gray-500">Judul</span><span class="font-medium text-right max-w-[150px] truncate" :title="beritaAcara.title">{{ beritaAcara.title }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Direktorat</span><span class="font-medium">{{ beritaAcara.meta?.direktorat || '-' }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Divisi</span><span class="font-medium">{{ beritaAcara.meta?.divisi || '-' }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Kepada</span><span class="font-medium truncate">{{ beritaAcara.meta?.kepada_nama || '-' }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Jabatan</span><span class="font-medium">{{ beritaAcara.meta?.kepada_jabatan || '-' }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Tanggal Buat</span><span>{{ formatDate(beritaAcara.created_at) }}</span></div>
+                        <div class="grid grid-cols-[5.25rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 text-sm">
+                            <span class="text-gray-500">Judul</span><span class="min-w-0 break-words text-left font-medium leading-5" :title="beritaAcara.title">{{ beritaAcara.title }}</span>
+                            <span class="text-gray-500">Direktorat</span><span class="min-w-0 break-words text-left font-medium leading-5">{{ beritaAcara.meta?.direktorat || '-' }}</span>
+                            <span class="text-gray-500">Divisi</span><span class="min-w-0 break-words text-left font-medium leading-5">{{ beritaAcara.meta?.divisi || '-' }}</span>
+                            <span class="text-gray-500">Kepada</span><span class="min-w-0 break-words text-left font-medium leading-5">{{ beritaAcara.meta?.kepada_nama || '-' }}</span>
+                            <span class="text-gray-500">Jabatan</span><span class="min-w-0 break-words text-left font-medium leading-5">{{ beritaAcara.meta?.kepada_jabatan || '-' }}</span>
+                            <span class="text-gray-500">Tanggal Buat</span><span class="min-w-0 break-words text-left leading-5">{{ formatDate(beritaAcara.created_at) }}</span>
                         </div>
                     </a-card>
                 </a-col>

@@ -35,18 +35,28 @@ const introText = computed(() => props.memo.field_values?.pengantar || `Sehubung
 // Meta: editable header fields (KC/AM customizable)
 const memoMeta = computed(() => props.memo.field_values?.meta || {});
 
+const isAreaManagerRole = (role) => ['Area Manager', 'Manager'].includes(String(role || '').trim());
+
+const areaManagerName = () => {
+    const name = props.memo.area_manager?.name?.trim();
+    if (!name) return 'Bpk. Fathurrahman';
+    return /^(bpk\.?|pak)\s/i.test(name) ? name : `Bpk. ${name}`;
+};
+
+const isPlaceholderSignerName = (name) => !name || name.trim().toLowerCase() === 'penandatangan';
+
 const configuredSignatures = computed(() => {
     const custom = props.memo.field_values?.custom_signers;
     if (Array.isArray(custom) && custom.length > 0) {
         return custom.map((slot) => {
             let user = null;
             if (slot.role === 'Kepala Cabang') user = props.memo.creator;
-            else if (slot.role === 'Area Manager') user = props.showAmSignature ? props.memo.area_manager : null;
+            else if (isAreaManagerRole(slot.role)) user = props.showAmSignature ? props.memo.area_manager : null;
             
             return {
                 ...slot,
                 label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (slot.role === 'Area Manager' ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
-                name: slot.name || '',
+                name: isAreaManagerRole(slot.role) && isPlaceholderSignerName(slot.name) ? areaManagerName() : (slot.name || ''),
                 role: slot.role || '',
                 location: slot.location || 'document',
                 user: user,
@@ -62,9 +72,9 @@ const configuredSignatures = computed(() => {
             if (slot.role === 'Kepala Cabang') {
                 user = props.memo.creator;
                 name = user?.name || name;
-            } else if (slot.role === 'Area Manager') {
+            } else if (isAreaManagerRole(slot.role)) {
                 user = props.showAmSignature ? props.memo.area_manager : null;
-                name = props.memo.area_manager?.name || name;
+                name = isPlaceholderSignerName(name) ? areaManagerName() : name;
             }
 
             return {

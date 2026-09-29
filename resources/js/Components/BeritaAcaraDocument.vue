@@ -35,7 +35,7 @@ const signatureSlots = computed(() => {
     return slots;
 });
 const signatureWidths = computed(() => isSeizedGoods.value
-    ? ['18%', '18%', '18%', '46%']
+    ? ['19%', '19%', '19%', '43%']
     : signatureSlots.value.map(() => `${100 / signatureSlots.value.length}%`));
 
 const handleImgError = (event) => {
@@ -48,6 +48,13 @@ const formatDate = (dateString) => {
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     return `${days[date.getDay()]}, ${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+const formatCurrency = (value) => {
+    if (value === undefined || value === null || value === '') return '-';
+    const digits = String(value).replace(/\D/g, '');
+    if (!digits) return String(value);
+    return `Rp ${Number(digits).toLocaleString('id-ID')}`;
 };
 </script>
 
@@ -131,7 +138,7 @@ const formatDate = (dateString) => {
             </thead>
             <tbody>
                 <tr v-for="(row, index) in templateRows" :key="index">
-                    <td v-for="(value, columnIndex) in [index + 1, row.cabang, row.nama_nasabah, row.no_faktur, row.barang, row.nominal_pinjaman]" :key="columnIndex" style="border:1px solid #000;padding:4px;text-align:center;">{{ value }}</td>
+                    <td v-for="(value, columnIndex) in [index + 1, row.cabang, row.nama_nasabah, row.no_faktur, row.barang, row.nominal_pinjaman]" :key="columnIndex" style="border:1px solid #000;padding:4px;text-align:center;">{{ columnIndex === 5 ? formatCurrency(value) : value }}</td>
                 </tr>
             </tbody>
         </table>

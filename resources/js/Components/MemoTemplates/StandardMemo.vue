@@ -10,6 +10,7 @@ const props = defineProps({
 });
 
 const isKeringananJasa = computed(() => props.memo.template?.category === 'Keringanan Jasa');
+const isPhoneDeathReliefMemo = computed(() => props.memo.template?.name === 'Pengajuan Keringanan Pelunasan Nasabah Handphone Meninggal Dunia');
 
 const formatFieldValue = (field, value) => {
     if (value === undefined || value === null || value === '') return '-';
@@ -19,9 +20,9 @@ const formatFieldValue = (field, value) => {
         });
     }
     if (field.key.includes('persentase')) return `${value}%`;
-    const isCurrencyField = ['biaya', 'anggaran', 'nominal', 'pinjaman', 'pelunasan', 'pokok']
-        .some((key) => field.key.includes(key));
-    if ((field.type === 'number' || !isNaN(value)) && isCurrencyField) {
+    const isCurrency = /nominal|biaya|anggaran|harga|pinjaman|pelunasan|pokok|rupiah|\brp\b/i
+        .test(`${field.key || ''} ${field.label || ''}`);
+    if ((field.type === 'number' || !isNaN(value)) && isCurrency) {
         return 'Rp ' + Number(value).toLocaleString('id-ID');
     }
     return String(value);
@@ -145,7 +146,12 @@ const signatureGridStyle = (count) => ({
     </div>
 
     <div v-if="documentSignatures.length" class="relative -left-1 mt-4 grid justify-start gap-6 items-start text-xs w-full max-w-none mx-0 px-0 mb-4 [break-inside:avoid]" :style="signatureGridStyle(documentSignatures.length)">
-        <div v-for="slot in documentSignatures" :key="slot.name + slot.role" class="flex min-w-0 flex-col items-center text-center">
+        <div
+            v-for="(slot, index) in documentSignatures"
+            :key="slot.name + slot.role"
+            class="flex min-w-0 flex-col items-center text-center"
+            :style="isPhoneDeathReliefMemo && documentSignatures.length === 3 && index > 0 ? { transform: `translateX(-${index * 8}px)` } : undefined"
+        >
             <p class="mb-1">{{ slot.label || (slot.location === 'bottom_right' ? 'Paraf' : 'Disetujui Oleh,') }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />

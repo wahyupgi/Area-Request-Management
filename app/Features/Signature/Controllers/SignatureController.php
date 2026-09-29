@@ -7,6 +7,7 @@ use App\Features\Signature\Requests\UpdateSignatureSettingsRequest;
 use App\Http\Controllers\Controller;
 use App\Models\DigitalSignature;
 use App\Models\MemoTemplate;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -15,13 +16,9 @@ class SignatureController extends Controller
     /**
      * Show the current user's digital signature page.
      */
-    public function index()
+    public function index(): RedirectResponse
     {
-        $signature = DigitalSignature::where('user_id', auth()->id())->first();
-
-        return Inertia::render('Signature/Index', [
-            'signature' => $signature,
-        ]);
+        return redirect()->route('profile.edit');
     }
 
     /**
