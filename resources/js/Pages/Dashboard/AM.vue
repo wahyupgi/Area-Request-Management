@@ -12,8 +12,12 @@ import {
 
 const props = defineProps({
     pendingMemos: { type: Array,  default: () => [] },
+    pendingBA:    { type: Array,  default: () => [] },
     recentActions: { type: Array,  default: () => [] },
     stats:         { type: Object, default: () => ({ pending: 0, approved: 0, rejected: 0 }) },
+    submissionStats: { type: Object, default: () => ({}) },
+    baStats:       { type: Object, default: () => ({}) },
+    recentBA:      { type: Array,  default: () => [] },
     // Report mode
     reportMode:  { type: Boolean, default: false },
     gaReport:    { type: Object,  default: null },
@@ -24,6 +28,26 @@ const props = defineProps({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+
+const pendingDocuments = computed(() => [
+    ...(props.pendingMemos || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
+    ...(props.pendingBA || []).map((ba) => ({ ...ba, _documentType: 'ba' })),
+].sort((a, b) => new Date(b.submitted_at || b.created_at) - new Date(a.submitted_at || a.created_at)));
+
+const recentDecisions = computed(() => [
+    ...(props.recentActions || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
+    ...(props.recentBA || [])
+        .filter((ba) => ['approved', 'rejected'].includes(ba.status))
+        .map((ba) => ({ ...ba, _documentType: 'ba' })),
+].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 6));
+
+const combinedStats = computed(() => ({
+    received: props.submissionStats?.received ?? 0,
+    total: props.submissionStats?.total ?? 0,
+    pending: props.submissionStats?.submitted ?? 0,
+    approved: props.submissionStats?.approved ?? 0,
+    rejected: props.submissionStats?.rejected ?? 0,
+}));
 
 const greeting = computed(() => {
     const h = new Date().getHours();
@@ -347,35 +371,53 @@ const pagination = computed(() => {
                 </a-col>
             </a-row>
 
-            <a-row :gutter="[16, 16]" style="margin-top: 24px;">
-                <a-col :xs="24" :sm="8">
+            <div class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+                <div>
                     <Link :href="route('approvals.pending')">
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-pending">
-                            <div class="am-stat-title">Perlu ditinjau</div>
-                            <div class="am-stat-number">{{ stats.pending ?? 0 }}</div>
-                            <div class="am-stat-desc">Antrean persetujuan</div>
+                            <div class="am-stat-title">Pengajuan Masuk</div>
+                            <div class="am-stat-number">{{ combinedStats.received }}</div>
+                            <div class="am-stat-desc">Memo dan Berita Acara</div>
                         </a-card>
                     </Link>
-                </a-col>
-                <a-col :xs="24" :sm="8">
+                </div>
+                <div>
+                    <Link :href="route('approvals.pending', { tab: 'riwayat' })">
+                        <a-card :bordered="false" size="small" hoverable class="am-stat-box">
+                            <div class="am-stat-title">Total Pengajuan</div>
+                            <div class="am-stat-number">{{ combinedStats.total }}</div>
+                            <div class="am-stat-desc">Termasuk draft</div>
+                        </a-card>
+                    </Link>
+                </div>
+                <div>
+                    <Link :href="route('approvals.pending')">
+                        <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-pending">
+                            <div class="am-stat-title">Menunggu AM</div>
+                            <div class="am-stat-number">{{ combinedStats.pending }}</div>
+                            <div class="am-stat-desc">Memo dan Berita Acara</div>
+                        </a-card>
+                    </Link>
+                </div>
+                <div>
                     <Link :href="route('approvals.pending', { tab: 'approved' })">
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-approved">
                             <div class="am-stat-title">Disetujui</div>
-                            <div class="am-stat-number">{{ stats.approved ?? 0 }}</div>
-                            <div class="am-stat-desc">Keputusan selesai</div>
+                            <div class="am-stat-number">{{ combinedStats.approved }}</div>
+                            <div class="am-stat-desc">Memo dan Berita Acara</div>
                         </a-card>
                     </Link>
-                </a-col>
-                <a-col :xs="24" :sm="8">
+                </div>
+                <div>
                     <Link :href="route('approvals.pending', { tab: 'rejected' })">
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-rejected">
-                            <div class="am-stat-title">Perlu revisi</div>
-                            <div class="am-stat-number">{{ stats.rejected ?? 0 }}</div>
-                            <div class="am-stat-desc">Dikembalikan ke cabang</div>
+                            <div class="am-stat-title">Perlu Revisi</div>
+                            <div class="am-stat-number">{{ combinedStats.rejected }}</div>
+                            <div class="am-stat-desc">Memo dan Berita Acara</div>
                         </a-card>
                     </Link>
-                </a-col>
-            </a-row>
+                </div>
+            </div>
         </a-card>
 
         <!-- ═══════════════════════════════════════════════════════
@@ -392,41 +434,39 @@ const pagination = computed(() => {
                         </Link>
                     </template>
                     
-                    <a-empty
-                        v-if="pendingMemos.length === 0"
-                        description="Tidak ada memo yang menunggu persetujuan."
-                    />
+                    <a-empty v-if="pendingDocuments.length === 0" description="Tidak ada dokumen yang menunggu persetujuan." />
                     
-                    <a-list v-else :data-source="pendingMemos" item-layout="horizontal">
-                        <template #renderItem="{ item: memo }">
+                    <a-list v-else :data-source="pendingDocuments" item-layout="horizontal">
+                        <template #renderItem="{ item: document }">
                             <a-list-item style="padding: 4px 0; border-bottom: none;">
                                 <a-card hoverable class="am-item-card w-full" size="small">
-                                    <Link :href="route('approvals.review', memo.id)" style="color: inherit; text-decoration: none;">
+                                    <Link :href="document._documentType === 'memo' ? route('approvals.review', document.id) : route('approvals.ba.review', document.id)" style="color: inherit; text-decoration: none;">
                                         <a-row type="flex" justify="space-between" align="middle">
                                             <a-col :span="18">
                                                 <div style="margin-bottom: 8px;">
                                                     <div class="am-item-text" style="font-family: monospace; font-size: 11px;">
-                                                        {{ memo.code || `#${memo.id}` }}
+                                                        {{ document.code || `#${document.id}` }}
                                                     </div>
                                                     <div class="am-item-title" style="font-weight: 600; font-size: 14px; margin-top: 4px; margin-bottom: 4px;">
-                                                        {{ memo.title }}
+                                                        {{ document.title }}
                                                     </div>
                                                 </div>
                                                 <a-space wrap>
-                                                    <a-tag color="blue">{{ memo.template?.name || '-' }}</a-tag>
-                                                    <a-tag>{{ memo.branch?.name || '-' }}</a-tag>
-                                                    <a-tag v-if="getUrgency(memo.submitted_at) === 'critical'" color="error">Mendesak</a-tag>
-                                                    <a-tag v-else-if="getUrgency(memo.submitted_at) === 'high'" color="warning">Segera</a-tag>
+                                                    <a-tag v-if="document._documentType === 'memo'" color="blue">{{ document.template?.name || 'Memo' }}</a-tag>
+                                                    <a-tag v-else color="purple">Berita Acara</a-tag>
+                                                    <a-tag>{{ document.branch?.name || '-' }}</a-tag>
+                                                    <a-tag v-if="document._documentType === 'memo' && getUrgency(document.submitted_at) === 'critical'" color="error">Mendesak</a-tag>
+                                                    <a-tag v-else-if="document._documentType === 'memo' && getUrgency(document.submitted_at) === 'high'" color="warning">Segera</a-tag>
                                                     <a-tag v-else color="processing">Baru Masuk</a-tag>
                                                 </a-space>
                                             </a-col>
                                             <a-col :span="6" style="text-align: right;">
                                                 <a-avatar style="background-color: #6366f1; vertical-align: middle;">
-                                                    {{ memo.creator?.name?.charAt(0)?.toUpperCase() || 'U' }}
+                                                    {{ document.creator?.name?.charAt(0)?.toUpperCase() || 'U' }}
                                                 </a-avatar>
                                                 <div style="margin-top: 8px;">
                                                     <span class="am-item-text" style="font-size: 11px;">
-                                                        {{ formatRelative(memo.submitted_at) }}
+                                                        {{ formatRelative(document.submitted_at || document.created_at) }}
                                                     </span>
                                                 </div>
                                             </a-col>
@@ -447,28 +487,29 @@ const pagination = computed(() => {
                     </template>
 
                     <a-empty
-                        v-if="recentActions.length === 0"
+                        v-if="recentDecisions.length === 0"
                         description="Belum ada riwayat keputusan."
                     />
 
-                    <a-list v-else :data-source="recentActions" item-layout="horizontal">
-                        <template #renderItem="{ item: memo }">
+                    <a-list v-else :data-source="recentDecisions" item-layout="horizontal">
+                        <template #renderItem="{ item: document }">
                             <a-list-item style="padding: 4px 0; border-bottom: none;">
                                 <a-card hoverable class="am-item-card w-full" size="small">
-                                    <Link :href="route('memos.show', memo.id)" style="color: inherit; text-decoration: none;">
+                                    <Link :href="document._documentType === 'memo' ? route('memos.show', document.id) : route('approvals.ba.history', document.id)" style="color: inherit; text-decoration: none;">
                                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                             <div>
-                                                <div class="am-item-title" style="font-weight: 600; font-size: 13px;">{{ memo.title }}</div>
+                                                <div class="am-item-title" style="font-weight: 600; font-size: 13px;">{{ document.title }}</div>
                                                 <div style="margin-top: 4px; font-size: 11px;">
                                                     <a-space split="·">
-                                                        <span class="am-item-text">{{ memo.branch?.name }}</span>
-                                                        <a-badge :status="memo.status === 'approved' ? 'success' : 'error'" :text="memo.status === 'approved' ? 'Disetujui' : 'Ditolak'" />
+                                                        <a-tag :color="document._documentType === 'memo' ? 'blue' : 'purple'">{{ document._documentType === 'memo' ? 'Memo' : 'BA' }}</a-tag>
+                                                        <span class="am-item-text">{{ document.branch?.name }}</span>
+                                                        <a-badge :status="document.status === 'approved' ? 'success' : 'error'" :text="document.status === 'approved' ? 'Disetujui' : 'Ditolak'" />
                                                     </a-space>
                                                 </div>
                                             </div>
                                             <div style="text-align: right;">
                                                 <span class="am-item-text" style="font-size: 11px;">
-                                                    {{ formatDate(memo.updated_at) }}
+                                                    {{ formatDate(document.updated_at) }}
                                                 </span>
                                             </div>
                                         </div>

@@ -5,7 +5,10 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
     stats: Object,
+    submissionStats: { type: Object, default: () => ({}) },
     recentMemos: Array,
+    baStats: { type: Object, default: () => ({}) },
+    recentBA: { type: Array, default: () => [] },
     activity: Array,
     chartData: Object,
 });
@@ -72,6 +75,13 @@ const statusConfig = {
         label: 'Ditolak', 
         badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
     },
+};
+
+const baStatusConfig = {
+    draft: { label: 'Draft', class: 'text-slate-300' },
+    submitted: { label: 'Menunggu AM', class: 'text-amber-300' },
+    approved: { label: 'Disetujui', class: 'text-emerald-300' },
+    rejected: { label: 'Perlu Revisi', class: 'text-rose-300' },
 };
 
 const formatDate = (dateString) => {
@@ -193,7 +203,7 @@ const statusChartData = computed(() => [
                 <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
                     <span>{{ greeting.icon }} {{ greeting.text }}, <span class="dashboard-greeting-name">{{ userDisplayName }}</span>!</span>
                 </h1>
-                <p class="text-base font-medium text-slate-400 tracking-tight">Monitoring pergerakan memo antar cabang dan tata kelola master data sistem.</p>
+                <p class="text-base font-medium text-slate-400 tracking-tight">Monitoring pengajuan Memo dan Berita Acara serta tata kelola master data sistem.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- Date & Realtime Clock Pill -->
@@ -212,39 +222,39 @@ const statusChartData = computed(() => [
 
         <!-- KPI Metric Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <!-- Memo Masuk -->
+            <!-- Pengajuan Masuk -->
             <Link href="#" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-indigo-500/20 shadow-sm flex flex-col justify-between block transition-all">
                 <div>
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Memo Masuk</span>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengajuan Masuk</span>
                         <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         </div>
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
-                        <span class="text-3xl font-bold text-white tracking-tight">{{ stats.pending_approvals ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">Baru</span>
+                        <span class="text-3xl font-bold text-white tracking-tight">{{ submissionStats.received ?? 0 }}</span>
+                        <span class="text-xs font-medium text-slate-400">Memo + BA</span>
                     </div>
                 </div>
             </Link>
 
-            <!-- Card 1: Total Memo -->
+            <!-- Card 1: Total Pengajuan -->
             <Link href="#" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-indigo-500/20 shadow-sm flex flex-col justify-between block transition-all">
                 <div>
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Memo</span>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pengajuan</span>
                         <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
-                        <span class="text-3xl font-bold text-white tracking-tight">{{ stats.total_memos ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">Pengajuan</span>
+                        <span class="text-3xl font-bold text-white tracking-tight">{{ submissionStats.total ?? 0 }}</span>
+                        <span class="text-xs font-medium text-slate-400">Memo + BA</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-                    <span>{{ stats.approved_memos ?? 0 }} Disetujui</span>
-                    <span>{{ stats.draft_memos ?? 0 }} Draft</span>
+                    <span>{{ submissionStats.approved ?? 0 }} Disetujui</span>
+                    <span>{{ submissionStats.draft ?? 0 }} Draft</span>
                 </div>
             </Link>
 
@@ -258,7 +268,7 @@ const statusChartData = computed(() => [
                         </div>
                     </div>
                     <div class="mt-3 flex items-baseline gap-2">
-                        <span class="text-3xl font-bold text-amber-300 tracking-tight">{{ stats.pending_approvals ?? 0 }}</span>
+                        <span class="text-3xl font-bold text-amber-300 tracking-tight">{{ submissionStats.submitted ?? 0 }}</span>
                         <span class="text-xs font-medium text-amber-400/80">Perlu Review AM</span>
                     </div>
                 </div>
@@ -307,6 +317,53 @@ const statusChartData = computed(() => [
                 </div>
             </Link>
         </div>
+
+        <section class="mb-8 rounded-2xl border border-white/5 bg-slate-800/50 p-5 shadow-sm">
+            <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-bold text-white">Ringkasan Berita Acara</h2>
+                    <p class="mt-1 text-xs text-slate-400">Pemantauan BA dari seluruh cabang.</p>
+                </div>
+                <span class="text-xs text-slate-400">{{ baStats.total ?? 0 }} dokumen</span>
+            </div>
+
+            <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div class="rounded-xl border border-white/5 bg-slate-900/40 p-3">
+                    <div class="text-xs text-slate-400">Draft</div>
+                    <div class="mt-1 text-xl font-semibold text-slate-200">{{ baStats.draft ?? 0 }}</div>
+                </div>
+                <div class="rounded-xl border border-amber-500/10 bg-slate-900/40 p-3">
+                    <div class="text-xs text-amber-300">Menunggu AM</div>
+                    <div class="mt-1 text-xl font-semibold text-amber-300">{{ baStats.submitted ?? 0 }}</div>
+                </div>
+                <div class="rounded-xl border border-emerald-500/10 bg-slate-900/40 p-3">
+                    <div class="text-xs text-emerald-300">Disetujui</div>
+                    <div class="mt-1 text-xl font-semibold text-emerald-300">{{ baStats.approved ?? 0 }}</div>
+                </div>
+                <div class="rounded-xl border border-rose-500/10 bg-slate-900/40 p-3">
+                    <div class="text-xs text-rose-300">Perlu Revisi</div>
+                    <div class="mt-1 text-xl font-semibold text-rose-300">{{ baStats.rejected ?? 0 }}</div>
+                </div>
+            </div>
+
+            <div class="divide-y divide-white/5">
+                <Link
+                    v-for="ba in recentBA"
+                    :key="ba.id"
+                    :href="route('approvals.ba.history', ba.id)"
+                    class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                    <div class="min-w-0">
+                        <div class="truncate text-sm font-medium text-slate-100">{{ ba.title }}</div>
+                        <div class="mt-1 text-xs text-slate-400">{{ ba.code }} · {{ ba.branch?.name || '-' }} · {{ ba.creator?.name || '-' }}</div>
+                    </div>
+                    <span class="shrink-0 text-xs" :class="baStatusConfig[ba.status]?.class || 'text-slate-300'">
+                        {{ baStatusConfig[ba.status]?.label || ba.status }}
+                    </span>
+                </Link>
+                <p v-if="recentBA.length === 0" class="py-3 text-sm text-slate-400">Belum ada Berita Acara.</p>
+            </div>
+        </section>
 
         <!-- Activity Overview -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

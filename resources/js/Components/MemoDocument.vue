@@ -130,6 +130,7 @@ const handleImgError = (event) => {
         <div class="mb-10">
             <KipasMemo v-if="isKipas" :memo="memo" :items="memoItems" :document-signatures="documentSignatures" />
             <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" :approver-name="memoMeta.penyetuju_akhir" />
+            <div v-else-if="!memo.template" class="whitespace-pre-wrap text-justify">{{ memo.field_values?.body }}</div>
             <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
         </div>
 

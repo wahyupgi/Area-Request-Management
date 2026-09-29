@@ -5,6 +5,7 @@ namespace App\Features\Profile\Controllers;
 use App\Features\Profile\Requests\DeleteAccountRequest;
 use App\Features\Profile\Requests\ProfileUpdateRequest;
 use App\Http\Controllers\Controller;
+use App\Models\DigitalSignature;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status'          => session('status'),
+            'signature'       => DigitalSignature::where('user_id', $request->user()->id)->first(),
         ]);
     }
 

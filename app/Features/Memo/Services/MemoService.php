@@ -117,7 +117,7 @@ class MemoService
         $errors = [];
 
         foreach ($items as $itemIndex => $item) {
-            foreach ($template->field_schema as $field) {
+            foreach ($template?->field_schema ?? [] as $field) {
                 if ($field['required'] && empty($item[$field['key']])) {
                     $errors['field_values.items.' . $itemIndex . '.' . $field['key']] =
                         $field['label'] . ' pada item ' . ($itemIndex + 1) . ' wajib diisi.';

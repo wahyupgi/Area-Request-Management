@@ -14,12 +14,16 @@ const props = defineProps({
     templates: Array,
 });
 
+const blankTemplateValue = '__blank__';
+
 const form = useForm({
     code: null,
     template_id: undefined,
     title: '',
     field_values: {
         pengantar: '',
+        penutup: '',
+        body: '',
         items: [{}],
         meta: { direktorat: '', divisi: '', perihal: '', kepada: '', kepada_jabatan: '', penyetuju_akhir: '', lampiran: '' },
     },
@@ -27,6 +31,7 @@ const form = useForm({
 });
 
 const selectedTemplate = ref(null);
+const isBlankMemo = computed(() => form.template_id === blankTemplateValue);
 const attachment = ref(null);
 const autoPerihal = ref('');
 const { success } = useSweetAlert();
@@ -56,26 +61,32 @@ const groupedTemplates = computed(() => {
         if (!groups[cat]) groups[cat] = [];
         groups[cat].push(t);
     });
-    return Object.keys(groups).map(key => ({
+    return [...Object.keys(groups).map(key => ({
         label: key === 'GA' ? 'Divisi GA' : key,
         options: groups[key].map(t => ({
             value: t.id,
             label: `[${/^(fin|hrd)\s*-/i.test(String(t.name || '').trim()) ? (String(t.name).trim().toUpperCase().startsWith('FIN') ? 'FIN' : 'HRD') : String(t.category || '').trim()}] ${String(t.name || '').replace(/^(FIN|HRD)\s*-\s*/i, '')}`
         }))
-    }));
+    })), {
+        label: 'Lainnya',
+        options: [{ value: blankTemplateValue, label: 'Lainnya' }],
+    }];
 });
 
 watch(() => form.template_id, (val) => {
-    selectedTemplate.value = props.templates.find(t => t.id == val) || null;
+    selectedTemplate.value = (props.templates || []).find(t => t.id == val) || null;
+    const documentDefaults = selectedTemplate.value?.document_defaults || {};
     form.field_values = {
-        pengantar: selectedTemplate.value
+        pengantar: documentDefaults.pengantar || (selectedTemplate.value
             ? `Sehubungan dengan pengajuan ${selectedTemplate.value.name}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`
-            : '',
+            : ''),
+        penutup: documentDefaults.penutup || '',
+        body: '',
         items: [{}],
         meta: {
             ...defaultDocumentMeta,
-            ...(selectedTemplate.value?.document_defaults || {}),
-            perihal: selectedTemplate.value?.document_defaults?.perihal || form.title,
+            ...Object.fromEntries(Object.entries(documentDefaults).filter(([key]) => !['pengantar', 'penutup'].includes(key))),
+            perihal: documentDefaults.perihal || form.title,
         },
     };
     autoPerihal.value = form.title;
@@ -134,7 +145,11 @@ const selectAttachment = (event) => {
 
 const submit = () => {
     form.submit_after_save = false;
-    form.transform((data) => ({ ...data, attachment: attachment.value })).post(route('memos.store'), {
+    form.transform((data) => ({
+        ...data,
+        template_id: data.template_id === blankTemplateValue ? null : data.template_id,
+        attachment: attachment.value,
+    })).post(route('memos.store'), {
         forceFormData: true,
         onSuccess: () => success('Draft memo berhasil disimpan.'),
     });
@@ -142,7 +157,11 @@ const submit = () => {
 
 const submitAndSign = () => {
     form.submit_after_save = true;
-    form.transform((data) => ({ ...data, attachment: attachment.value })).post(route('memos.store'), { forceFormData: true });
+    form.transform((data) => ({
+        ...data,
+        template_id: data.template_id === blankTemplateValue ? null : data.template_id,
+        attachment: attachment.value,
+    })).post(route('memos.store'), { forceFormData: true });
 };
 </script>
 
@@ -157,7 +176,7 @@ const submitAndSign = () => {
             <!-- Template Selection -->
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
                 <h2 class="text-lg font-semibold mb-2">Pilih Template Memo</h2>
-                <p class="text-gray-500 text-sm mb-4">Pilih jenis memo sesuai kebutuhan cabang pada Divisi GA atau Ma-Link (FIN dan HRD).</p>
+                <p class="text-gray-500 text-sm mb-4">Pilih kategori dan template memo sesuai kebutuhan pengajuan cabang.</p>
                 <a-form-item 
                     :validateStatus="form.errors.template_id ? 'error' : ''" 
                     :help="form.errors.template_id"
@@ -174,7 +193,7 @@ const submitAndSign = () => {
                 </a-form-item>
             </a-card>
 
-            <a-row :gutter="24" v-if="selectedTemplate">
+            <a-row :gutter="24" v-if="selectedTemplate || isBlankMemo">
                 <a-col :xs="24" :lg="10" class="mb-6">
                     <div class="flex flex-col gap-6">
                         <!-- Informasi Memo -->
@@ -199,10 +218,13 @@ const submitAndSign = () => {
                             </a-form-item>
                             <a-form-item 
                                 label="Isi Memo" 
-                                class="mb-0"
+                                class="mb-3"
                                 extra="Teks ini akan tampil pada bagian “Sehubungan dengan” dan dapat diubah sesuai kebutuhan pengajuan."
                             >
                                 <a-textarea v-model:value="form.field_values.pengantar" :rows="5" />
+                            </a-form-item>
+                            <a-form-item v-if="selectedTemplate?.category === 'Keringanan Jasa'" label="Kalimat Penutup" class="mb-0">
+                                <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
                             </a-form-item>
                         </a-card>
 
@@ -250,7 +272,25 @@ const submitAndSign = () => {
 
                 <a-col :xs="24" :lg="14">
                     <!-- Dynamic Fields -->
-                    <a-card :bordered="false" class="rounded-lg shadow-sm">
+                    <a-card v-if="isBlankMemo" :bordered="false" class="rounded-lg shadow-sm">
+                        <h2 class="text-sm font-semibold mb-4">Isi Memo</h2>
+                        <a-form-item label="Isi / Rincian Memo" class="mb-0">
+                            <a-textarea v-model:value="form.field_values.body" :rows="12" placeholder="Tuliskan isi memo..." />
+                        </a-form-item>
+
+                        <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
+                            <a-button size="large" type="default" class="memo-save-draft-button" @click="submit" :loading="form.processing && !form.submit_after_save">
+                                <template #icon><save-outlined /></template>
+                                Simpan Draft
+                            </a-button>
+                            <a-button size="large" type="primary" @click="submitAndSign" :loading="form.processing && form.submit_after_save" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
+                                <template #icon><send-outlined /></template>
+                                Tanda Tangani &amp; Kirim ke AM
+                            </a-button>
+                        </div>
+                    </a-card>
+
+                    <a-card v-else :bordered="false" class="rounded-lg shadow-sm">
                         <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-gray-200 rounded-lg p-5 mb-4 relative">
                             <div class="flex justify-between items-center border-b pb-2 mb-4">
                                 <h3 class="font-semibold">Item {{ itemIndex + 1 }}</h3>

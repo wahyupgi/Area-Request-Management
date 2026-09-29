@@ -6,6 +6,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 const props = defineProps({
     memos: Array,
     stats: Object,
+    submissionStats: { type: Object, default: () => ({}) },
+    baStats: { type: Object, default: () => ({}) },
+    recentBA: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -67,23 +70,21 @@ const formattedTime = computed(() => {
 });
 
 const statusConfig = {
-    draft: { 
-        label: 'Draft', 
-        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-    },
-    submitted: { 
-        label: 'Menunggu AM', 
-        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-    },
-    approved: { 
-        label: 'Disetujui', 
-        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-    },
-    rejected: { 
-        label: 'Ditolak', 
-        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-    },
+    draft: { label: 'Draft' },
+    submitted: { label: 'Menunggu AM' },
+    approved: { label: 'Disetujui' },
+    rejected: { label: 'Ditolak' },
 };
+
+const documentColumns = [
+    { title: 'Kode Dokumen', dataIndex: 'code', key: 'code' },
+    { title: 'Perihal & Template', key: 'subject' },
+    { title: 'Jenis', key: 'type' },
+    { title: 'Tanggal Dibuat', key: 'created_at' },
+    { title: 'Status', key: 'status' },
+    { title: 'TTD Digital', key: 'signature' },
+    { title: 'Aksi', key: 'action', align: 'center' },
+];
 
 const statusTagColor = (status) => ({
     draft: 'default',
@@ -110,10 +111,17 @@ const formatTime = (dateString) => {
     });
 };
 
-const filteredMemos = computed(() => {
-    let list = props.memos || [];
+const documents = computed(() => [
+    ...(props.memos || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
+    ...(props.recentBA || []).map((ba) => ({ ...ba, _documentType: 'ba' })),
+].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)));
 
-    if (statusFilter.value !== 'all') {
+const filteredDocuments = computed(() => {
+    let list = documents.value;
+
+    if (statusFilter.value === 'received') {
+        list = list.filter(m => m.status !== 'draft');
+    } else if (statusFilter.value !== 'all') {
         list = list.filter(m => m.status === statusFilter.value);
     }
 
@@ -122,12 +130,18 @@ const filteredMemos = computed(() => {
         list = list.filter(m =>
             (m.code && m.code.toLowerCase().includes(q)) ||
             (m.title && m.title.toLowerCase().includes(q)) ||
-            (m.template?.name && m.template.name.toLowerCase().includes(q))
+            (m.template?.name && m.template.name.toLowerCase().includes(q)) ||
+            (m._documentType === 'ba' && 'berita acara'.includes(q))
         );
     }
 
     return list;
 });
+
+const focusDocuments = (status) => {
+    statusFilter.value = status;
+    document.getElementById('dashboard-documents')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 </script>
 
@@ -171,229 +185,414 @@ const filteredMemos = computed(() => {
         <!-- Stats Cards Grid -->
         <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             <!-- Memo Masuk -->
-            <Link :href="route('memos.index', { status: 'submitted' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block transition-all">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Memo Masuk</span>
-                <p class="text-2xl font-bold text-indigo-400 mt-1">{{ stats.submitted ?? 0 }}</p>
-                <p class="text-[11px] text-slate-500 mt-2">Menunggu Persetujuan AM</p>
-            </Link>
+            <button type="button" @click="focusDocuments('received')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengajuan Masuk</span>
+                <p class="text-2xl font-bold text-indigo-400 mt-1">{{ submissionStats.received ?? 0 }}</p>
+                <p class="text-[11px] text-slate-500 mt-2">Memo dan Berita Acara terkirim</p>
+            </button>
 
             <!-- Total -->
-            <Link :href="route('memos.index')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block transition-all">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Memo</span>
-                <p class="text-2xl font-bold text-white mt-1">{{ stats.total ?? 0 }}</p>
+            <button type="button" @click="focusDocuments('all')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pengajuan</span>
+                <p class="text-2xl font-bold text-white mt-1">{{ submissionStats.total ?? 0 }}</p>
                 <p class="text-[11px] text-slate-500 mt-2">Semua riwayat</p>
-            </Link>
+            </button>
 
             <!-- Draft -->
-            <Link :href="route('memos.index', { status: 'draft' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-slate-500/20 shadow-sm block transition-all">
+            <button type="button" @click="focusDocuments('draft')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-slate-500/20 shadow-sm block w-full text-left transition-all">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Draft Tersimpan</span>
-                <p class="text-2xl font-bold text-slate-300 mt-1">{{ stats.draft ?? 0 }}</p>
+                <p class="text-2xl font-bold text-slate-300 mt-1">{{ submissionStats.draft ?? 0 }}</p>
                 <p class="text-[11px] text-slate-500 mt-2">Belum diajukan</p>
-            </Link>
+            </button>
 
             <!-- Submitted / Pending -->
-            <Link :href="route('memos.index', { status: 'submitted' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-amber-500/20 shadow-sm block transition-all">
+            <button type="button" @click="focusDocuments('submitted')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-amber-500/20 shadow-sm block w-full text-left transition-all">
                 <span class="text-xs font-semibold text-amber-400/90 uppercase tracking-wider">Menunggu AM</span>
-                <p class="text-2xl font-bold text-amber-300 mt-1">{{ stats.submitted ?? 0 }}</p>
+                <p class="text-2xl font-bold text-amber-300 mt-1">{{ submissionStats.submitted ?? 0 }}</p>
                 <p class="text-[11px] text-amber-400/70 mt-2">Dalam proses verifikasi</p>
-            </Link>
+            </button>
 
             <!-- Approved -->
-            <Link :href="route('memos.index', { status: 'approved' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 shadow-sm block transition-all">
+            <button type="button" @click="focusDocuments('approved')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 shadow-sm block w-full text-left transition-all">
                 <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Disetujui</span>
-                <p class="text-2xl font-bold text-emerald-400 mt-1">{{ stats.approved ?? 0 }}</p>
+                <p class="text-2xl font-bold text-emerald-400 mt-1">{{ submissionStats.approved ?? 0 }}</p>
                 <p class="text-[11px] text-emerald-500/70 mt-2">Selesai & resmi</p>
-            </Link>
+            </button>
 
             <!-- Rejected -->
-            <Link :href="route('memos.index', { status: 'rejected' })" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-rose-500/20 shadow-sm block transition-all">
+            <button type="button" @click="focusDocuments('rejected')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-rose-500/20 shadow-sm block w-full text-left transition-all">
                 <span class="text-xs font-semibold text-rose-400 uppercase tracking-wider">Perlu Revisi</span>
-                <p class="text-2xl font-bold text-rose-400 mt-1">{{ stats.rejected ?? 0 }}</p>
+                <p class="text-2xl font-bold text-rose-400 mt-1">{{ submissionStats.rejected ?? 0 }}</p>
                 <p class="text-[11px] text-rose-500/70 mt-2">Ditolak Area Manager</p>
-            </Link>
+            </button>
         </div>
 
         <!-- Memos Table Section -->
-        <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 shadow-sm">
+            <a-card id="dashboard-documents" :bordered="false" class="kc-memo-list-card">
             <!-- Header & Controls -->
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-white/5">
+            <div class="kc-memo-list-heading">
                 <div>
-                    <h2 class="text-lg font-bold text-white tracking-tight">Daftar Memo Kantor Cabang</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Seluruh pengajuan memo yang dibuat dari akun kantor cabang Anda.</p>
+                    <h2 class="kc-memo-list-title">Daftar Dokumen Kantor Cabang</h2>
+                    <p class="kc-memo-list-description">Memo dan Berita Acara dari akun kantor cabang Anda.</p>
+                    <p class="mt-2 text-xs text-slate-400">
+                        BA: {{ baStats.draft ?? 0 }} draft · {{ baStats.submitted ?? 0 }} menunggu · {{ baStats.approved ?? 0 }} disetujui · {{ baStats.rejected ?? 0 }} revisi
+                    </p>
                 </div>
 
-                <!-- Live Search -->
-                <div class="relative w-full md:w-64">
-                    <input
-                        v-model="searchQuery"
-                        type="text"
-                        placeholder="Cari kode atau perihal..."
-                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                    />
-                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                </div>
+                <a-input-search
+                    v-model:value="searchQuery"
+                    class="kc-memo-search"
+                    placeholder="Cari kode, perihal, atau jenis..."
+                    allow-clear
+                />
             </div>
 
             <!-- Filter Status Tabs -->
-            <div class="flex items-center gap-1.5 py-3 overflow-x-auto text-xs border-b border-white/5 scrollbar-none">
-                <a-button size="small"
+            <a-space wrap class="kc-memo-status-filters">
+                <a-button
+                    size="small"
+                    :type="statusFilter === 'all' ? 'primary' : 'default'"
                     @click="statusFilter = 'all'"
-                    :class="[
-                        statusFilter === 'all'
-                            ? 'bg-indigo-600 text-white font-medium shadow-sm'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5',
-                        'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                    ]"
                 >
-                    Semua ({{ memos.length }})
+                    Semua ({{ documents.length }})
                 </a-button>
-                <a-button size="small"
+                <a-button
+                    size="small"
+                    :type="statusFilter === 'submitted' ? 'primary' : 'default'"
                     @click="statusFilter = 'submitted'"
-                    :class="[
-                        statusFilter === 'submitted'
-                            ? 'bg-amber-500/20 text-amber-300 font-medium border border-amber-500/30'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5',
-                        'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                    ]"
                 >
-                    Menunggu AM ({{ memos.filter(m => m.status === 'submitted').length }})
+                    Menunggu AM ({{ documents.filter(m => m.status === 'submitted').length }})
                 </a-button>
-                <a-button size="small"
+                <a-button
+                    size="small"
+                    :type="statusFilter === 'approved' ? 'primary' : 'default'"
                     @click="statusFilter = 'approved'"
-                    :class="[
-                        statusFilter === 'approved'
-                            ? 'bg-emerald-500/20 text-emerald-300 font-medium border border-emerald-500/30'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5',
-                        'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                    ]"
                 >
-                    Disetujui ({{ memos.filter(m => m.status === 'approved').length }})
+                    Disetujui ({{ documents.filter(m => m.status === 'approved').length }})
                 </a-button>
-                <a-button size="small"
+                <a-button
+                    size="small"
+                    :type="statusFilter === 'draft' ? 'primary' : 'default'"
                     @click="statusFilter = 'draft'"
-                    :class="[
-                        statusFilter === 'draft'
-                            ? 'bg-slate-700 text-white font-medium'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5',
-                        'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                    ]"
                 >
-                    Draft ({{ memos.filter(m => m.status === 'draft').length }})
+                    Draft ({{ documents.filter(m => m.status === 'draft').length }})
                 </a-button>
-                <a-button size="small"
+                <a-button
+                    size="small"
+                    :type="statusFilter === 'rejected' ? 'primary' : 'default'"
                     @click="statusFilter = 'rejected'"
-                    :class="[
-                        statusFilter === 'rejected'
-                            ? 'bg-rose-500/20 text-rose-300 font-medium border border-rose-500/30'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5',
-                        'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                    ]"
                 >
-                    Perlu Revisi ({{ memos.filter(m => m.status === 'rejected').length }})
+                    Perlu Revisi ({{ documents.filter(m => m.status === 'rejected').length }})
                 </a-button>
-            </div>
+            </a-space>
 
             <!-- Table -->
-            <div class="overflow-x-auto -mx-6">
-                <table class="memo-list-table w-full text-left table-head-pgi border border-white/10">
-                    <thead>
-                        <tr class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
-                            <th class="px-6 py-3.5">Kode Memo</th>
-                            <th class="px-6 py-3.5">Perihal & Template</th>
-                            <th class="px-6 py-3.5">Tanggal Dibuat</th>
-                            <th class="px-6 py-3.5">Status</th>
-                            <th class="px-6 py-3.5">TTD Digital</th>
-                            <th class="px-6 py-3.5 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5">
-                        <tr
-                            v-for="memo in filteredMemos"
-                            :key="memo.id"
-                            class="border-b border-white/10 hover:bg-white/[0.02] transition-colors group"
-                        >
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="font-mono text-xs font-semibold text-indigo-400 group-hover:text-indigo-300 transition-colors">
-                                    {{ memo.code }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 max-w-xs">
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-medium text-white line-clamp-1 group-hover:text-indigo-200 transition-colors">
-                                        {{ memo.title }}
-                                    </span>
-                                    <span v-if="memo.template" class="text-[11px] text-slate-400 mt-0.5">
-                                        {{ memo.template.name }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-400">
-                                <span>{{ formatDate(memo.created_at) }}</span>
-                                <span class="text-slate-600 block text-[11px]">{{ formatTime(memo.created_at) }}</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <a-tag :class="{ 'dashboard-status-draft': memo.status === 'draft' }" :color="statusTagColor(memo.status)">
-                                    {{ statusConfig[memo.status]?.label || memo.status }}
-                                </a-tag>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div v-if="memo.status === 'approved' || memo.latest_approval?.signature" class="flex items-center gap-2">
-                                    <img
-                                        v-if="memo.latest_approval?.signature"
-                                        :src="'/storage/' + memo.latest_approval.signature.signature_image"
-                                        alt="Tanda tangan digital AM"
-                                        class="h-8 w-20 object-contain rounded bg-white/10 p-1"
-                                    />
-                                    <span class="text-[11px] text-emerald-400">Sudah ditandatangani</span>
-                                </div>
-                                <span v-else class="text-[11px] text-slate-500">Belum ditandatangani</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <Link
-                                        v-if="memo.status === 'draft' || memo.status === 'rejected'"
-                                        :href="route('memos.edit', memo.id)"
-                                    >
-                                        <a-button type="primary" ghost size="small">Edit</a-button>
-                                    </Link>
-                                    <Link
-                                        :href="route('memos.show', memo.id)"
-                                    >
-                                        <a-button type="primary" ghost size="small">Detail</a-button>
-                                    </Link>
-                                </div>
-                            </td>
-                        </tr>
+            <a-table
+                class="kc-memo-table"
+                :data-source="filteredDocuments"
+                :columns="documentColumns"
+                :row-key="record => `${record._documentType}-${record.id}`"
+                :pagination="{ pageSize: 8, showSizeChanger: false }"
+                :scroll="{ x: 900 }"
+            >
+                <template #bodyCell="{ column, record }">
+                    <template v-if="column.key === 'code'">
+                        <span class="kc-memo-code">{{ record.code }}</span>
+                    </template>
+                    <template v-else-if="column.key === 'subject'">
+                        <div class="kc-memo-subject">
+                            <span>{{ record.title }}</span>
+                            <small v-if="record.template">{{ record.template.name }}</small>
+                        </div>
+                    </template>
+                    <template v-else-if="column.key === 'type'">
+                        <a-tag :color="record._documentType === 'memo' ? 'blue' : 'purple'">
+                            {{ record._documentType === 'memo' ? 'Memo' : 'Berita Acara' }}
+                        </a-tag>
+                    </template>
+                    <template v-else-if="column.key === 'created_at'">
+                        <div class="kc-memo-date">
+                            <span>{{ formatDate(record.created_at) }}</span>
+                            <small>{{ formatTime(record.created_at) }}</small>
+                        </div>
+                    </template>
+                    <template v-else-if="column.key === 'status'">
+                        <a-tag :color="statusTagColor(record.status)">
+                            {{ statusConfig[record.status]?.label || record.status }}
+                        </a-tag>
+                    </template>
+                    <template v-else-if="column.key === 'signature' && record._documentType === 'memo'">
+                        <a-space v-if="record.status === 'approved' || record.latest_approval?.signature" size="small">
+                            <img
+                                v-if="record.latest_approval?.signature"
+                                :src="'/storage/' + record.latest_approval.signature.signature_image"
+                                alt="Tanda tangan digital AM"
+                                class="kc-memo-signature"
+                            />
+                            <a-typography-text type="success">Sudah ditandatangani</a-typography-text>
+                        </a-space>
+                        <a-typography-text v-else type="secondary">Belum ditandatangani</a-typography-text>
+                    </template>
+                    <template v-else-if="column.key === 'signature'">-</template>
+                    <template v-else-if="column.key === 'action'">
+                        <a-space>
+                            <Link v-if="record._documentType === 'memo' && (record.status === 'draft' || record.status === 'rejected')" :href="route('memos.edit', record.id)">
+                                <a-button type="primary" ghost size="small">Edit</a-button>
+                            </Link>
+                            <Link :href="record._documentType === 'memo' ? route('memos.show', record.id) : route('approvals.ba.history', record.id)">
+                                <a-button type="primary" ghost size="small">Detail</a-button>
+                            </Link>
+                        </a-space>
+                    </template>
+                </template>
 
-                        <!-- Empty State -->
-                        <tr v-if="filteredMemos.length === 0">
-                            <td colspan="5" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center justify-center">
-                                    <div class="w-12 h-12 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center text-slate-500 mb-3">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                    </div>
-                                    <p class="text-sm font-medium text-slate-300">Belum ada memo yang sesuai</p>
-                                    <p class="text-xs text-slate-500 mt-1 max-w-sm">Mulai buat pengajuan memo baru atau sesuaikan filter Anda.</p>
-                                    <Link
-                                        :href="route('memos.create')"
-                                    >
-                                        <a-button type="primary">Buat Memo Sekarang</a-button>
-                                    </Link>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                <template #emptyText>
+                    <a-empty description="Belum ada dokumen yang sesuai">
+                        <Link :href="route('memos.create')">
+                            <a-button type="primary">Buat Memo Sekarang</a-button>
+                        </Link>
+                    </a-empty>
+                </template>
+            </a-table>
 
             <!-- Footer -->
-            <div class="pt-4 mt-2 border-t border-white/5 flex items-center justify-between text-xs text-slate-500">
-                <span>Menampilkan {{ filteredMemos.length }} dari {{ memos.length }} total memo</span>
-                <span class="hidden sm:inline">PT Pusat Gadai Indonesia</span>
+            <div class="kc-memo-list-footer">
+                <span>Menampilkan {{ filteredDocuments.length }} dari {{ documents.length }} dokumen terbaru</span>
+                <span class="kc-memo-footer-brand">PT Pusat Gadai Indonesia</span>
             </div>
-        </div>
+        </a-card>
         </div>
     </AuthenticatedLayout>
 </template>
 
-    
+<style>
+.kc-memo-list-card {
+    color: #e2e8f0;
+    background: rgba(30, 41, 59, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.kc-memo-list-card .ant-card-body {
+    padding: 24px;
+}
+
+.kc-memo-list-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kc-memo-list-title {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.kc-memo-list-description {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.kc-memo-search {
+    width: min(100%, 280px);
+}
+
+.kc-memo-status-filters {
+    margin: 16px 0;
+}
+
+.kc-memo-table {
+    margin-top: 20px;
+}
+
+.kc-memo-list-card .kc-memo-status-filters .ant-btn-default {
+    color: #cbd5e1;
+    background: #1e293b;
+    border-color: #475569;
+}
+
+.kc-memo-table .ant-table {
+    color: #e2e8f0;
+    background: transparent !important;
+}
+
+.kc-memo-table .ant-table-thead > tr > th {
+    color: #ffffff !important;
+    background: #203c5b !important;
+    border-bottom: 1px solid #34516e !important;
+}
+
+.kc-memo-table .ant-table-tbody > tr > td {
+    color: #e2e8f0 !important;
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.kc-memo-table .ant-table-tbody > tr:hover > td {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.kc-memo-table .ant-table-placeholder {
+    color: #cbd5e1;
+    background: transparent !important;
+}
+
+.kc-memo-table .ant-empty-description,
+.kc-memo-table .ant-empty-normal {
+    color: #cbd5e1;
+}
+
+.kc-memo-table .ant-pagination-item a,
+.kc-memo-table .ant-pagination-prev .ant-pagination-item-link,
+.kc-memo-table .ant-pagination-next .ant-pagination-item-link {
+    color: #cbd5e1;
+}
+
+.kc-memo-code {
+    color: #93c5fd;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.kc-memo-subject,
+.kc-memo-date {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kc-memo-subject > span {
+    overflow: hidden;
+    color: #f8fafc;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kc-memo-subject small,
+.kc-memo-date small {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.kc-memo-signature {
+    width: 80px;
+    height: 32px;
+    padding: 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.12);
+    object-fit: contain;
+}
+
+.kc-memo-list-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    color: #94a3b8;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+}
+
+html.theme-light .kc-memo-list-card {
+    color: #334155;
+    background: #ffffff !important;
+    border-color: #e2e8f0;
+}
+
+html.theme-light .kc-memo-list-heading,
+html.theme-light .kc-memo-list-footer {
+    border-color: #e2e8f0;
+}
+
+html.theme-light .kc-memo-list-title,
+html.theme-light .kc-memo-subject > span {
+    color: #0f172a;
+}
+
+html.theme-light .kc-memo-list-description,
+html.theme-light .kc-memo-subject small,
+html.theme-light .kc-memo-date small,
+html.theme-light .kc-memo-list-footer {
+    color: #64748b;
+}
+
+html.theme-light .kc-memo-list-card .kc-memo-status-filters .ant-btn-default {
+    color: #334155;
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+
+html.theme-light .kc-memo-table .ant-table {
+    color: #1e293b;
+    background: #ffffff !important;
+}
+
+html.theme-light .kc-memo-table .ant-table-thead > tr > th {
+    color: #ffffff !important;
+    background: #315a84 !important;
+    border-bottom: 1px solid #274b70 !important;
+}
+
+html.theme-light .kc-memo-table .ant-table-tbody > tr > td {
+    color: #1e293b !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html.theme-light .kc-memo-table .ant-table-tbody > tr:hover > td {
+    color: #0f172a !important;
+    background: #eff6ff !important;
+}
+
+html.theme-light .kc-memo-table .ant-table-placeholder,
+html.theme-light .kc-memo-table .ant-empty-description,
+html.theme-light .kc-memo-table .ant-empty-normal {
+    color: #64748b;
+    background: #ffffff !important;
+}
+
+html.theme-light .kc-memo-table .ant-pagination-item a,
+html.theme-light .kc-memo-table .ant-pagination-prev .ant-pagination-item-link,
+html.theme-light .kc-memo-table .ant-pagination-next .ant-pagination-item-link {
+    color: #334155;
+}
+
+html.theme-light .kc-memo-code {
+    color: #1677ff;
+}
+
+html.theme-light .kc-memo-signature {
+    background: #f1f5f9;
+}
+
+@media (max-width: 640px) {
+    .kc-memo-list-card .ant-card-body {
+        padding: 16px;
+    }
+
+    .kc-memo-list-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .kc-memo-search {
+        width: 100%;
+    }
+
+    .kc-memo-footer-brand {
+        display: none;
+    }
+}
+</style>
+
+

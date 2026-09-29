@@ -15,7 +15,7 @@ class StoreMemoRequest extends FormRequest
     {
         return [
             'code' => ['nullable', 'string', 'max:255'],
-            'template_id' => ['required', 'exists:memo_templates,id'],
+            'template_id' => ['nullable', 'exists:memo_templates,id'],
             'title' => ['required', 'string', 'max:255'],
             'field_values' => ['nullable', 'array'],
             'attachment' => ['nullable', 'file', 'max:10240'],

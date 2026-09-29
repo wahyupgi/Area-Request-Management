@@ -1,24 +1,40 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import BeritaAcaraDocument from '@/Components/BeritaAcaraDocument.vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { useTheme } from '@/composables/useTheme';
 import {
-    ArrowLeftOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined,
     PaperClipOutlined,
-    DownloadOutlined
+    DownloadOutlined,
+    PrinterOutlined
 } from '@ant-design/icons-vue';
 
 const props = defineProps({
     beritaAcara: Object,
 });
 
+const page = usePage();
+const { theme } = useTheme();
+const isKcUser = page.props.auth.user?.role === 'KC';
+const backUrl = isKcUser
+    ? route('berita-acara.index')
+    : route('approvals.pending', { tab: 'ba-approved' });
+const backLabel = isKcUser ? 'Daftar Berita Acara' : 'Antrean Berita Acara';
+
 const attachmentUrl = () => '/storage/' + props.beritaAcara.attachment_path;
 
 const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return `${days[date.getDay()]}, ${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+const printBA = () => {
+        window.print();
 };
 </script>
 
@@ -28,10 +44,13 @@ const formatDate = (dateString) => {
         <template #header>
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
-                    <Link :href="route('approvals.pending', { tab: 'ba-approved' })">
-                        <a-button type="text" shape="circle" title="Kembali ke Daftar Antrean">
-                            <template #icon><arrow-left-outlined /></template>
-                        </a-button>
+                    <Link :href="backUrl">
+                        <span
+                            class="ba-history-back-link"
+                            :style="{ color: theme === 'light' ? '#000000' : '#f8fafc' }"
+                        >
+                            {{ backLabel }}
+                        </span>
                     </Link>
                     <div>
                         <h1 class="text-base font-bold text-gray-800 mb-0 tracking-tight">Riwayat Berita Acara</h1>
@@ -44,6 +63,10 @@ const formatDate = (dateString) => {
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <a-button @click="printBA" class="hidden sm:inline-flex print:hidden">
+                        <template #icon><printer-outlined /></template>
+                        Cetak BA
+                    </a-button>
                     <a-tag v-if="beritaAcara.status === 'approved'" color="success" class="font-semibold">
                         <template #icon><check-circle-outlined /></template> Disetujui
                     </a-tag>
@@ -57,47 +80,20 @@ const formatDate = (dateString) => {
             </div>
         </template>
 
-        <div class="max-w-5xl mx-auto py-6">
-            <a-row :gutter="24">
-                <a-col :xs="24" :lg="16">
+        <div class="max-w-7xl mx-auto py-6 px-4">
+            <a-row :gutter="[24, 24]">
+                <a-col :xs="24" :lg="18">
                     <a-card :bordered="false" class="rounded-lg shadow-sm mb-6">
-                        <h2 class="text-lg font-bold border-b pb-2 mb-4">Dokumen Berita Acara</h2>
-                        
-                        <div class="bg-gray-50 p-6 rounded border border-gray-200 text-gray-800">
-                            <h3 class="text-center font-bold text-xl uppercase mb-1">BERITA ACARA</h3>
-                            <p class="text-center font-semibold mb-6">NO: {{ beritaAcara.code || '_________________' }}</p>
-
-                            <p class="mb-4">{{ beritaAcara.pengantar }}</p>
-
-                            <table class="w-full mb-6">
-                                <tbody>
-                                    <tr v-for="(item, idx) in beritaAcara.rincian_data" :key="idx">
-                                        <td class="py-1 w-1/3 font-semibold">{{ item.label }}</td>
-                                        <td class="py-1 w-4 text-center">:</td>
-                                        <td class="py-1">{{ item.value }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <div v-if="beritaAcara.keterangan_tambahan" class="mb-4">
-                                <p class="whitespace-pre-line">{{ beritaAcara.keterangan_tambahan }}</p>
-                            </div>
-
-                            <p class="mb-8">{{ beritaAcara.penutup }}</p>
-
-                            <div class="flex justify-between mt-12">
-                                <div class="text-center">
-                                    <p class="mb-16">Dibuat Oleh,</p>
-                                    <p class="font-bold underline mb-0">{{ beritaAcara.creator?.name || '_________________' }}</p>
-                                    <p class="text-sm">Kepala Cabang</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="mb-16">Mengetahui,</p>
-                                    <p class="font-bold underline mb-0">{{ beritaAcara.area_manager?.name || '_________________' }}</p>
-                                    <p class="text-sm">Area Manager</p>
-                                </div>
-                            </div>
+                        <div class="flex items-center justify-between border-b pb-2 mb-4">
+                            <h2 class="text-lg font-bold mb-0">Dokumen Berita Acara</h2>
+                            <a-button type="primary" @click="printBA" class="print:hidden">
+                                <template #icon><printer-outlined /></template>
+                                Cetak
+                            </a-button>
                         </div>
+
+                        <BeritaAcaraDocument :berita-acara="beritaAcara" />
+                        <!-- End BA Document -->
                     </a-card>
 
                     <a-card v-if="beritaAcara.attachment_path" title="Lampiran Pendukung" :bordered="false" class="rounded-lg shadow-sm">
@@ -123,7 +119,7 @@ const formatDate = (dateString) => {
                     </a-card>
                 </a-col>
 
-                <a-col :xs="24" :lg="8">
+                <a-col :xs="24" :lg="6">
                     <!-- Status Card -->
                     <a-card title="Status" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
                         <template #extra>
@@ -159,3 +155,28 @@ const formatDate = (dateString) => {
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+/* Semua styling BA document menggunakan Tailwind utility classes inline.
+   Style block ini hanya untuk override minimal jika diperlukan. */
+.ba-history-back-link {
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.ba-history-back-link:hover {
+    color: #e2e8f0;
+    text-decoration: underline;
+}
+
+:global(html.theme-light) .ba-history-back-link {
+    color: #000000;
+}
+
+:global(html.theme-light) .ba-history-back-link:hover {
+    color: #1f2937;
+}
+
+</style>

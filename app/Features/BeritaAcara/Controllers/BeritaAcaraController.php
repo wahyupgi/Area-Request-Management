@@ -23,14 +23,22 @@ class BeritaAcaraController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
+        $areaManager = $user->branch?->area?->areaManager;
 
         $validated = $request->validate([
+            'meta.template'         => 'required|in:permohonan_biaya_kost,revisi_absensi,penghapusan_barang_sitaan',
+            'meta.data'             => 'nullable|array',
+            'meta.data.rows'        => 'nullable|array',
+            'meta.data.rows.*'      => 'array',
+            'meta.data.rows.*.*'    => 'nullable|string|max:1000',
+            'meta.data.kronologi'   => 'nullable|string',
             'meta.direktorat'       => 'nullable|string|max:255',
             'meta.divisi'           => 'nullable|string|max:255',
             'meta.perihal'          => 'nullable|string|max:500',
             'meta.lampiran'         => 'nullable|string|max:255',
             'meta.kepada_nama'      => 'nullable|string|max:255',
             'meta.kepada_jabatan'   => 'nullable|string|max:255',
+            'meta.penyetuju_akhir'  => 'nullable|string|max:255',
             'title'                 => 'required|string|max:500',
             'pengantar'             => 'nullable|string',
             'rincian_data'          => 'nullable|array',
@@ -62,7 +70,7 @@ class BeritaAcaraController extends Controller
             'attachment_name'     => $attachmentName,
             'branch_id'           => $user->branch_id,
             'created_by'          => $user->id,
-            'area_manager_id'     => $user->area_manager_id ?? null,
+            'area_manager_id'     => $areaManager?->id,
             'status'              => BeritaAcara::STATUS_DRAFT,
         ]);
 

@@ -20,7 +20,7 @@ import {
     BankOutlined,
     TeamOutlined,
     LogoutOutlined,
-    DownOutlined,
+    RightOutlined,
     BarChartOutlined,
     AuditOutlined,
 } from '@ant-design/icons-vue';
@@ -91,10 +91,32 @@ const navItems = computed(() => {
     const items = [
         { name: 'Dashboard', route: 'dashboard', icon: DashboardOutlined, roles: ['KC', 'AM', 'ADMIN'] },
         { name: 'Profil Saya', route: 'profile.edit', icon: UserOutlined, roles: ['KC', 'AM', 'ADMIN'] },
-        { name: 'Memo Saya', route: 'memos.index', icon: FileTextOutlined, roles: ['KC'] },
-        { name: 'Buat Memo', route: 'memos.create', icon: FormOutlined, roles: ['KC'] },
-        { name: 'Berita Acara', route: 'berita-acara.index', icon: AuditOutlined, roles: ['KC'] },
-        { name: 'Pengajuan BA', route: 'berita-acara.create', icon: FormOutlined, roles: ['KC'] },
+        {
+            name: 'Pengajuan',
+            key: 'submissions',
+            icon: InboxOutlined,
+            roles: ['KC'],
+            children: [
+                {
+                    name: 'Memo',
+                    key: 'memo-submenu',
+                    icon: FileTextOutlined,
+                    children: [
+                        { name: 'Buat Memo', route: 'memos.create', icon: FormOutlined },
+                        { name: 'Riwayat Memo', route: 'memos.index', icon: FileTextOutlined },
+                    ],
+                },
+                {
+                    name: 'Berita Acara',
+                    key: 'berita-acara-submenu',
+                    icon: AuditOutlined,
+                    children: [
+                        { name: 'Buat BA', route: 'berita-acara.create', icon: FormOutlined },
+                        { name: 'Riwayat BA', route: 'berita-acara.index', icon: FileTextOutlined },
+                    ],
+                },
+            ],
+        },
         { name: 'Kotak Masuk', route: 'approvals.pending', icon: InboxOutlined, roles: ['AM'] },
         { name: 'Tanda Tangan', route: 'signature.index', icon: EditOutlined, roles: ['AM'] },
         { name: 'Pengaturan TTD', route: 'signature.settings', icon: SettingOutlined, roles: ['AM'] },
@@ -108,10 +130,29 @@ const navItems = computed(() => {
 });
 
 const selectedKeys = ref([]);
+const openKeys = ref([]);
+
+const findActiveNavItem = (items, currentRoute, parentKeys = []) => {
+    for (const item of items) {
+        if (item.children) {
+            const nestedItem = findActiveNavItem(item.children, currentRoute, [...parentKeys, item.key]);
+            if (nestedItem) return nestedItem;
+        } else if (
+            item.route === currentRoute ||
+            (item.route === 'memos.index' && ['memos.show', 'memos.edit'].includes(currentRoute))
+        ) {
+            return { selectedKey: item.route, parentKeys };
+        }
+    }
+
+    return null;
+};
 
 watch(() => route().current(), (currentRoute) => {
     if (currentRoute) {
-        selectedKeys.value = [currentRoute];
+        const activeItem = findActiveNavItem(navItems.value, currentRoute);
+        selectedKeys.value = [activeItem?.selectedKey || currentRoute];
+        openKeys.value = activeItem?.parentKeys || [];
     }
 }, { immediate: true });
 
@@ -187,7 +228,7 @@ const handleLogout = () => {
             :collapsedWidth="80"
         >
             <div class="flex items-center gap-3 px-5 py-4 border-b border-blue-500/80">
-                <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-10 h-10 rounded-lg object-contain border border-blue-700 bg-white p-0.5 shadow-sm flex-shrink-0" />
+                <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-10 h-10 rounded-lg object-contain border border-blue-700 p-0.5 shadow-sm flex-shrink-0" />
                 <div class="sidebar-brand-details flex flex-col min-w-0 text-white" :class="{ 'is-hidden': sidebarCollapsed }">
                     <span class="sidebar-brand-title text-xs font-bold text-white tracking-wider uppercase leading-tight">PUSAT GADAI INDONESIA</span>
                     <div class="flex items-center gap-1.5 mt-1 text-[10px] text-blue-100">
@@ -199,24 +240,74 @@ const handleLogout = () => {
 
             <a-menu
                 v-model:selectedKeys="selectedKeys"
+                v-model:openKeys="openKeys"
                 mode="inline"
                 theme="dark"
                 :style="{ background: isLightTheme ? '#2474ad' : '#155080' }"
                 class="border-r-0 pt-4"
             >
-                <a-menu-item
-                    v-for="item in navItems"
-                    :key="item.route"
-                    @click="onNavClick(item)"
-                    @mouseenter="onNavHover(item)"
-                    @mousedown="onNavPress(item)"
-                    @touchstart.passive="onNavPress(item)"
-                >
-                    <template #icon>
-                        <component :is="item.icon" />
-                    </template>
-                    {{ item.name }}
-                </a-menu-item>
+                <template #expandIcon="{ isOpen }">
+                    <RightOutlined :class="{ 'is-open': isOpen }" />
+                </template>
+                <template v-for="item in navItems" :key="item.key || item.route">
+                    <a-sub-menu v-if="item.children" :key="item.key">
+                        <template #icon>
+                            <component :is="item.icon" />
+                        </template>
+                        <template #title>{{ item.name }}</template>
+
+                        <template v-for="child in item.children" :key="child.key || child.route">
+                            <a-sub-menu v-if="child.children" :key="child.key">
+                                <template #icon>
+                                    <component :is="child.icon" />
+                                </template>
+                                <template #title>{{ child.name }}</template>
+
+                                <a-menu-item
+                                    v-for="nestedItem in child.children"
+                                    :key="nestedItem.route"
+                                    @click="onNavClick(nestedItem)"
+                                    @mouseenter="onNavHover(nestedItem)"
+                                    @mousedown="onNavPress(nestedItem)"
+                                    @touchstart.passive="onNavPress(nestedItem)"
+                                >
+                                    <template #icon>
+                                        <component :is="nestedItem.icon" />
+                                    </template>
+                                    {{ nestedItem.name }}
+                                </a-menu-item>
+                            </a-sub-menu>
+
+                            <a-menu-item
+                                v-else
+                                :key="child.route"
+                                @click="onNavClick(child)"
+                                @mouseenter="onNavHover(child)"
+                                @mousedown="onNavPress(child)"
+                                @touchstart.passive="onNavPress(child)"
+                            >
+                                <template #icon>
+                                    <component :is="child.icon" />
+                                </template>
+                                {{ child.name }}
+                            </a-menu-item>
+                        </template>
+                    </a-sub-menu>
+
+                    <a-menu-item
+                        v-else
+                        :key="item.route"
+                        @click="onNavClick(item)"
+                        @mouseenter="onNavHover(item)"
+                        @mousedown="onNavPress(item)"
+                        @touchstart.passive="onNavPress(item)"
+                    >
+                        <template #icon>
+                            <component :is="item.icon" />
+                        </template>
+                        {{ item.name }}
+                    </a-menu-item>
+                </template>
             </a-menu>
         </a-layout-sider>
 
@@ -461,6 +552,26 @@ html.theme-light .ant-layout-header {
     margin: 4px 8px !important;
     width: calc(100% - 16px) !important;
     font-weight: 600 !important;
+}
+
+.ant-menu-submenu-title {
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+.ant-menu-submenu-title .ant-menu-title-content {
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+.ant-menu-submenu-expand-icon {
+    transition: transform 0.2s ease;
+}
+
+.ant-menu-submenu-expand-icon.is-open {
+    transform: rotate(90deg);
 }
 
 .sidebar-brand-title {

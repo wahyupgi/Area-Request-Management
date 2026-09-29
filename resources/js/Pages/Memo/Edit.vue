@@ -29,7 +29,8 @@ const form = useForm({
     title: props.memo.title || '',
     field_values: {
         ...(props.memo.field_values || {}),
-        pengantar: props.memo.field_values?.pengantar || `Sehubungan dengan pengajuan ${props.memo.template?.name || props.memo.title || 'memo ini'}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`,
+        pengantar: props.memo.field_values?.pengantar || (props.memo.template ? `Sehubungan dengan pengajuan ${props.memo.template.name}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:` : ''),
+        body: props.memo.field_values?.body || '',
         items: initialItems,
         meta: {
             direktorat: props.memo.field_values?.meta?.direktorat || 'Regional Branch Office',
@@ -168,7 +169,7 @@ const deleteMemo = async () => {
                         </a-button>
                     </div>
                 </div>
-                <p class="text-sm text-gray-500 mb-0">Template: <span class="font-medium text-gray-800">{{ memo.template?.name }}</span></p>
+                <p class="text-sm text-gray-500 mb-0">Template: <span class="font-medium text-gray-800">{{ memo.template?.name || 'Memo Kosong' }}</span></p>
             </a-card>
 
             <!-- Edit Form -->
@@ -177,7 +178,7 @@ const deleteMemo = async () => {
                     <a-col :xs="24" :lg="10" class="mb-6">
                         <div class="flex flex-col gap-6">
                             <!-- Informasi Memo -->
-                            <a-card v-if="memo.template" :bordered="false" class="memo-compact-field-card rounded-lg shadow-sm">
+                            <a-card :bordered="false" class="memo-compact-field-card rounded-lg shadow-sm">
                                 <h2 class="text-sm font-semibold mb-4">Informasi Memo</h2>
                                 <a-form-item label="Nomor Memo" extra="Nomor memo otomatis dikelola oleh Area Manager (AM)." :validateStatus="form.errors.code ? 'error' : ''" :help="form.errors.code" class="mb-3">
                                     <a-input v-model:value="form.code" placeholder="Diatur otomatis oleh AM" size="large" />
@@ -298,6 +299,24 @@ const deleteMemo = async () => {
                                 <template #icon><plus-outlined /></template>
                                 Tambah Item
                             </a-button>
+
+                            <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
+                                <a-button size="large" type="default" class="memo-save-draft-button" @click="save" :loading="form.processing && !showSignatureDialog">
+                                    <template #icon><save-outlined /></template>
+                                    Simpan Perubahan
+                                </a-button>
+                                <a-button size="large" type="primary" @click="submitMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
+                                    <template #icon><send-outlined /></template>
+                                    Tanda Tangani &amp; Kirim ke AM
+                                </a-button>
+                            </div>
+                        </a-card>
+
+                        <a-card v-else :bordered="false" class="rounded-lg shadow-sm">
+                            <h2 class="text-sm font-semibold mb-4">Isi Memo</h2>
+                            <a-form-item label="Isi / Rincian Memo" class="mb-0">
+                                <a-textarea v-model:value="form.field_values.body" :rows="12" placeholder="Tuliskan isi memo..." />
+                            </a-form-item>
 
                             <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
                                 <a-button size="large" type="default" class="memo-save-draft-button" @click="save" :loading="form.processing && !showSignatureDialog">

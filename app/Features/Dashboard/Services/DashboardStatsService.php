@@ -4,16 +4,19 @@ namespace App\Features\Dashboard\Services;
 
 use App\Models\Area;
 use App\Models\Branch;
+use App\Models\BeritaAcara;
 use App\Models\Memo;
 use App\Models\MemoTemplate;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 
 class DashboardStatsService
 {
     public function forKcUser(User $user): array
     {
+        $baScope = BeritaAcara::query()->where('created_by', $user->id);
         $memos = Memo::with([
             'template:id,name',
             'branch:id,name',
@@ -24,21 +27,33 @@ class DashboardStatsService
             ->orderByDesc('updated_at')
             ->limit(8)
             ->get();
+        $memoStats = Memo::where('created_by', $user->id)
+            ->selectRaw(
+                "COUNT(*) as total, ".
+                "SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft, ".
+                "SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted, ".
+                "SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved, ".
+                "SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected"
+            )
+            ->first();
+        $baStats = $this->beritaAcaraStats(clone $baScope);
 
         return [
             'memos' => $memos,
-            'stats' => [
-                'total' => $memos->count(),
-                'draft' => $memos->where('status', Memo::STATUS_DRAFT)->count(),
-                'submitted' => $memos->where('status', Memo::STATUS_SUBMITTED)->count(),
-                'approved' => $memos->where('status', Memo::STATUS_APPROVED)->count(),
-                'rejected' => $memos->where('status', Memo::STATUS_REJECTED)->count(),
-            ],
+            'submissionStats' => $this->combineSubmissionStats($memoStats, $baStats),
+            'baStats' => $baStats,
+            'recentBA' => (clone $baScope)
+                ->with('branch:id,name')
+                ->orderByDesc('updated_at')
+                ->limit(6)
+                ->get(),
+            'stats' => $this->memoStats($memoStats),
         ];
     }
 
     public function forAmUser(User $user): array
     {
+        $baScope = BeritaAcara::query()->where('area_manager_id', $user->id);
         $pendingMemos = Memo::with([
             'template:id,name',
             'branch:id,name',
@@ -47,6 +62,13 @@ class DashboardStatsService
         ])
             ->where('area_manager_id', $user->id)
             ->where('status', Memo::STATUS_SUBMITTED)
+            ->orderByDesc('submitted_at')
+            ->limit(6)
+            ->get();
+
+        $pendingBA = (clone $baScope)
+            ->with(['branch:id,name', 'creator:id,name'])
+            ->where('status', BeritaAcara::STATUS_SUBMITTED)
             ->orderByDesc('submitted_at')
             ->limit(6)
             ->get();
@@ -65,17 +87,28 @@ class DashboardStatsService
 
         $actionStats = Memo::where('area_manager_id', $user->id)
             ->selectRaw(
-                "SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending, ".
+                "COUNT(*) as total, ".
+                "SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft, ".
+                "SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted, ".
                 "SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved, ".
                 "SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected"
             )
             ->first();
+        $baStats = $this->beritaAcaraStats(clone $baScope);
 
         return [
             'pendingMemos' => $pendingMemos,
+            'pendingBA' => $pendingBA,
             'recentActions' => $recentActions,
+            'submissionStats' => $this->combineSubmissionStats($actionStats, $baStats),
+            'baStats' => $baStats,
+            'recentBA' => (clone $baScope)
+                ->with(['branch:id,name', 'creator:id,name'])
+                ->orderByDesc('updated_at')
+                ->limit(6)
+                ->get(),
             'stats' => [
-                'pending' => (int) ($actionStats->pending ?? 0),
+                'pending' => (int) ($actionStats->submitted ?? 0),
                 'approved' => (int) ($actionStats->approved ?? 0),
                 'rejected' => (int) ($actionStats->rejected ?? 0),
             ],
@@ -84,6 +117,7 @@ class DashboardStatsService
 
     public function forAdmin(): array
     {
+        $baScope = BeritaAcara::query();
         $memoStats = Memo::selectRaw(
             "COUNT(*) as total, ".
             "SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved, ".
@@ -126,7 +160,16 @@ class DashboardStatsService
             'year' => $this->buildChartPeriod($chartMemos, 'year'),
         ];
 
+        $baStats = $this->beritaAcaraStats(clone $baScope);
+
         return [
+            'submissionStats' => $this->combineSubmissionStats($memoStats, $baStats),
+            'baStats' => $baStats,
+            'recentBA' => (clone $baScope)
+                ->with(['branch:id,name', 'creator:id,name'])
+                ->orderByDesc('updated_at')
+                ->limit(6)
+                ->get(),
             'stats' => [
                 'total_memos' => (int) ($memoStats->total ?? 0),
                 'approved_memos' => (int) ($memoStats->approved ?? 0),
@@ -142,6 +185,47 @@ class DashboardStatsService
             'activity' => $activity,
             'chartData' => $chartData,
         ];
+    }
+
+    private function beritaAcaraStats(Builder $query): array
+    {
+        $stats = $query->selectRaw(
+            "COUNT(*) as total, ".
+            "SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft, ".
+            "SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted, ".
+            "SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved, ".
+            "SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected"
+        )->first();
+
+        return [
+            'total' => (int) ($stats->total ?? 0),
+            'draft' => (int) ($stats->draft ?? 0),
+            'submitted' => (int) ($stats->submitted ?? 0),
+            'approved' => (int) ($stats->approved ?? 0),
+            'rejected' => (int) ($stats->rejected ?? 0),
+        ];
+    }
+
+    private function memoStats(object $stats): array
+    {
+        return [
+            'total' => (int) ($stats->total ?? 0),
+            'draft' => (int) ($stats->draft ?? 0),
+            'submitted' => (int) ($stats->submitted ?? 0),
+            'approved' => (int) ($stats->approved ?? 0),
+            'rejected' => (int) ($stats->rejected ?? 0),
+        ];
+    }
+
+    private function combineSubmissionStats(object $memoStats, array $baStats): array
+    {
+        $stats = $this->memoStats($memoStats);
+        foreach (['total', 'draft', 'submitted', 'approved', 'rejected'] as $key) {
+            $stats[$key] += $baStats[$key];
+        }
+        $stats['received'] = $stats['total'] - $stats['draft'];
+
+        return $stats;
     }
 
     private function buildChartPeriod(Collection $memos, string $period): array

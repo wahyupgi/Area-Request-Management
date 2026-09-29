@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import BeritaAcaraDocument from '@/Components/BeritaAcaraDocument.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import {
@@ -7,7 +8,8 @@ import {
     CheckCircleOutlined,
     CloseCircleOutlined,
     PaperClipOutlined,
-    DownloadOutlined
+    DownloadOutlined,
+    EditOutlined
 } from '@ant-design/icons-vue';
 
 const props = defineProps({
@@ -16,11 +18,32 @@ const props = defineProps({
 
 const showRejectModal = ref(false);
 const showApproveConfirm = ref(false);
+const showDocumentModal = ref(false);
 
 const approveForm = useForm({});
+const documentForm = useForm({
+    code: props.beritaAcara.code || '',
+    title: props.beritaAcara.title || '',
+    meta: {
+        direktorat: props.beritaAcara.meta?.direktorat || '',
+        divisi: props.beritaAcara.meta?.divisi || '',
+        perihal: props.beritaAcara.meta?.perihal || '',
+        kepada_nama: props.beritaAcara.meta?.kepada_nama || '',
+        kepada_jabatan: props.beritaAcara.meta?.kepada_jabatan || '',
+        penyetuju_akhir: props.beritaAcara.meta?.penyetuju_akhir || '',
+        lampiran: props.beritaAcara.meta?.lampiran || '',
+    },
+});
 const rejectForm = useForm({
     notes: '',
 });
+
+const saveDocumentInfo = () => {
+    documentForm.post(route('approvals.ba.updateCode', props.beritaAcara.id), {
+        preserveScroll: true,
+        onSuccess: () => { showDocumentModal.value = false; },
+    });
+};
 
 const handleApprove = () => {
     approveForm.post(route('approvals.ba.approve', props.beritaAcara.id), {
@@ -78,47 +101,12 @@ const formatDate = (dateString) => {
             </div>
         </template>
 
-        <div class="max-w-5xl mx-auto py-6">
-            <a-row :gutter="24">
-                <a-col :xs="24" :lg="16">
+        <div class="max-w-7xl mx-auto py-6 px-4">
+            <a-row :gutter="[24, 24]">
+                <a-col :xs="24" :lg="18">
                     <a-card :bordered="false" class="rounded-lg shadow-sm mb-6">
-                        <h2 class="text-lg font-bold border-b pb-2 mb-4">Draft Dokumen Berita Acara</h2>
-                        
-                        <div class="bg-gray-50 p-6 rounded border border-gray-200 text-gray-800">
-                            <h3 class="text-center font-bold text-xl uppercase mb-1">BERITA ACARA</h3>
-                            <p class="text-center font-semibold mb-6">NO: {{ beritaAcara.code || '_________________' }}</p>
-
-                            <p class="mb-4">{{ beritaAcara.pengantar }}</p>
-
-                            <table class="w-full mb-6">
-                                <tbody>
-                                    <tr v-for="(item, idx) in beritaAcara.rincian_data" :key="idx">
-                                        <td class="py-1 w-1/3 font-semibold">{{ item.label }}</td>
-                                        <td class="py-1 w-4 text-center">:</td>
-                                        <td class="py-1">{{ item.value }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <div v-if="beritaAcara.keterangan_tambahan" class="mb-4">
-                                <p class="whitespace-pre-line">{{ beritaAcara.keterangan_tambahan }}</p>
-                            </div>
-
-                            <p class="mb-8">{{ beritaAcara.penutup }}</p>
-
-                            <div class="flex justify-between mt-12">
-                                <div class="text-center">
-                                    <p class="mb-16">Dibuat Oleh,</p>
-                                    <p class="font-bold underline mb-0">{{ beritaAcara.creator?.name || '_________________' }}</p>
-                                    <p class="text-sm">Kepala Cabang</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="mb-16">Mengetahui,</p>
-                                    <p class="font-bold underline mb-0">{{ beritaAcara.area_manager?.name || '_________________' }}</p>
-                                    <p class="text-sm">Area Manager</p>
-                                </div>
-                            </div>
-                        </div>
+                        <h2 class="text-lg font-bold border-b pb-2 mb-4">Dokumen Berita Acara</h2>
+                        <BeritaAcaraDocument :berita-acara="beritaAcara" />
                     </a-card>
 
                     <a-card v-if="beritaAcara.attachment_path" title="Lampiran Pendukung" :bordered="false" class="rounded-lg shadow-sm">
@@ -144,7 +132,7 @@ const formatDate = (dateString) => {
                     </a-card>
                 </a-col>
 
-                <a-col :xs="24" :lg="8">
+                <a-col :xs="24" :lg="6">
                     <!-- Status Card -->
                     <a-card title="Keputusan Persetujuan" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
                         <template #extra>
@@ -175,19 +163,63 @@ const formatDate = (dateString) => {
                     </a-card>
 
                     <!-- Meta Data -->
-                    <a-card title="Informasi Meta Dokumen" :bordered="false" class="rounded-lg shadow-sm" size="small">
+                    <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm" size="small">
+                        <template #extra>
+                            <a-button v-if="beritaAcara.status === 'submitted'" type="link" size="small" @click="showDocumentModal = true">
+                                <template #icon><edit-outlined /></template> Edit
+                            </a-button>
+                        </template>
                         <div class="space-y-2 text-sm">
-                            <div class="flex justify-between"><span class="text-gray-500">Judul</span><span class="font-medium text-right max-w-[150px] truncate" :title="beritaAcara.title">{{ beritaAcara.title }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Direktorat</span><span class="font-medium">{{ beritaAcara.meta?.direktorat || '-' }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Divisi</span><span class="font-medium">{{ beritaAcara.meta?.divisi || '-' }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Kepada</span><span class="font-medium truncate">{{ beritaAcara.meta?.kepada_nama || '-' }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Jabatan</span><span class="font-medium">{{ beritaAcara.meta?.kepada_jabatan || '-' }}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Tanggal Buat</span><span>{{ formatDate(beritaAcara.created_at) }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Direktorat</span><span class="font-medium truncate max-w-[150px]">{{ beritaAcara.meta?.direktorat || '(default)' }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Divisi</span><span class="font-medium truncate max-w-[150px]">{{ beritaAcara.meta?.divisi || '(default)' }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Perihal</span><span class="font-medium truncate max-w-[150px]">{{ beritaAcara.meta?.perihal || beritaAcara.title }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Lampiran</span><span class="font-medium truncate max-w-[150px]">{{ beritaAcara.meta?.lampiran || '(default)' }}</span></div>
                         </div>
                     </a-card>
                 </a-col>
             </a-row>
         </div>
+
+        <a-modal
+            v-model:open="showDocumentModal"
+            title="Edit Informasi Dokumen"
+            :confirmLoading="documentForm.processing"
+            @ok="saveDocumentInfo"
+            okText="Simpan Perubahan"
+            cancelText="Batal"
+            centered
+        >
+            <p class="text-sm text-gray-500 mb-4">Perubahan ini akan tampil di header dokumen BA.</p>
+            <a-form layout="vertical">
+                <a-form-item label="Nomor BA" :help="documentForm.errors.code" :validateStatus="documentForm.errors.code ? 'error' : ''" class="mb-3">
+                    <a-input v-model:value="documentForm.code" placeholder="Masukkan nomor BA..." />
+                </a-form-item>
+                <a-form-item label="Judul" :help="documentForm.errors.title" :validateStatus="documentForm.errors.title ? 'error' : ''" class="mb-3">
+                    <a-input v-model:value="documentForm.title" placeholder="Masukkan judul BA..." />
+                </a-form-item>
+                <a-form-item label="Direktorat" :help="documentForm.errors['meta.direktorat']" :validateStatus="documentForm.errors['meta.direktorat'] ? 'error' : ''" class="mb-3">
+                    <a-input v-model:value="documentForm.meta.direktorat" placeholder="Contoh: Regional Branch Office" />
+                </a-form-item>
+                <a-form-item label="Divisi" :help="documentForm.errors['meta.divisi']" :validateStatus="documentForm.errors['meta.divisi'] ? 'error' : ''" class="mb-3">
+                    <a-input v-model:value="documentForm.meta.divisi" placeholder="Contoh: Branch Leader / HRD" />
+                </a-form-item>
+                <a-form-item label="Perihal" :help="documentForm.errors['meta.perihal']" :validateStatus="documentForm.errors['meta.perihal'] ? 'error' : ''" class="mb-3">
+                    <a-input v-model:value="documentForm.meta.perihal" :placeholder="documentForm.title" />
+                </a-form-item>
+                <a-form-item label="Kepada (Yth.)" :help="documentForm.errors['meta.kepada_nama']" :validateStatus="documentForm.errors['meta.kepada_nama'] ? 'error' : ''" class="mb-3">
+                    <a-input v-model:value="documentForm.meta.kepada_nama" placeholder="Nama penerima" />
+                </a-form-item>
+                <a-form-item label="Jabatan Penerima" :help="documentForm.errors['meta.kepada_jabatan']" :validateStatus="documentForm.errors['meta.kepada_jabatan'] ? 'error' : ''" class="mb-3">
+                    <a-input v-model:value="documentForm.meta.kepada_jabatan" placeholder="Jabatan penerima" />
+                </a-form-item>
+                <a-form-item label="Penyetuju Akhir" :help="documentForm.errors['meta.penyetuju_akhir']" :validateStatus="documentForm.errors['meta.penyetuju_akhir'] ? 'error' : ''" class="mb-3">
+                    <a-input v-model:value="documentForm.meta.penyetuju_akhir" placeholder="Nama penyetuju akhir" />
+                </a-form-item>
+                <a-form-item label="Lampiran" :help="documentForm.errors['meta.lampiran']" :validateStatus="documentForm.errors['meta.lampiran'] ? 'error' : ''" class="mb-0">
+                    <a-input v-model:value="documentForm.meta.lampiran" placeholder="Contoh: 1 Lembar, 3 Berkas" />
+                </a-form-item>
+            </a-form>
+        </a-modal>
 
         <!-- Approve Modal -->
         <a-modal
@@ -202,6 +234,13 @@ const formatDate = (dateString) => {
             centered
         >
             <p class="text-gray-600">Apakah Anda yakin ingin menyetujui Berita Acara ini?</p>
+            <a-alert
+                v-if="approveForm.errors.signature"
+                class="mt-3"
+                type="error"
+                show-icon
+                :message="approveForm.errors.signature"
+            />
         </a-modal>
 
         <!-- Reject Modal -->

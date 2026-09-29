@@ -5,6 +5,13 @@ use App\Features\Approval\Controllers\BeritaAcaraApprovalController;
 use App\Features\Signature\Controllers\SignatureController;
 use Illuminate\Support\Facades\Route;
 
+// AM & KC manage their own digital signatures.
+Route::middleware('role:AM,KC')->group(function () {
+    Route::get('/signature', [SignatureController::class, 'index'])->name('signature.index');
+    Route::post('/signature', [SignatureController::class, 'store'])->name('signature.store');
+    Route::delete('/signature', [SignatureController::class, 'destroy'])->name('signature.destroy');
+});
+
 // AM-only routes
 Route::middleware('role:AM')->group(function () {
     // Approval
@@ -16,13 +23,11 @@ Route::middleware('role:AM')->group(function () {
 
     // Berita Acara Approval for AM
     Route::get('/approvals/ba/{beritaAcara}/review', [BeritaAcaraApprovalController::class, 'review'])->name('approvals.ba.review');
+    Route::post('/approvals/ba/{beritaAcara}/code', [BeritaAcaraApprovalController::class, 'updateCode'])->name('approvals.ba.updateCode');
     Route::post('/approvals/ba/{beritaAcara}/approve', [BeritaAcaraApprovalController::class, 'approve'])->name('approvals.ba.approve');
     Route::post('/approvals/ba/{beritaAcara}/reject', [BeritaAcaraApprovalController::class, 'reject'])->name('approvals.ba.reject');
 
-    // Signature management (AM manages their own signature)
-    Route::get('/signature', [SignatureController::class, 'index'])->name('signature.index');
-    Route::post('/signature', [SignatureController::class, 'store'])->name('signature.store');
-    Route::delete('/signature', [SignatureController::class, 'destroy'])->name('signature.destroy');
+    // Template signature schema management
     Route::get('/signature/settings', [SignatureController::class, 'settings'])->name('signature.settings');
     Route::put('/signature/settings/{template}', [SignatureController::class, 'updateSettings'])->name('signature.settings.update');
 });

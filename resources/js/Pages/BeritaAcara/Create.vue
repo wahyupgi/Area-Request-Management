@@ -1,20 +1,30 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
+import { watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 
 const { success } = useSweetAlert();
 
+const templates = [
+    { value: 'permohonan_biaya_kost', label: 'Permohonan Biaya Kost' },
+    { value: 'revisi_absensi', label: 'Permintaan Revisi Absensi' },
+    { value: 'penghapusan_barang_sitaan', label: 'Penghapusan Barang Sitaan' },
+];
+
 const form = useForm({
     title: '',
     meta: {
+        template: undefined,
         direktorat: 'Operasional',
         divisi: 'Support',
         perihal: 'Berita Acara Permohonan',
         lampiran: '-',
         kepada_nama: '',
         kepada_jabatan: '',
+        penyetuju_akhir: '',
+        data: { rows: [], kronologi: '' },
     },
     pengantar: 'Sehubungan dengan adanya berita acara ini, saya ingin memberitahukan bahwa...',
     rincian_data: [
@@ -29,6 +39,54 @@ const form = useForm({
     submit_after_save: false,
 });
 
+watch(() => form.meta.template, (template) => {
+    const selected = templates.find((item) => item.value === template);
+    if (!selected) return;
+
+    form.title = selected.label;
+    form.meta.perihal = selected.label;
+    form.meta.data = { rows: [], kronologi: '' };
+
+    if (template === 'permohonan_biaya_kost') {
+        form.meta.direktorat = 'Regional Branch Office';
+        form.meta.divisi = 'Branch Leader';
+        form.meta.kepada_nama = 'Bpk. Nugroho Samudra Sujatmiko, Ko';
+        form.meta.kepada_jabatan = 'Senior Executive Vice President Bisnis dan Operasional';
+        form.pengantar = 'Sehubungan dengan kondisi yang mengharuskan saya untuk tinggal di luar kota, maka dengan ini saya mengajukan permohonan biaya kost dengan data sebagai berikut:';
+        form.rincian_data = [
+            { label: 'Nama', value: '' },
+            { label: 'NIK', value: '' },
+            { label: 'Nama Pemilik', value: '' },
+            { label: 'Nama Kost', value: '' },
+            { label: 'No. Tlp', value: '' },
+            { label: 'Alamat Kost', value: '' },
+            { label: 'Biaya Kost', value: '' },
+        ];
+        form.keterangan_tambahan = 'Berdasarkan data tersebut, saya mengajukan permohonan agar biaya kost untuk bulan-bulan berikutnya dapat ditransfer sesuai ketentuan yang berlaku.';
+        form.penutup = 'Demikian internal memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Mohon dibantu pembayaran melalui rekening yang tertera. Terima kasih atas perhatian dan kerjasamanya.';
+    } else if (template === 'revisi_absensi') {
+        form.meta.direktorat = '';
+        form.meta.divisi = 'HRD';
+        form.meta.kepada_nama = 'Kepala Cabang';
+        form.meta.kepada_jabatan = 'HRD';
+        form.pengantar = 'Sehubungan dengan adanya kendala absensi, dengan ini kami mengajukan permohonan revisi absensi dengan data sebagai berikut:';
+        form.rincian_data = [];
+        form.meta.data.rows = [{ nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }];
+        form.keterangan_tambahan = '';
+        form.penutup = 'Demikian berita acara ini saya buat dengan sebenarnya. Terima kasih atas perhatian dan kerjasamanya, saya berharap dapat dibantu memakluminya.';
+    } else {
+        form.meta.direktorat = 'Regional Branch Office';
+        form.meta.divisi = 'Branch Leader';
+        form.meta.kepada_nama = 'Bpk. Nugroho Samudra Sujatmiko, Ko';
+        form.meta.kepada_jabatan = 'Senior Executive Vice President Bisnis dan Operasional';
+        form.pengantar = 'Sehubungan dengan adanya penyitaan barang gadai, bersama ini kami sampaikan data barang sebagai berikut:';
+        form.rincian_data = [];
+        form.meta.data.rows = [{ cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }];
+        form.keterangan_tambahan = '';
+        form.penutup = 'Demikian berita acara ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
+    }
+});
+
 const selectAttachment = (event) => {
     form.attachment = event.target.files[0] || null;
 };
@@ -39,6 +97,17 @@ const addRincian = () => {
 
 const removeRincian = (index) => {
     form.rincian_data.splice(index, 1);
+};
+
+const addTemplateRow = () => {
+    const row = form.meta.template === 'revisi_absensi'
+        ? { nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }
+        : { cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' };
+    form.meta.data.rows.push(row);
+};
+
+const removeTemplateRow = (index) => {
+    form.meta.data.rows.splice(index, 1);
 };
 
 const submit = () => {
@@ -66,47 +135,64 @@ const submitAndSign = () => {
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
-            <a-row :gutter="24">
+            <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
+                <h2 class="text-lg font-semibold mb-2">Pilih Template Berita Acara</h2>
+                <a-form-item
+                    :validateStatus="form.errors['meta.template'] ? 'error' : ''"
+                    :help="form.errors['meta.template']"
+                    class="mb-0"
+                >
+                    <a-select
+                        v-model:value="form.meta.template"
+                        placeholder="Pilih kategori dan template Berita Acara"
+                        :options="templates"
+                        size="large"
+                    />
+                </a-form-item>
+            </a-card>
+
+            <a-row :gutter="24" v-if="form.meta.template">
                 <a-col :xs="24" :lg="10" class="mb-6">
                     <div class="flex flex-col gap-6">
-                        <!-- Informasi Header -->
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
-                            <h2 class="text-sm font-semibold mb-4">Informasi Dokumen</h2>
+                            <h2 class="text-sm font-semibold mb-1">Informasi Dokumen</h2>
+                            <p class="text-xs text-gray-500 mb-4">Detail header yang tampil di dokumen cetak.</p>
 
-                            <a-form-item label="Judul / Perihal Utama" class="mb-3"
+                            <a-form-item label="Judul Berita Acara" class="mb-3"
                                 :validateStatus="form.errors.title ? 'error' : ''"
                                 :help="form.errors.title"
                             >
-                                <a-input v-model:value="form.title" placeholder="Contoh: Permohonan Resign Karyawan" size="large" />
-                            </a-form-item>
-                            
-                            <a-form-item label="Direktorat" class="mb-3">
-                                <a-input v-model:value="form.meta.direktorat" />
-                            </a-form-item>
-                            
-                            <a-form-item label="Divisi" class="mb-3">
-                                <a-input v-model:value="form.meta.divisi" />
-                            </a-form-item>
-                            
-                            <a-form-item label="Perihal" class="mb-3">
-                                <a-input v-model:value="form.meta.perihal" />
-                            </a-form-item>
-                            
-                            <a-form-item label="Lampiran" class="mb-3">
-                                <a-input v-model:value="form.meta.lampiran" />
+                                <a-input v-model:value="form.title" placeholder="Masukkan judul berita acara" size="large" />
                             </a-form-item>
 
-                            <div class="border-t border-gray-100 my-4"></div>
-                            
-                            <h2 class="text-sm font-semibold mb-4">Penerima Dokumen (Kepada Yth)</h2>
-                            
-                            <a-form-item label="Nama Penerima" class="mb-3">
-                                <a-input v-model:value="form.meta.kepada_nama" placeholder="Contoh: Ibu Ella Safitri" />
+                            <a-form-item label="Direktorat" class="mb-3">
+                                <a-input v-model:value="form.meta.direktorat" placeholder="Contoh: Regional Branch Office" />
                             </a-form-item>
-                            
-                            <a-form-item label="Jabatan Penerima" class="mb-0">
-                                <a-input v-model:value="form.meta.kepada_jabatan" placeholder="Contoh: SPV HC Payroll" />
+
+                            <a-form-item label="Divisi" class="mb-3">
+                                <a-input v-model:value="form.meta.divisi" placeholder="Contoh: Branch Leader / HRD" />
                             </a-form-item>
+
+                            <a-form-item label="Perihal" extra="Opsional, jika berbeda dari judul" class="mb-3">
+                                <a-input v-model:value="form.meta.perihal" :placeholder="form.title || 'Mengikuti judul berita acara'" />
+                            </a-form-item>
+
+                            <a-form-item label="Kepada (Yth.)" class="mb-3">
+                                <a-input v-model:value="form.meta.kepada_nama" placeholder="Nama penerima" />
+                            </a-form-item>
+
+                            <a-form-item label="Jabatan Penerima" class="mb-3">
+                                <a-input v-model:value="form.meta.kepada_jabatan" placeholder="Contoh: Area Manager / SPV HC Payroll" />
+                            </a-form-item>
+
+                            <a-form-item label="Penyetuju Akhir" extra="Nama penyetuju akhir pada dokumen." class="mb-3">
+                                <a-input v-model:value="form.meta.penyetuju_akhir" placeholder="Nama penyetuju akhir" />
+                            </a-form-item>
+
+                            <a-form-item label="Lampiran" extra="Keterangan lampiran yang tercetak pada dokumen." class="mb-3">
+                                <a-input v-model:value="form.meta.lampiran" placeholder="Contoh: 1 Lembar, 3 Berkas, atau -" />
+                            </a-form-item>
+
                         </a-card>
 
                         <!-- Lampiran Word -->
@@ -133,7 +219,7 @@ const submitAndSign = () => {
                                 <a-textarea v-model:value="form.pengantar" :rows="3" />
                             </a-form-item>
 
-                            <div class="border border-gray-200 rounded p-4 mb-4">
+                            <div v-if="form.meta.template === 'permohonan_biaya_kost'" class="border border-gray-200 rounded p-4 mb-4">
                                 <h3 class="font-semibold text-sm mb-3">Data Rincian</h3>
                                 <div v-for="(item, index) in form.rincian_data" :key="index" class="flex gap-3 mb-2 items-center">
                                     <a-input v-model:value="item.label" placeholder="Label (Misal: NIK)" style="width: 35%;" />
@@ -149,7 +235,45 @@ const submitAndSign = () => {
                                 </a-button>
                             </div>
 
-                            <a-form-item label="Keterangan Tambahan / Alasan" class="mb-4">
+                            <div v-else class="border border-gray-200 rounded p-4 mb-4 overflow-x-auto">
+                                <h3 class="font-semibold text-sm mb-3">{{ form.meta.template === 'revisi_absensi' ? 'Data Absensi' : 'Data Barang Sitaan' }}</h3>
+                                <div v-for="(row, index) in form.meta.data.rows" :key="index" class="border border-gray-200 rounded p-3 mb-3">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <strong class="text-xs">Baris {{ index + 1 }}</strong>
+                                        <a-button type="text" danger @click="removeTemplateRow(index)">
+                                            <template #icon><delete-outlined /></template>
+                                        </a-button>
+                                    </div>
+                                    <template v-if="form.meta.template === 'revisi_absensi'">
+                                        <a-row :gutter="8">
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nama" placeholder="Nama" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nik" placeholder="NIK" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.tanggal" placeholder="Tanggal" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.absensi_in" placeholder="Absensi IN" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.absensi_out" placeholder="Absensi Out" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.ket" placeholder="Keterangan" class="mb-2" /></a-col>
+                                        </a-row>
+                                    </template>
+                                    <template v-else>
+                                        <a-row :gutter="8">
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.cabang" placeholder="Cabang" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nama_nasabah" placeholder="Nama Nasabah" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.no_faktur" placeholder="No. Faktur" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="12"><a-input v-model:value="row.barang" placeholder="Barang" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="12"><a-input v-model:value="row.nominal_pinjaman" placeholder="Nominal Pinjaman" class="mb-2" /></a-col>
+                                        </a-row>
+                                    </template>
+                                </div>
+                                <a-button type="dashed" block @click="addTemplateRow">
+                                    <template #icon><plus-outlined /></template>
+                                    Tambah Baris
+                                </a-button>
+                                <a-form-item v-if="form.meta.template === 'penghapusan_barang_sitaan'" label="Kronologi" class="mt-4 mb-0">
+                                    <a-textarea v-model:value="form.meta.data.kronologi" :rows="5" />
+                                </a-form-item>
+                            </div>
+
+                            <a-form-item v-if="form.meta.template !== 'penghapusan_barang_sitaan'" label="Keterangan Tambahan / Alasan" class="mb-4">
                                 <a-textarea v-model:value="form.keterangan_tambahan" :rows="4" placeholder="Misal: Rincian pinalty, atau penjelasan lebih lanjut..." />
                             </a-form-item>
                             

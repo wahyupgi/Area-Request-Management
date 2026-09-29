@@ -1,102 +1,141 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
-    mustVerifyEmail: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-    },
+    mustVerifyEmail: Boolean,
+    status: String,
 });
 
 const user = usePage().props.auth.user;
-
 const form = useForm({
     username: user.username,
     email: user.email,
 });
+
+const updateProfile = () => {
+    form.patch(route('profile.update'));
+};
 </script>
 
 <template>
-    <section>
-        <header>
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Informasi Profil</h2>
-
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Ubah username dan alamat email akun Anda.
-            </p>
+    <section class="profile-form-section">
+        <header class="profile-form-header">
+            <h2>Informasi Profil</h2>
+            <p>Ubah username dan alamat email akun Anda.</p>
         </header>
 
-        <form @submit.prevent="form.patch(route('profile.update'))" class="mt-6 space-y-6">
-            <div>
-                <InputLabel for="username" value="Username" />
-
-                <TextInput
-                    id="username"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.username"
-                    required
-                    autofocus
+        <a-form layout="vertical" class="profile-ant-form">
+            <a-form-item
+                label="Username"
+                :validate-status="form.errors.username ? 'error' : ''"
+                :help="form.errors.username"
+            >
+                <a-input
+                    v-model:value="form.username"
                     autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.username" />
-            </div>
-
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
+                    autofocus
                     required
-                    autocomplete="email"
                 />
+            </a-form-item>
 
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
+            <a-form-item
+                label="Email"
+                :validate-status="form.errors.email ? 'error' : ''"
+                :help="form.errors.email"
+            >
+                <a-input
+                    v-model:value="form.email"
+                    type="email"
+                    autocomplete="email"
+                    required
+                />
+            </a-form-item>
 
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="text-sm mt-2 text-gray-800 dark:text-gray-200">
-                    Your email address is unverified.
-                    <Link
-                        :href="route('verification.send')"
-                        method="post"
-                        as="button"
-                        class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-                    >
-                        Click here to re-send the verification email.
+            <a-alert
+                v-if="mustVerifyEmail && user.email_verified_at === null"
+                type="warning"
+                show-icon
+                class="profile-verification-alert"
+            >
+                <template #message>Email Anda belum diverifikasi.</template>
+                <template #description>
+                    <Link :href="route('verification.send')" method="post" as="button" class="profile-verification-link">
+                        Kirim ulang tautan verifikasi
                     </Link>
-                </p>
+                    <span v-if="status === 'verification-link-sent'" class="profile-verification-success">
+                        Tautan verifikasi baru telah dikirim.
+                    </span>
+                </template>
+            </a-alert>
 
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="mt-2 font-medium text-sm text-green-600 dark:text-green-400"
-                >
-                    A new verification link has been sent to your email address.
-                </div>
+            <div class="profile-form-actions">
+                <a-button type="primary" :loading="form.processing" @click="updateProfile">
+                    Simpan Perubahan
+                </a-button>
+                <a-typography-text v-if="form.recentlySuccessful" type="success">
+                    Perubahan tersimpan.
+                </a-typography-text>
             </div>
-
-            <div class="flex items-center gap-4">
-                    <PrimaryButton :disabled="form.processing">Simpan Perubahan</PrimaryButton>
-
-                <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
-                >
-                    <p v-if="form.recentlySuccessful" class="text-sm text-gray-600 dark:text-gray-400">Perubahan tersimpan.</p>
-                </Transition>
-            </div>
-        </form>
+        </a-form>
     </section>
 </template>
+
+<style>
+.profile-form-section {
+    color: #e2e8f0;
+}
+
+.profile-form-header {
+    margin-bottom: 24px;
+}
+
+.profile-form-header h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.profile-form-header p {
+    margin: 6px 0 0;
+    color: #94a3b8;
+}
+
+.profile-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-verification-alert {
+    margin-bottom: 24px;
+}
+
+.profile-verification-link {
+    padding: 0;
+    color: #60a5fa;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.profile-verification-success {
+    display: block;
+    margin-top: 8px;
+    color: #22c55e;
+}
+
+html.theme-light .profile-form-section,
+html.theme-light .profile-form-header h2 {
+    color: #0f172a;
+}
+
+html.theme-light .profile-form-header p {
+    color: #64748b;
+}
+
+html.theme-light .profile-verification-link {
+    color: #1677ff;
+}
+</style>

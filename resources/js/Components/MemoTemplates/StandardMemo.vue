@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+
 const props = defineProps({
     memo: { type: Object, required: true },
     items: { type: Array, required: true },
@@ -7,9 +9,19 @@ const props = defineProps({
     showAmSignature: { type: Boolean, default: false },
 });
 
+const isKeringananJasa = computed(() => props.memo.template?.category === 'Keringanan Jasa');
+
 const formatFieldValue = (field, value) => {
     if (value === undefined || value === null || value === '') return '-';
-    if ((field.type === 'number' || !isNaN(value)) && (field.key.includes('biaya') || field.key.includes('anggaran') || field.key.includes('nominal'))) {
+    if (field.type === 'date') {
+        return new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', {
+            day: '2-digit', month: 'short', year: 'numeric',
+        });
+    }
+    if (field.key.includes('persentase')) return `${value}%`;
+    const isCurrencyField = ['biaya', 'anggaran', 'nominal', 'pinjaman', 'pelunasan', 'pokok']
+        .some((key) => field.key.includes(key));
+    if ((field.type === 'number' || !isNaN(value)) && isCurrencyField) {
         return 'Rp ' + Number(value).toLocaleString('id-ID');
     }
     return String(value);
@@ -55,9 +67,9 @@ const signatureGridStyle = (count) => ({
     <table class="w-full text-xs border-collapse border border-black mb-5">
         <thead>
             <tr class="bg-[#0284c7] text-white">
-                <th class="border border-black px-2.5 py-1.5 w-10 text-center font-bold">No.</th>
+                <th v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 w-10 text-center font-bold">No.</th>
                 <th class="border border-black px-3 py-1.5 text-left font-bold">
-                    {{ isItemBased ? (memo.field_values?.items?.[0]?.nama_barang || memo.field_values?.nama_barang ? 'Nama Barang' : 'Permintaan') : 'Permintaan' }}
+                    {{ isKeringananJasa ? 'Informasi Nasabah' : (isItemBased ? (memo.field_values?.items?.[0]?.nama_barang || memo.field_values?.nama_barang ? 'Nama Barang' : 'Permintaan') : 'Permintaan') }}
                 </th>
                 <th v-if="isItemBased" class="border border-black px-2.5 py-1.5 text-center font-bold w-32 min-w-[8rem] whitespace-nowrap">Jumlah</th>
                 <th class="border border-black px-3 py-1.5 text-left font-bold">Keterangan</th>
@@ -66,16 +78,16 @@ const signatureGridStyle = (count) => ({
         <tbody>
             <template v-if="isItemBased">
                 <tr v-for="(item, index) in items" :key="'item-' + index">
-                    <td class="border border-black px-2.5 py-1.5 text-center font-medium">{{ index + 1 }}.</td>
+                    <td v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 text-center font-medium">{{ index + 1 }}.</td>
                     <td class="border border-black px-3 py-1.5 font-medium">{{ item?.nama_barang || item?.permintaan || memo.title }}</td>
                     <td class="border border-black px-2.5 py-1.5 text-center font-medium w-32 min-w-[8rem] whitespace-nowrap">{{ formatValue(item?.jumlah || item?.nominal) }}</td>
                     <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ item?.keterangan || item?.deskripsi || '-' }}</td>
                 </tr>
             </template>
-            <template v-else>
+            <template v-else-if="!memo.template?.field_schema?.some((field) => field.type === 'table')">
                 <template v-for="(item, itemIndex) in items" :key="itemIndex">
                     <tr>
-                        <td class="border border-black px-2.5 py-1.5 text-center font-medium" :rowspan="memo.template?.field_schema?.length">{{ itemIndex + 1 }}.</td>
+                        <td v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 text-center font-medium" :rowspan="memo.template?.field_schema?.length">{{ itemIndex + 1 }}.</td>
                         <td class="border border-black px-3 py-1.5 font-bold">{{ memo.template?.field_schema?.[0]?.label }}</td>
                         <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ formatFieldValue(memo.template?.field_schema?.[0], item?.[memo.template?.field_schema?.[0]?.key]) }}</td>
                     </tr>
@@ -85,12 +97,51 @@ const signatureGridStyle = (count) => ({
                     </tr>
                 </template>
             </template>
+            <template v-else>
+                <template v-for="(item, itemIndex) in items" :key="'structured-' + itemIndex">
+                    <template v-for="(field, fieldIndex) in memo.template?.field_schema" :key="field.key">
+                        <tr v-if="field.display === 'paragraph'">
+                            <td :colspan="isKeringananJasa ? 2 : 3" class="border-0 px-1 py-2 whitespace-pre-wrap text-justify">{{ formatFieldValue(field, item?.[field.key]) }}</td>
+                        </tr>
+                        <tr v-else-if="field.type !== 'table'">
+                            <td v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 text-center font-medium">{{ fieldIndex === 0 ? `${itemIndex + 1}.` : '' }}</td>
+                            <td class="border border-black px-3 py-1.5 font-bold">{{ field.label }}</td>
+                            <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ formatFieldValue(field, item?.[field.key]) }}</td>
+                        </tr>
+                        <tr v-else>
+                            <td v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 text-center font-medium">{{ fieldIndex === 0 ? `${itemIndex + 1}.` : '' }}</td>
+                            <td colspan="2" class="border border-black p-0">
+                                <div class="px-3 py-1.5 font-bold">{{ field.label }}</div>
+                                <table class="w-full border-collapse">
+                                    <thead>
+                                        <tr class="bg-[#1f497d] text-white">
+                                            <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold">
+                                                {{ column.label }}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(row, rowIndex) in item?.[field.key] || []" :key="field.key + '-' + rowIndex">
+                                            <td v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center whitespace-pre-wrap">
+                                                {{ formatFieldValue(column, row?.[column.key]) }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </template>
+                </template>
+            </template>
         </tbody>
     </table>
 
     <div class="mt-2 text-[11px] leading-[1.5] text-black" style="font-family: Tahoma, sans-serif;">
-        <p class="m-0">Demikianlah Internal Memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
-        <p class="mt-1 m-0">Terima kasih atas perhatiannya.</p>
+        <p v-if="memo.field_values?.penutup" class="m-0 whitespace-pre-wrap">{{ memo.field_values.penutup }}</p>
+        <template v-else>
+            <p class="m-0">Demikianlah Internal Memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
+            <p class="mt-1 m-0">Terima kasih atas perhatiannya.</p>
+        </template>
     </div>
 
     <div v-if="documentSignatures.length" class="relative -left-1 mt-4 grid justify-start gap-6 items-start text-xs w-full max-w-none mx-0 px-0 mb-4 [break-inside:avoid]" :style="signatureGridStyle(documentSignatures.length)">
@@ -126,10 +177,5 @@ const signatureGridStyle = (count) => ({
             <p class="relative top-2 w-full whitespace-normal break-words mt-2 text-black leading-none">{{ memo.area_manager?.name || 'Manager' }}</p>
             <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Manager</p>
         </div>
-    </div>
-
-    <div class="mt-2 text-[11px] leading-[1.5] text-black" style="font-family: Tahoma, sans-serif;">
-        <p class="m-0">Demikianlah berita acara ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
-        <p class="mt-3 m-0">Terima kasih atas perhatiannya.</p>
     </div>
 </template>
