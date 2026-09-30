@@ -203,6 +203,10 @@ html.theme-light .ba-detail-button:hover .ba-detail-icon {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
+html:not(.theme-light) .berita-acara-history-table .ant-badge-status-text {
+    color: #e2e8f0 !important;
+}
+
 .berita-acara-history-table .ant-table-tbody > tr > td:not(:last-child) {
     border-right: 1px solid rgba(255, 255, 255, 0.14) !important;
 }

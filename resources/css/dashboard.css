@@ -356,6 +356,106 @@ html:not(.theme-light) .dashboard-status-draft {
     padding: 1.5rem !important;
 }
 
+.dashboard-ant-card .ant-statistic-title {
+    font-weight: 600 !important;
+}
+
+.dashboard-ant-card .ant-typography-secondary {
+    font-weight: 500 !important;
+}
+
+html:not(.theme-light) .dashboard-ant-card .ant-statistic-title {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .dashboard-ant-card .ant-typography-secondary,
+html:not(.theme-light) .dashboard-ant-card .ant-badge-status-text {
+    color: #94a3b8 !important;
+}
+
+html.theme-light .dashboard-ant-card .ant-statistic-title,
+html.theme-light .dashboard-ant-card .ant-typography-secondary {
+    color: #0f172a !important;
+}
+
+html:not(.theme-light) .dashboard-ant-card .ant-segmented {
+    background: #0f172a !important;
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .dashboard-ant-card .ant-segmented-item-selected {
+    background: #334155 !important;
+    color: #f8fafc !important;
+    box-shadow: none !important;
+}
+
+html:not(.theme-light) .dashboard-ant-card .ant-tag,
+html:not(.theme-light) .admin-document-table .ant-tag {
+    background: rgba(148, 163, 184, 0.14) !important;
+    border-color: rgba(148, 163, 184, 0.3) !important;
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .dashboard-ant-card .ant-tag-blue,
+html:not(.theme-light) .admin-document-table .ant-tag-blue,
+html:not(.theme-light) .admin-document-table .ant-tag-processing {
+    background: rgba(59, 130, 246, 0.16) !important;
+    border-color: rgba(96, 165, 250, 0.35) !important;
+    color: #bfdbfe !important;
+}
+
+html:not(.theme-light) .dashboard-ant-card .ant-tag-cyan,
+html:not(.theme-light) .admin-document-table .ant-tag-cyan {
+    background: rgba(6, 182, 212, 0.15) !important;
+    border-color: rgba(34, 211, 238, 0.35) !important;
+    color: #a5f3fc !important;
+}
+
+html:not(.theme-light) .admin-document-table .ant-tag-success {
+    background: rgba(34, 197, 94, 0.15) !important;
+    border-color: rgba(74, 222, 128, 0.35) !important;
+    color: #bbf7d0 !important;
+}
+
+html:not(.theme-light) .admin-document-table .ant-tag-error {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(248, 113, 113, 0.35) !important;
+    color: #fecaca !important;
+}
+
+.admin-document-table .ant-table-thead > tr > th {
+    background: #344f82 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    white-space: nowrap;
+}
+
+html:not(.theme-light) .admin-document-table .ant-table-thead > tr > th {
+    background: #123762 !important;
+}
+
+.admin-document-table .ant-table-tbody > tr > td {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border-bottom-color: #e2e8f0 !important;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+.admin-document-table .ant-table-tbody > tr > td:last-child {
+    border-right: 0 !important;
+}
+
+html:not(.theme-light) .admin-document-table .ant-table-tbody > tr > td {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-bottom-color: #334155 !important;
+    border-right-color: #334155 !important;
+}
+
+html:not(.theme-light) .admin-document-table .ant-table-tbody > tr:hover > td {
+    background: #26364d !important;
+}
+
 html.theme-light .dashboard-status-hole {
     background: #ffffff;
 }

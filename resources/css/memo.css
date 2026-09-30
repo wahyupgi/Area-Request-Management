@@ -31,11 +31,40 @@ html:not(.theme-light) .memo-create-page .ant-form-item-extra {
 
 html:not(.theme-light) .memo-create-page .ant-input,
 html:not(.theme-light) .memo-create-page .ant-input-affix-wrapper,
+html:not(.theme-light) .memo-create-page .ant-input-number,
 html:not(.theme-light) .memo-create-page .ant-select-selector,
 html:not(.theme-light) .memo-create-page textarea {
     background: #17233a !important;
     border-color: #475569 !important;
     color: #f8fafc !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-input-number-input {
+    color: #f8fafc !important;
+    background: transparent !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-input-number-input::placeholder {
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-input-number-handler-wrap {
+    background: #1e293b !important;
+    border-inline-start-color: #475569 !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-input-number-handler {
+    border-block-start-color: #475569 !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-input-number-handler-up-inner,
+html:not(.theme-light) .memo-create-page .ant-input-number-handler-down-inner {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-input-number:hover,
+html:not(.theme-light) .memo-create-page .ant-input-number-focused {
+    border-color: #64748b !important;
 }
 
 html:not(.theme-light) .memo-create-page .ant-input::placeholder,
@@ -51,6 +80,39 @@ html:not(.theme-light) .memo-create-page .border-b {
 
 html:not(.theme-light) .memo-create-page .bg-gray-50 {
     background: #17233a !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-list-item-meta-title,
+html:not(.theme-light) .memo-create-page .ant-list-item-meta-title > a {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-list-item-meta-avatar {
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) .memo-create-page .ant-list-item {
+    border-block-end-color: #334155 !important;
+}
+
+html:not(.theme-light) .memo-signature-modal .ant-modal-body,
+html:not(.theme-light) .memo-signature-modal .ant-form-item-label > label {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .memo-signature-modal .text-gray-400,
+html:not(.theme-light) .memo-signature-modal .text-gray-500,
+html:not(.theme-light) .memo-signature-modal .ant-form-item-extra {
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) .memo-signature-modal input[type="file"] {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .memo-signature-modal input[type="file"]::file-selector-button {
+    color: #ffffff !important;
+    background: #2563eb !important;
 }
 
 html.theme-light .memo-create-page .ant-card {

@@ -15,7 +15,24 @@ const isPhoneDeathReliefMemo = computed(() => props.memo.template?.name === 'Pen
 const formatFieldValue = (field, value) => {
     if (value === undefined || value === null || value === '') return '-';
     if (field.type === 'date') {
-        return new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', {
+        const rawDate = String(value).trim();
+        const isoDate = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        const localDate = rawDate.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+        const parts = isoDate
+            ? [Number(isoDate[1]), Number(isoDate[2]), Number(isoDate[3])]
+            : localDate
+                ? [Number(localDate[3]), Number(localDate[2]), Number(localDate[1])]
+                : null;
+        const date = parts
+            ? new Date(parts[0], parts[1] - 1, parts[2])
+            : new Date(rawDate);
+
+        if (Number.isNaN(date.getTime())) return rawDate;
+        if (parts && (date.getFullYear() !== parts[0] || date.getMonth() !== parts[1] - 1 || date.getDate() !== parts[2])) {
+            return rawDate;
+        }
+
+        return date.toLocaleDateString('id-ID', {
             day: '2-digit', month: 'short', year: 'numeric',
         });
     }
@@ -59,13 +76,55 @@ const roleLines = (role) => {
 
 const signatureGridStyle = (count) => ({
     gridTemplateColumns: count > 3
-        ? '17% 21% 21% 41%'
+    ? '17fr 21fr 21fr 41fr'
         : `repeat(${Math.max(count, 1)}, minmax(0, 1fr))`,
 });
 </script>
 
 <template>
-    <table class="w-full text-xs border-collapse border border-black mb-5">
+    <template v-if="isKeringananJasa">
+        <table class="w-full text-xs border-collapse border border-black">
+            <thead>
+                <tr class="bg-[#0284c7] text-white">
+                    <th class="border border-black px-3 py-1.5 text-left font-bold">Informasi Nasabah</th>
+                    <th class="border border-black px-3 py-1.5 text-left font-bold">Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="(item, itemIndex) in items" :key="'customer-' + itemIndex">
+                    <tr v-for="field in memo.template?.field_schema?.filter((field) => field.type !== 'table')" :key="field.key">
+                        <td class="border border-black px-3 py-1.5 font-bold">{{ field.label }}</td>
+                        <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ formatFieldValue(field, item?.[field.key]) }}</td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+
+        <table class="mt-3 w-full text-xs border-collapse border border-black mb-5">
+            <thead>
+                <tr class="bg-[#0284c7] text-white">
+                    <template v-for="field in memo.template?.field_schema?.filter((field) => field.type === 'table')" :key="field.key + '-columns'">
+                        <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold">
+                            {{ column.label }}
+                        </th>
+                    </template>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="(item, itemIndex) in items" :key="'detail-' + itemIndex">
+                    <template v-for="field in memo.template?.field_schema?.filter((field) => field.type === 'table')" :key="field.key">
+                        <tr v-for="(row, rowIndex) in item?.[field.key] || []" :key="field.key + '-' + rowIndex">
+                            <td v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center whitespace-pre-wrap">
+                                {{ formatFieldValue(column, row?.[column.key]) }}
+                            </td>
+                        </tr>
+                    </template>
+                </template>
+            </tbody>
+        </table>
+    </template>
+
+    <table v-else class="w-full text-xs border-collapse border border-black mb-5">
         <thead>
             <tr class="bg-[#0284c7] text-white">
                 <th v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 w-10 text-center font-bold">No.</th>
@@ -111,9 +170,9 @@ const signatureGridStyle = (count) => ({
                         </tr>
                         <tr v-else>
                             <td v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 text-center font-medium">{{ fieldIndex === 0 ? `${itemIndex + 1}.` : '' }}</td>
-                            <td colspan="2" class="border border-black p-0">
-                                <div class="px-3 py-1.5 font-bold">{{ field.label }}</div>
-                                <table class="w-full border-collapse">
+                            <td colspan="2" :class="isKeringananJasa ? 'border-0 px-0 py-2' : 'border border-black p-0'">
+                                <div v-if="!isKeringananJasa" class="px-3 py-1.5 font-bold">{{ field.label }}</div>
+                                <table :class="['w-full border-collapse', isKeringananJasa ? 'mt-2' : '']">
                                     <thead>
                                         <tr class="bg-[#1f497d] text-white">
                                             <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold">

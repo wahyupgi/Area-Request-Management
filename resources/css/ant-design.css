@@ -121,6 +121,25 @@ html:not(.theme-light) .ant-select-selection-placeholder {
     color: #94a3b8 !important;
 }
 
+html:not(.theme-light) .ant-select-dropdown {
+    background: #1e293b !important;
+    border: 1px solid #334155;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+html:not(.theme-light) .ant-select-item-option {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+    background: #334155 !important;
+}
+
+html:not(.theme-light) .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+}
+
 /* Layout background */
 html:not(.theme-light) .main-layout {
     background: #0f172a !important;

@@ -9,7 +9,6 @@ import {
     EnvironmentOutlined,
     FileTextOutlined,
     InboxOutlined,
-    RightOutlined,
     TeamOutlined,
 } from '@ant-design/icons-vue';
 
@@ -86,13 +85,6 @@ const userDisplayName = computed(() => {
         { title: 'Pengguna', value: props.stats?.total_users ?? 0, note: `${props.stats?.total_branches ?? 0} Cabang · ${props.stats?.total_areas ?? 0} Area`, icon: TeamOutlined, color: '#22d3ee', href: route('admin.users.index') },
     ]);
 
-    const masterDataLinks = computed(() => [
-        { title: 'Kelola Template Memo', description: 'Atur skema form & field dinamis', count: props.stats?.total_templates ?? 0, route: 'admin.templates.index', icon: AppstoreOutlined },
-        { title: 'Kelola Kantor Cabang', description: 'Daftar cabang & alokasi area', count: props.stats?.total_branches ?? 0, route: 'admin.branches.index', icon: BankOutlined },
-        { title: 'Kelola Wilayah Area', description: 'Pembagian area operasional', count: props.stats?.total_areas ?? 0, route: 'admin.areas.index', icon: EnvironmentOutlined },
-        { title: 'Kelola Data User', description: 'Akun KC, AM, & Administrator', count: props.stats?.total_users ?? 0, route: 'admin.users.index', icon: TeamOutlined },
-    ]);
-
     const formatDate = (dateString) => {
         if (!dateString) return '-';
         return new Date(dateString).toLocaleDateString('id-ID', {
@@ -116,12 +108,12 @@ const documents = computed(() => [
 ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
 
 const documentColumns = [
-    { title: 'Kode & Tanggal', key: 'code', width: 175 },
-    { title: 'Perihal', key: 'subject', width: 190 },
-    { title: 'Jenis', key: 'type', width: 120 },
-    { title: 'Cabang & Pembuat', key: 'creator', width: 190 },
-    { title: 'Status', key: 'status', width: 130 },
-    { title: 'Aksi', key: 'action', align: 'center', width: 125 },
+    { title: 'Kode & Tanggal', key: 'code', width: 190 },
+    { title: 'Perihal', key: 'subject', width: 250 },
+    { title: 'Jenis', key: 'type', width: 130 },
+    { title: 'Cabang & Pembuat', key: 'creator', width: 230 },
+    { title: 'Status', key: 'status', width: 140 },
+    { title: 'Aksi', key: 'action', align: 'center', width: 140 },
 ];
 
 const filteredDocuments = computed(() => {
@@ -279,7 +271,7 @@ const statusChartData = computed(() => [
                 <Link :href="card.href" class="block h-full">
                     <a-card :bordered="false" size="small" hoverable class="dashboard-ant-card h-full">
                         <div class="flex items-start justify-between gap-3">
-                            <a-statistic :title="card.title" :value="card.value" :value-style="{ color: card.color, fontSize: '28px', fontWeight: 700 }" />
+                            <a-statistic :title="card.title" :value="card.value" :value-style="{ color: '#60a5fa', fontSize: '28px', fontWeight: 700 }" />
                             <component :is="card.icon" :style="{ color: card.color, fontSize: '20px' }" />
                         </div>
                         <a-typography-text type="secondary" class="mt-3 block text-xs">{{ card.note }}</a-typography-text>
@@ -374,8 +366,7 @@ const statusChartData = computed(() => [
             </a-card>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-8 flex flex-col gap-4">
+        <div class="w-full">
                 <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 shadow-sm">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-white/5">
                         <div>
@@ -409,7 +400,7 @@ const statusChartData = computed(() => [
                         :columns="documentColumns"
                         :row-key="document => `${document._documentType}-${document.id}`"
                         :pagination="false"
-                        :scroll="{ x: 930 }"
+                        :scroll="{ x: 1080 }"
                         size="small"
                     >
                         <template #bodyCell="{ column, record }">
@@ -429,12 +420,9 @@ const statusChartData = computed(() => [
                                 <a-tag :color="record._documentType === 'ba' ? 'cyan' : 'blue'">{{ record._documentType === 'ba' ? 'Berita Acara' : 'Memo' }}</a-tag>
                             </template>
                             <template v-else-if="column.key === 'creator'">
-                                <div class="flex min-w-40 items-center gap-2.5">
-                                    <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-slate-800 text-xs font-semibold text-slate-300">{{ record.creator?.name?.charAt(0) || 'U' }}</div>
-                                    <div class="flex min-w-0 flex-col">
-                                        <span class="truncate text-xs font-medium text-slate-200">{{ record.creator?.name || '-' }}</span>
-                                        <span class="truncate text-[11px] text-slate-400">{{ record.branch?.name || 'Kantor Cabang' }}</span>
-                                    </div>
+                                <div class="flex min-w-0 flex-col">
+                                    <span class="truncate text-xs font-medium text-slate-200">{{ record.creator?.name || '-' }}</span>
+                                    <span class="truncate text-[11px] text-slate-400">{{ record.branch?.name || 'Kantor Cabang' }}</span>
                                 </div>
                             </template>
                             <template v-else-if="column.key === 'status'">
@@ -460,32 +448,6 @@ const statusChartData = computed(() => [
                         <span class="hidden sm:inline">Data diperbarui secara otomatis</span>
                     </div>
                 </div>
-            </div>
-
-            <!-- Right 4 Columns: Widgets (Breakdown, Shortcuts, SOP Info) -->
-            <div class="lg:col-span-4 flex flex-col gap-6">
-                    <a-card :bordered="false" class="dashboard-ant-card" title="Pusat Akses Master Data">
-                        <a-list :data-source="masterDataLinks" item-layout="horizontal" :split="false">
-                            <template #renderItem="{ item }">
-                                <a-list-item>
-                                    <Link :href="route(item.route)" class="flex w-full items-center justify-between gap-3">
-                                        <a-list-item-meta :title="item.title" :description="item.description">
-                                            <template #avatar>
-                                                <a-avatar>
-                                                    <component :is="item.icon" />
-                                                </a-avatar>
-                                            </template>
-                                        </a-list-item-meta>
-                                        <a-space>
-                                            <a-tag>{{ item.count }}</a-tag>
-                                            <RightOutlined />
-                                        </a-space>
-                                    </Link>
-                                </a-list-item>
-                            </template>
-                        </a-list>
-                    </a-card>
-            </div>
         </div>
     </AuthenticatedLayout>
 </template>

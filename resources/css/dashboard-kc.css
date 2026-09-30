@@ -35,6 +35,11 @@
         color: #64748b !important;
     }
 
+    html.theme-light .dashboard-kc-theme .dashboard-kpi-card > span,
+    html.theme-light .dashboard-kc-theme .dashboard-kpi-card > p:not(.text-2xl) {
+        color: #0f172a !important;
+    }
+
     html.theme-light .dashboard-kc-theme .border-white\/5,
     html.theme-light .dashboard-kc-theme .border-white\/10,
     html.theme-light .dashboard-kc-theme .memo-list-table {

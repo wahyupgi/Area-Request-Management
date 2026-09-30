@@ -11,6 +11,7 @@ const templates = [
     { value: 'permohonan_biaya_kost', label: 'Permohonan Biaya Kost' },
     { value: 'revisi_absensi', label: 'Permintaan Revisi Absensi' },
     { value: 'penghapusan_barang_sitaan', label: 'Penghapusan Barang Sitaan' },
+    { value: 'lainnya', label: 'Lainnya' },
 ];
 
 const form = useForm({
@@ -74,7 +75,7 @@ watch(() => form.meta.template, (template) => {
         form.meta.data.rows = [{ nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }];
         form.keterangan_tambahan = '';
         form.penutup = 'Demikian berita acara ini saya buat dengan sebenarnya. Terima kasih atas perhatian dan kerjasamanya, saya berharap dapat dibantu memakluminya.';
-    } else {
+    } else if (template === 'penghapusan_barang_sitaan') {
         form.meta.direktorat = 'Regional Branch Office';
         form.meta.divisi = 'Branch Leader';
         form.meta.kepada_nama = 'Bpk. Nugroho Samudra Sujatmiko, Ko';
@@ -84,6 +85,20 @@ watch(() => form.meta.template, (template) => {
         form.meta.data.rows = [{ cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }];
         form.keterangan_tambahan = '';
         form.penutup = 'Demikian berita acara ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
+    } else {
+        form.title = '';
+        form.meta.direktorat = '';
+        form.meta.divisi = '';
+        form.meta.perihal = '';
+        form.meta.lampiran = '';
+        form.meta.kepada_nama = '';
+        form.meta.kepada_jabatan = '';
+        form.meta.penyetuju_akhir = '';
+        form.meta.data.rows = [{ uraian: '', keterangan: '' }];
+        form.pengantar = '';
+        form.rincian_data = [];
+        form.keterangan_tambahan = '';
+        form.penutup = '';
     }
 });
 
@@ -102,7 +117,9 @@ const removeRincian = (index) => {
 const addTemplateRow = () => {
     const row = form.meta.template === 'revisi_absensi'
         ? { nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }
-        : { cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' };
+        : form.meta.template === 'penghapusan_barang_sitaan'
+            ? { cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }
+            : { uraian: '', keterangan: '' };
     form.meta.data.rows.push(row);
 };
 
@@ -248,7 +265,36 @@ const submitAndSign = () => {
                             </div>
 
                             <div v-else class="border border-gray-200 rounded p-4 mb-4 overflow-x-auto">
-                                <h3 class="font-semibold text-sm mb-3">{{ form.meta.template === 'revisi_absensi' ? 'Data Absensi' : 'Data Barang Sitaan' }}</h3>
+                                <h3 class="font-semibold text-sm mb-3">{{ form.meta.template === 'revisi_absensi' ? 'Data Absensi' : form.meta.template === 'penghapusan_barang_sitaan' ? 'Data Barang Sitaan' : 'Daftar Item' }}</h3>
+                                <template v-if="form.meta.template === 'lainnya'">
+                                    <table class="w-full min-w-[520px] border-collapse text-sm">
+                                        <thead>
+                                            <tr class="bg-gray-50">
+                                                <th class="border border-gray-200 px-3 py-2 text-center font-semibold">No.</th>
+                                                <th class="border border-gray-200 px-3 py-2 text-left font-semibold">Uraian</th>
+                                                <th class="border border-gray-200 px-3 py-2 text-left font-semibold">Keterangan</th>
+                                                <th class="w-12 border border-gray-200 px-2 py-2"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(row, index) in form.meta.data.rows" :key="index">
+                                                <td class="border border-gray-200 px-3 py-2 text-center">{{ index + 1 }}</td>
+                                                <td class="border border-gray-200 px-2 py-2"><a-input v-model:value="row.uraian" placeholder="Uraian item" /></td>
+                                                <td class="border border-gray-200 px-2 py-2"><a-input v-model:value="row.keterangan" placeholder="Keterangan" /></td>
+                                                <td class="border border-gray-200 px-1 py-2 text-center">
+                                                    <a-button type="text" danger aria-label="Hapus baris" @click="removeTemplateRow(index)">
+                                                        <template #icon><delete-outlined /></template>
+                                                    </a-button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <a-button type="dashed" block class="mt-3" @click="addTemplateRow">
+                                        <template #icon><plus-outlined /></template>
+                                        Tambah Baris
+                                    </a-button>
+                                </template>
+                                <template v-else>
                                 <div v-for="(row, index) in form.meta.data.rows" :key="index" class="border border-gray-200 rounded p-3 mb-3">
                                     <div class="flex justify-between items-center mb-2">
                                         <strong class="text-xs">Baris {{ index + 1 }}</strong>
@@ -283,6 +329,7 @@ const submitAndSign = () => {
                                 <a-form-item v-if="form.meta.template === 'penghapusan_barang_sitaan'" label="Kronologi" class="mt-4 mb-0">
                                     <a-textarea v-model:value="form.meta.data.kronologi" :rows="5" />
                                 </a-form-item>
+                                </template>
                             </div>
 
                             <a-form-item v-if="form.meta.template !== 'penghapusan_barang_sitaan'" label="Keterangan Tambahan / Alasan" class="mb-4">

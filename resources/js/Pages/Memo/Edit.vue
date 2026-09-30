@@ -290,6 +290,7 @@ const deleteMemo = async () => {
                                                     <a-col :span="24 / field.columns.length" v-for="col in field.columns" :key="col.key">
                                                         <div class="text-xs text-gray-500 mb-1">{{ col.label }}</div>
                                                         <a-input-number v-if="col.type === 'number'" v-model:value="subRow[col.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(col))" :parser="parseIntegerInput" size="small" class="w-full" />
+                                                        <a-input v-else-if="col.type === 'date'" v-model:value="subRow[col.key]" type="date" size="small" />
                                                         <a-input v-else v-model:value="subRow[col.key]" size="small" />
                                                     </a-col>
                                                 </a-row>
@@ -376,6 +377,7 @@ const deleteMemo = async () => {
             cancelText="Batal"
             @ok="confirmSubmit"
             centered
+            wrapClassName="memo-signature-modal"
         >
             <p class="text-sm text-gray-500 mb-4">Masukkan tanda tangan terlebih dahulu sebelum memo dikirim ke Area Manager.</p>
 

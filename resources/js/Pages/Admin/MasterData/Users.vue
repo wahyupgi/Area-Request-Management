@@ -102,7 +102,7 @@ const columns = [
             </div>
         </template>
 
-        <div class="admin-master-page max-w-6xl">
+        <div class="admin-master-page w-full">
             <a-card :bordered="false" class="bg-slate-800/50 border border-white/5">
                 <template #title>
                     <span class="text-white font-medium">Daftar User ({{ users.length }})</span>
@@ -120,7 +120,8 @@ const columns = [
                     :rowKey="(record) => record.id"
                     :pagination="{ pageSize: 10 }"
                     :scroll="{ x: 'max-content' }"
-                    class="ant-table-dark-custom"
+                    size="small"
+                    class="admin-document-table ant-table-dark-custom"
                 >
                     <template #bodyCell="{ column, record }">
                         <template v-if="column.key === 'role'">

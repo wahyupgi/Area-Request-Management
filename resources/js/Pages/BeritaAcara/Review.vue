@@ -1,10 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BeritaAcaraDocument from '@/Components/BeritaAcaraDocument.vue';
+import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import {
     ArrowLeftOutlined,
+    PrinterOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined,
     PaperClipOutlined,
@@ -58,6 +60,51 @@ const handleReject = () => {
 };
 
 const attachmentUrl = () => '/storage/' + props.beritaAcara.attachment_path;
+const printAttachments = props.beritaAcara.attachment_path ? [{
+    id: props.beritaAcara.id,
+    file_path: props.beritaAcara.attachment_path,
+    original_name: props.beritaAcara.attachment_name,
+}] : [];
+
+const printBA = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const originalTitle = document.title;
+    const beritaAcara = document.querySelector('#printable-ba')?.outerHTML || '';
+    const stylesheetUrls = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.href);
+    const activeStyles = Array.from(document.querySelectorAll('style')).map((style) => style.textContent).join('\n');
+
+    const waitForDocx = new Promise((resolve) => {
+        const startedAt = Date.now();
+        const check = () => {
+            if (!document.querySelector('[data-attachment-loading]') || Date.now() - startedAt > 5000) {
+                resolve();
+                return;
+            }
+            window.setTimeout(check, 100);
+        };
+        check();
+    });
+
+    waitForDocx.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
+        const attachments = document.querySelector('.memo-print-attachments')?.outerHTML || '';
+        printWindow.document.write(`<!doctype html><html><head><title>${originalTitle}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
+            @page { size: A4 portrait; margin: 0; }
+            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+            body * { visibility: visible !important; }
+            #printable-ba { position: relative !important; inset: auto !important; width: 210mm !important; min-height: 297mm !important; page-break-after: always !important; break-after: page !important; box-sizing: border-box !important; }
+            .memo-print-attachments { display: block !important; width: 210mm !important; }
+            .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 297mm !important; page-break-before: always !important; break-before: page !important; box-sizing: border-box !important; }
+        </style></head><body>${beritaAcara}${attachments}</body></html>`);
+        printWindow.onload = () => {
+            printWindow.onafterprint = () => printWindow.close();
+            printWindow.focus();
+            printWindow.print();
+        };
+        printWindow.document.close();
+    });
+};
 
 const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -88,6 +135,12 @@ const formatDate = (dateString) => {
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <a-button class="print:hidden" @click="printBA">
+                        <template #icon><printer-outlined /></template> Cetak BA
+                    </a-button>
+                    <a-button class="print:hidden" @click="printBA">
+                        <template #icon><download-outlined /></template> Download / Simpan PDF
+                    </a-button>
                     <a-tag v-if="beritaAcara.status === 'approved'" color="success" class="font-semibold">
                         <template #icon><check-circle-outlined /></template> Disetujui
                     </a-tag>
@@ -178,6 +231,7 @@ const formatDate = (dateString) => {
                     </a-card>
                 </a-col>
             </a-row>
+            <MemoAttachments :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
         </div>
 
         <a-modal

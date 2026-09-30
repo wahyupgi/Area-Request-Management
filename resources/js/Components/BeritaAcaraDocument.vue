@@ -9,6 +9,7 @@ const template = computed(() => props.beritaAcara.meta?.template || 'standard');
 const isCostRequest = computed(() => template.value === 'permohonan_biaya_kost');
 const isAttendanceRevision = computed(() => template.value === 'revisi_absensi');
 const isSeizedGoods = computed(() => template.value === 'penghapusan_barang_sitaan');
+const isOtherTemplate = computed(() => template.value === 'lainnya');
 const templateRows = computed(() => props.beritaAcara.meta?.data?.rows || []);
 const signatureSlots = computed(() => {
     const beritaAcara = props.beritaAcara;
@@ -89,17 +90,17 @@ const formatCurrency = (value) => {
             <div>Lampiran</div><div>:</div><div>{{ beritaAcara.meta?.lampiran || '-' }}</div>
         </div>
         <div v-else class="grid grid-cols-[120px_12px_1fr] text-xs gap-y-1 mb-3">
-            <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div class="font-bold text-gray-900">{{ beritaAcara.meta?.direktorat || 'Operasional' }}</div>
-            <div class="text-gray-900">Divisi</div><div>:</div><div>{{ beritaAcara.meta?.divisi || '-' }}</div>
-            <div class="text-gray-900">Perihal</div><div>:</div><div>{{ beritaAcara.meta?.perihal || beritaAcara.title }}</div>
-            <div class="text-gray-900">Lampiran</div><div>:</div><div>{{ beritaAcara.meta?.lampiran || '-' }}</div>
+            <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div class="font-bold text-gray-900">{{ beritaAcara.meta?.direktorat || (isOtherTemplate ? '' : 'Operasional') }}</div>
+            <div class="text-gray-900">Divisi</div><div>:</div><div>{{ beritaAcara.meta?.divisi || (isOtherTemplate ? '' : '-') }}</div>
+            <div class="text-gray-900">Perihal</div><div>:</div><div>{{ beritaAcara.meta?.perihal || (isOtherTemplate ? '' : beritaAcara.title) }}</div>
+            <div class="text-gray-900">Lampiran</div><div>:</div><div>{{ beritaAcara.meta?.lampiran || (isOtherTemplate ? '' : '-') }}</div>
         </div>
 
         <hr class="border-t-2 border-black my-3" />
 
         <div class="text-xs mb-4 leading-tight">
             <p class="m-0">{{ isAttendanceRevision ? 'Kepada Yth :' : 'Kepada yth :' }}</p>
-            <p class="m-0">{{ beritaAcara.meta?.kepada_nama || '_________________' }}</p>
+            <p class="m-0">{{ beritaAcara.meta?.kepada_nama || (isOtherTemplate ? '' : '_________________') }}</p>
             <p class="m-0 font-medium">{{ beritaAcara.meta?.kepada_jabatan || '' }}</p>
             <p class="m-0 font-medium">Di tempat,</p>
         </div>
@@ -109,7 +110,23 @@ const formatCurrency = (value) => {
             <p v-if="!isSeizedGoods" class="mt-2">Dengan data sebagai berikut :</p>
         </div>
 
-        <table v-if="isAttendanceRevision" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
+        <table v-if="isOtherTemplate" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
+            <colgroup><col style="width:8%;" /><col style="width:42%;" /><col style="width:50%;" /></colgroup>
+            <thead>
+                <tr>
+                    <th v-for="heading in ['No.', 'Uraian', 'Keterangan']" :key="heading" style="border:1px solid #000;background:#f3f4f6;padding:6px;text-align:center;">{{ heading }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(row, index) in templateRows" :key="index">
+                    <td style="border:1px solid #000;padding:6px;text-align:center;">{{ index + 1 }}</td>
+                    <td style="border:1px solid #000;padding:6px;">{{ row.uraian }}</td>
+                    <td style="border:1px solid #000;padding:6px;">{{ row.keterangan }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table v-else-if="isAttendanceRevision" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
             <thead>
                 <tr>
                     <th v-for="heading in ['No', 'Nama', 'NIK', 'Tanggal', 'Absensi IN', 'Absensi Out', 'Ket']" :key="heading" style="border:1px solid #000;background:#9dc3e6;padding:4px;text-align:center;">{{ heading }}</th>
@@ -148,7 +165,7 @@ const formatCurrency = (value) => {
             <p class="m-0 whitespace-pre-line">{{ beritaAcara.meta?.data?.kronologi }}</p>
         </div>
 
-        <div v-else-if="!isAttendanceRevision" class="grid grid-cols-[200px_20px_1fr] text-xs gap-y-0.5 mb-4">
+        <div v-else-if="!isAttendanceRevision && !isOtherTemplate" class="grid grid-cols-[200px_20px_1fr] text-xs gap-y-0.5 mb-4">
             <template v-for="(item, idx) in beritaAcara.rincian_data" :key="idx">
                 <div>{{ item.label }}</div>
                 <div class="text-center">:</div>

@@ -186,43 +186,43 @@ const focusDocuments = (status) => {
         <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             <!-- Memo Masuk -->
             <button type="button" @click="focusDocuments('received')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengajuan Masuk</span>
-                <p class="text-2xl font-bold text-indigo-400 mt-1">{{ submissionStats.received ?? 0 }}</p>
-                <p class="text-[11px] text-slate-500 mt-2">Memo dan Berita Acara terkirim</p>
+                <span class="text-xs font-semibold text-slate-400 tracking-wider">Pengajuan Masuk</span>
+                <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.received ?? 0 }}</p>
+                <p class="text-[11px] text-slate-500 mt-2">Memo dan BA terkirim</p>
             </button>
 
             <!-- Total -->
             <button type="button" @click="focusDocuments('all')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pengajuan</span>
-                <p class="text-2xl font-bold text-white mt-1">{{ submissionStats.total ?? 0 }}</p>
+                <span class="text-xs font-semibold text-slate-400 tracking-wider">Total Pengajuan</span>
+                <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.total ?? 0 }}</p>
                 <p class="text-[11px] text-slate-500 mt-2">Semua riwayat</p>
             </button>
 
             <!-- Draft -->
             <button type="button" @click="focusDocuments('draft')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-slate-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Draft Tersimpan</span>
-                <p class="text-2xl font-bold text-slate-300 mt-1">{{ submissionStats.draft ?? 0 }}</p>
+                <span class="text-xs font-semibold text-slate-400 tracking-wider">Draft Tersimpan</span>
+                <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.draft ?? 0 }}</p>
                 <p class="text-[11px] text-slate-500 mt-2">Belum diajukan</p>
             </button>
 
             <!-- Submitted / Pending -->
             <button type="button" @click="focusDocuments('submitted')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-amber-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-amber-400/90 uppercase tracking-wider">Menunggu AM</span>
-                <p class="text-2xl font-bold text-amber-300 mt-1">{{ submissionStats.submitted ?? 0 }}</p>
+                <span class="text-xs font-semibold text-amber-400/90 tracking-wider">Menunggu AM</span>
+                <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.submitted ?? 0 }}</p>
                 <p class="text-[11px] text-amber-400/70 mt-2">Dalam proses verifikasi</p>
             </button>
 
             <!-- Approved -->
             <button type="button" @click="focusDocuments('approved')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Disetujui</span>
-                <p class="text-2xl font-bold text-emerald-400 mt-1">{{ submissionStats.approved ?? 0 }}</p>
+                <span class="text-xs font-semibold text-emerald-400 tracking-wider">Disetujui</span>
+                <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.approved ?? 0 }}</p>
                 <p class="text-[11px] text-emerald-500/70 mt-2">Selesai & resmi</p>
             </button>
 
             <!-- Rejected -->
             <button type="button" @click="focusDocuments('rejected')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-rose-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-rose-400 uppercase tracking-wider">Perlu Revisi</span>
-                <p class="text-2xl font-bold text-rose-400 mt-1">{{ submissionStats.rejected ?? 0 }}</p>
+                <span class="text-xs font-semibold text-rose-400 tracking-wider">Perlu Revisi</span>
+                <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.rejected ?? 0 }}</p>
                 <p class="text-[11px] text-rose-500/70 mt-2">Ditolak Area Manager</p>
             </button>
         </div>
@@ -306,7 +306,10 @@ const focusDocuments = (status) => {
                         </div>
                     </template>
                     <template v-else-if="column.key === 'type'">
-                        <a-tag :color="record._documentType === 'memo' ? 'blue' : 'purple'">
+                        <a-tag
+                            :color="record._documentType === 'memo' ? 'blue' : 'purple'"
+                            :class="['kc-memo-type-tag', record._documentType === 'memo' ? 'kc-memo-type-tag-memo' : 'kc-memo-type-tag-ba']"
+                        >
                             {{ record._documentType === 'memo' ? 'Memo' : 'Berita Acara' }}
                         </a-tag>
                     </template>
@@ -317,7 +320,7 @@ const focusDocuments = (status) => {
                         </div>
                     </template>
                     <template v-else-if="column.key === 'status'">
-                        <a-tag :color="statusTagColor(record.status)">
+                        <a-tag :color="statusTagColor(record.status)" :class="['kc-memo-status-tag', `kc-memo-status-tag-${record.status}`]">
                             {{ statusConfig[record.status]?.label || record.status }}
                         </a-tag>
                     </template>
@@ -430,7 +433,48 @@ const focusDocuments = (status) => {
 .kc-memo-table .ant-table-tbody > tr > td {
     color: #e2e8f0 !important;
     background: transparent !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.kc-memo-table .ant-table-tbody > tr > td:last-child {
+    border-right: 0 !important;
+}
+
+.kc-memo-table .kc-memo-type-tag-memo {
+    color: #bfdbfe !important;
+    background: #1e3a5f !important;
+    border-color: #3b82f6 !important;
+}
+
+.kc-memo-table .kc-memo-type-tag-ba {
+    color: #e9d5ff !important;
+    background: #3b2456 !important;
+    border-color: #8b5cf6 !important;
+}
+
+.kc-memo-table .kc-memo-status-tag-draft {
+    color: #cbd5e1 !important;
+    background: #334155 !important;
+    border-color: #64748b !important;
+}
+
+.kc-memo-table .kc-memo-status-tag-submitted {
+    color: #fde68a !important;
+    background: #493719 !important;
+    border-color: #d97706 !important;
+}
+
+.kc-memo-table .kc-memo-status-tag-approved {
+    color: #bbf7d0 !important;
+    background: #17432f !important;
+    border-color: #22c55e !important;
+}
+
+.kc-memo-table .kc-memo-status-tag-rejected {
+    color: #fecaca !important;
+    background: #4c2528 !important;
+    border-color: #ef4444 !important;
 }
 
 .kc-memo-table .ant-table-tbody > tr:hover > td {
@@ -546,7 +590,48 @@ html.theme-light .kc-memo-table .ant-table-thead > tr > th {
 html.theme-light .kc-memo-table .ant-table-tbody > tr > td {
     color: #1e293b !important;
     background: #ffffff !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+html.theme-light .kc-memo-table .ant-table-tbody > tr > td:last-child {
+    border-right: 0 !important;
+}
+
+html.theme-light .kc-memo-table .kc-memo-type-tag-memo {
+    color: #1d4ed8 !important;
+    background: #dbeafe !important;
+    border-color: #93c5fd !important;
+}
+
+html.theme-light .kc-memo-table .kc-memo-type-tag-ba {
+    color: #6b21a8 !important;
+    background: #f3e8ff !important;
+    border-color: #d8b4fe !important;
+}
+
+html.theme-light .kc-memo-table .kc-memo-status-tag-draft {
+    color: #475569 !important;
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+html.theme-light .kc-memo-table .kc-memo-status-tag-submitted {
+    color: #92400e !important;
+    background: #fef3c7 !important;
+    border-color: #fcd34d !important;
+}
+
+html.theme-light .kc-memo-table .kc-memo-status-tag-approved {
+    color: #166534 !important;
+    background: #dcfce7 !important;
+    border-color: #86efac !important;
+}
+
+html.theme-light .kc-memo-table .kc-memo-status-tag-rejected {
+    color: #991b1b !important;
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
 }
 
 html.theme-light .kc-memo-table .ant-table-tbody > tr:hover > td {

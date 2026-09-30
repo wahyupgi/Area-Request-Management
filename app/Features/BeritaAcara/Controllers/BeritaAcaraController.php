@@ -26,7 +26,7 @@ class BeritaAcaraController extends Controller
         $areaManager = $user->branch?->area?->areaManager;
 
         $validated = $request->validate([
-            'meta.template'         => 'required|in:permohonan_biaya_kost,revisi_absensi,penghapusan_barang_sitaan',
+            'meta.template'         => 'required|in:permohonan_biaya_kost,revisi_absensi,penghapusan_barang_sitaan,lainnya',
             'meta.data'             => 'nullable|array',
             'meta.data.rows'        => 'nullable|array',
             'meta.data.rows.*'      => 'array',
