@@ -119,7 +119,7 @@ const remove = () => {
                         <img :src="'/storage/' + signature.signature_image" alt="Signature" class="h-24 object-contain" />
                     </div>
                     <div class="flex-1 w-full">
-                        <a-tag color="success" class="mb-2">✓ Terdaftar</a-tag>
+                        <a-tag color="success" class="mb-2">Terdaftar</a-tag>
                         <a-descriptions :column="1" size="small" class="custom-dark-descriptions">
                             <a-descriptions-item v-if="signature.certificate_no" label="No. Sertifikat">
                                 {{ signature.certificate_no }}

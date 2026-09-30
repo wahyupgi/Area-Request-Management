@@ -92,10 +92,11 @@ const showSignerModal = ref(false);
 const showMetaModal = ref(false);
 
 const existingCustom = props.memo.field_values?.custom_signers || [];
-const existingSlot3 = existingCustom[2] || {};
-const existingSlot4 = existingCustom[3] || {};
+const templateSigners = props.memo.template?.signature_schema || [];
+const existingSlot3 = existingCustom[2] ?? templateSigners[2] ?? {};
+const existingSlot4 = existingCustom[3] ?? templateSigners[3] ?? {};
 
-const signersForm = useForm({
+const savedSignerSettings = ref({
     slot3_enabled: !!(existingSlot3.name || existingSlot3.role),
     slot4_enabled: !!(existingSlot4.name || existingSlot4.role),
     slot3_name: existingSlot3.name || '',
@@ -103,6 +104,10 @@ const signersForm = useForm({
     slot4_name: existingSlot4.name || '',
     slot4_role: existingSlot4.role || '',
     footer_box_count: Number(props.memo.field_values?.footer_box_count || 2),
+});
+
+const signersForm = useForm({
+    ...savedSignerSettings.value,
 });
 
 const existingMeta = props.memo.field_values?.meta || {};
@@ -129,18 +134,41 @@ const saveSigners = () => {
         { name: props.memo.area_manager?.name || '', role: 'Area Manager', location: 'document' },
     ];
 
+    const hasTemplateSlot3 = !!templateSigners[2];
+    const hasTemplateSlot4 = !!templateSigners[3];
+
     if (signersForm.slot3_enabled) {
         signers.push({ name: signersForm.slot3_name, role: signersForm.slot3_role, location: 'document' });
+    } else if (signersForm.slot4_enabled || hasTemplateSlot3 || hasTemplateSlot4) {
+        signers.push({ name: '', role: '', location: 'document' });
     }
 
     if (signersForm.slot4_enabled) {
         signers.push({ name: signersForm.slot4_name, role: signersForm.slot4_role, location: 'document' });
+    } else if (hasTemplateSlot4) {
+        signers.push({ name: '', role: '', location: 'document' });
     }
 
     signersForm.transform(() => ({ signers, footer_box_count: signersForm.footer_box_count })).post(route('approvals.updateSigners', props.memo.id), {
         preserveScroll: true,
-        onSuccess: () => { showSignerModal.value = false; },
+        onSuccess: () => {
+            savedSignerSettings.value = {
+                slot3_enabled: signersForm.slot3_enabled,
+                slot4_enabled: signersForm.slot4_enabled,
+                slot3_name: signersForm.slot3_name,
+                slot3_role: signersForm.slot3_role,
+                slot4_name: signersForm.slot4_name,
+                slot4_role: signersForm.slot4_role,
+                footer_box_count: signersForm.footer_box_count,
+            };
+            showSignerModal.value = false;
+        },
     });
+};
+
+const cancelSignerEdits = () => {
+    Object.assign(signersForm, savedSignerSettings.value);
+    showSignerModal.value = false;
 };
 
 const formatDate = (dateString) => {
@@ -418,6 +446,7 @@ const formatDate = (dateString) => {
             title="Sesuaikan Penandatangan Memo"
             :confirmLoading="signersForm.processing"
             @ok="saveSigners"
+            @cancel="cancelSignerEdits"
             okText="Simpan Penandatangan"
             cancelText="Batal"
             centered

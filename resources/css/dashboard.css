@@ -115,6 +115,54 @@ html:not(.theme-light) .dashboard-status-draft {
     gap: 0.28rem;
 }
 
+.dashboard-period-group {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.2rem;
+}
+
+.dashboard-period-bars {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.04rem;
+}
+
+.dashboard-document-column {
+    display: flex;
+    flex: 0 1 0.75rem;
+    height: 100%;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.dashboard-document-column .dashboard-stacked-track {
+    width: min(0.55rem, 88%);
+}
+
+.dashboard-document-type-label {
+    color: #64748b;
+    font-size: 0.5rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.dashboard-period-label {
+    color: #64748b;
+    font-size: 0.62rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
 .dashboard-stacked-track {
     display: flex;
     width: min(0.70rem, 58%);
@@ -173,8 +221,8 @@ html:not(.theme-light) .dashboard-status-draft {
 }
 
 .dashboard-status-donut {
-    width: 150px;
-    height: 150px;
+    width: 168px;
+    height: 168px;
     margin: 0 auto;
     border-radius: 50%;
     display: flex;
@@ -206,7 +254,7 @@ html:not(.theme-light) .dashboard-status-draft {
 .dashboard-status-track,
 .dashboard-status-segment {
     fill: none;
-    stroke-width: 12;
+    stroke-width: 10;
 }
 
 .dashboard-status-track {
@@ -214,7 +262,7 @@ html:not(.theme-light) .dashboard-status-draft {
 }
 
 .dashboard-status-segment {
-    stroke-linecap: round;
+    stroke-linecap: butt;
     transition: stroke-dasharray 0.35s ease, stroke-dashoffset 0.35s ease;
 }
 
@@ -232,6 +280,7 @@ html:not(.theme-light) .dashboard-status-draft {
 .dashboard-status-hole strong {
     color: #f8fafc;
     font-size: 1.25rem;
+    line-height: 1;
 }
 
 .dashboard-status-hole span {
@@ -284,8 +333,9 @@ html:not(.theme-light) .dashboard-status-draft {
 }
 
 .dashboard-legend-pending { background: #fbbf24; }
-.dashboard-legend-approved { background: #a78bfa; }
-.dashboard-legend-rejected { background: #fb7185; }
+.dashboard-legend-pending { background: #f2b323; }
+.dashboard-legend-approved { background: #2563eb; }
+.dashboard-legend-rejected { background: #f97360; }
 
 .dashboard-approval-footer {
     margin-top: 0.7rem;
@@ -308,6 +358,10 @@ html:not(.theme-light) .dashboard-status-draft {
 
 html.theme-light .dashboard-status-hole {
     background: #ffffff;
+}
+
+html.theme-light .dashboard-status-track {
+    stroke: #e2e8f0;
 }
 
 html.theme-light .dashboard-ant-card {

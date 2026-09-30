@@ -2,11 +2,21 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import {
+    AppstoreOutlined,
+    BankOutlined,
+    ClockCircleOutlined,
+    EnvironmentOutlined,
+    FileTextOutlined,
+    InboxOutlined,
+    RightOutlined,
+    TeamOutlined,
+} from '@ant-design/icons-vue';
 
 const props = defineProps({
     stats: Object,
     submissionStats: { type: Object, default: () => ({}) },
-    recentMemos: Array,
+    recentMemos: { type: Array, default: () => [] },
     baStats: { type: Object, default: () => ({}) },
     recentBA: { type: Array, default: () => [] },
     activity: Array,
@@ -42,57 +52,53 @@ const userDisplayName = computed(() => {
     return name.split('(')[0].trim();
 });
 
-const formattedDate = computed(() => {
-    return new Intl.DateTimeFormat('id-ID', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-    }).format(now.value);
-});
+    const formattedDate = computed(() => new Intl.DateTimeFormat('id-ID', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    }).format(now.value));
 
-const formattedTime = computed(() => {
-    return now.value.toLocaleTimeString('id-ID', {
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-    }) + ' WIB';
-});
+    const formattedTime = computed(() => now.value.toLocaleTimeString('id-ID', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    }) + ' WIB');
 
-const searchQuery = ref('');
-const statusFilter = ref('all');
-const chartPeriod = ref('year');
+    const searchQuery = ref('');
+    const statusFilter = ref('all');
+    const documentTypeFilter = ref('all');
+    const chartPeriod = ref('year');
 
-const statusConfig = {
-    draft: { 
-        label: 'Draft', 
-        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-    },
-    submitted: { 
-        label: 'Menunggu AM', 
-        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-    },
-    approved: { 
-        label: 'Disetujui', 
-        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-    },
-    rejected: { 
-        label: 'Ditolak', 
-        badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-    },
-};
+    const chartPeriodOptions = [
+        { label: 'Week', value: 'week' },
+        { label: 'Month', value: 'month' },
+        { label: 'Year', value: 'year' },
+    ];
 
-const baStatusConfig = {
-    draft: { label: 'Draft', class: 'text-slate-300' },
-    submitted: { label: 'Menunggu AM', class: 'text-amber-300' },
-    approved: { label: 'Disetujui', class: 'text-emerald-300' },
-    rejected: { label: 'Perlu Revisi', class: 'text-rose-300' },
-};
+    const statusConfig = {
+        draft: { label: 'Draft' },
+        submitted: { label: 'Menunggu AM' },
+        approved: { label: 'Disetujui' },
+        rejected: { label: 'Ditolak' },
+    };
 
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    });
-};
+    const kpiCards = computed(() => [
+        { title: 'Pengajuan Masuk', value: props.submissionStats?.received ?? 0, note: 'Memo + BA', icon: InboxOutlined, color: '#818cf8', href: '#' },
+        { title: 'Total Pengajuan', value: props.submissionStats?.total ?? 0, note: `${props.submissionStats?.approved ?? 0} Disetujui · ${props.submissionStats?.draft ?? 0} Draft`, icon: FileTextOutlined, color: '#818cf8', href: '#' },
+        { title: 'Menunggu AM', value: props.submissionStats?.submitted ?? 0, note: 'Perlu review AM', icon: ClockCircleOutlined, color: '#fbbf24', href: '#' },
+        { title: 'Template Form', value: props.stats?.total_templates ?? 0, note: 'Skema aktif', icon: AppstoreOutlined, color: '#34d399', href: route('admin.templates.index') },
+        { title: 'Pengguna', value: props.stats?.total_users ?? 0, note: `${props.stats?.total_branches ?? 0} Cabang · ${props.stats?.total_areas ?? 0} Area`, icon: TeamOutlined, color: '#22d3ee', href: route('admin.users.index') },
+    ]);
+
+    const masterDataLinks = computed(() => [
+        { title: 'Kelola Template Memo', description: 'Atur skema form & field dinamis', count: props.stats?.total_templates ?? 0, route: 'admin.templates.index', icon: AppstoreOutlined },
+        { title: 'Kelola Kantor Cabang', description: 'Daftar cabang & alokasi area', count: props.stats?.total_branches ?? 0, route: 'admin.branches.index', icon: BankOutlined },
+        { title: 'Kelola Wilayah Area', description: 'Pembagian area operasional', count: props.stats?.total_areas ?? 0, route: 'admin.areas.index', icon: EnvironmentOutlined },
+        { title: 'Kelola Data User', description: 'Akun KC, AM, & Administrator', count: props.stats?.total_users ?? 0, route: 'admin.users.index', icon: TeamOutlined },
+    ]);
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            day: '2-digit', month: 'short', year: 'numeric',
+        });
+    };
 
 const formatTime = (dateString) => {
     if (!dateString) return '';
@@ -104,32 +110,51 @@ const formatTime = (dateString) => {
 };
 
 
-const filteredMemos = computed(() => {
-    let list = props.recentMemos || [];
+const documents = computed(() => [
+    ...(props.recentMemos || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
+    ...(props.recentBA || []).map((ba) => ({ ...ba, _documentType: 'ba' })),
+].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+
+const documentColumns = [
+    { title: 'Kode & Tanggal', key: 'code', width: 175 },
+    { title: 'Perihal', key: 'subject', width: 190 },
+    { title: 'Jenis', key: 'type', width: 120 },
+    { title: 'Cabang & Pembuat', key: 'creator', width: 190 },
+    { title: 'Status', key: 'status', width: 130 },
+    { title: 'Aksi', key: 'action', align: 'center', width: 125 },
+];
+
+const filteredDocuments = computed(() => {
+    let list = documents.value;
+
+    if (documentTypeFilter.value !== 'all') {
+        list = list.filter((document) => document._documentType === documentTypeFilter.value);
+    }
     
     if (statusFilter.value !== 'all') {
-        list = list.filter(m => m.status === statusFilter.value);
+        list = list.filter((document) => document.status === statusFilter.value);
     }
     
     if (searchQuery.value.trim()) {
         const q = searchQuery.value.toLowerCase().trim();
-        list = list.filter(m => 
-            (m.code && m.code.toLowerCase().includes(q)) ||
-            (m.title && m.title.toLowerCase().includes(q)) ||
-            (m.creator?.name && m.creator.name.toLowerCase().includes(q)) ||
-            (m.branch?.name && m.branch.name.toLowerCase().includes(q)) ||
-            (m.template?.name && m.template.name.toLowerCase().includes(q))
+        list = list.filter((document) =>
+            (document.code && document.code.toLowerCase().includes(q)) ||
+            (document.title && document.title.toLowerCase().includes(q)) ||
+            (document.creator?.name && document.creator.name.toLowerCase().includes(q)) ||
+            (document.branch?.name && document.branch.name.toLowerCase().includes(q)) ||
+            (document.template?.name && document.template.name.toLowerCase().includes(q)) ||
+            (document._documentType === 'ba' ? 'berita acara ba' : 'memo').includes(q)
         );
     }
     
     return list;
 });
 
-const totalMemosCount = computed(() => props.stats?.total_memos || (props.recentMemos?.length || 0));
-const approvedCount = computed(() => props.stats?.approved_memos ?? props.recentMemos?.filter(m => m.status === 'approved').length ?? 0);
-const pendingCount = computed(() => props.stats?.pending_approvals ?? props.recentMemos?.filter(m => m.status === 'submitted').length ?? 0);
-const draftCount = computed(() => props.stats?.draft_memos ?? props.recentMemos?.filter(m => m.status === 'draft').length ?? 0);
-const rejectedCount = computed(() => props.stats?.rejected_memos ?? props.recentMemos?.filter(m => m.status === 'rejected').length ?? 0);
+const totalMemosCount = computed(() => props.submissionStats?.total ?? props.stats?.total_memos ?? props.recentMemos?.length ?? 0);
+const approvedCount = computed(() => props.submissionStats?.approved ?? props.stats?.approved_memos ?? props.recentMemos?.filter((memo) => memo.status === 'approved').length ?? 0);
+const pendingCount = computed(() => props.submissionStats?.submitted ?? props.stats?.pending_approvals ?? props.recentMemos?.filter((memo) => memo.status === 'submitted').length ?? 0);
+const draftCount = computed(() => props.submissionStats?.draft ?? props.stats?.draft_memos ?? props.recentMemos?.filter((memo) => memo.status === 'draft').length ?? 0);
+const rejectedCount = computed(() => props.submissionStats?.rejected ?? props.stats?.rejected_memos ?? props.recentMemos?.filter((memo) => memo.status === 'rejected').length ?? 0);
 
 const approvedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((approvedCount.value / totalMemosCount.value) * 100) : 0);
 const pendingPercent = computed(() => totalMemosCount.value > 0 ? Math.round((pendingCount.value / totalMemosCount.value) * 100) : 0);
@@ -137,20 +162,28 @@ const draftPercent = computed(() => totalMemosCount.value > 0 ? Math.round((draf
 const rejectedPercent = computed(() => totalMemosCount.value > 0 ? Math.round((rejectedCount.value / totalMemosCount.value) * 100) : 0);
 
 const donutSegments = computed(() => {
-    const circumference = 2 * Math.PI * 42;
-    const values = [approvedCount.value, pendingCount.value, draftCount.value, rejectedCount.value];
-    const colors = ['#8b7cf6', '#ffc43d', '#64748b', '#ff9b7a'];
-    const total = values.reduce((sum, value) => sum + value, 0);
+    const radius = 42;
+    const circumference = 2 * Math.PI * radius;
+    const statuses = [
+        { label: 'Approved', value: approvedCount.value, color: '#2563eb', strokeWidth: 13.5 },
+        { label: 'Pending', value: pendingCount.value, color: '#f2b323', strokeWidth: 10.5 },
+        { label: 'Rejected', value: rejectedCount.value, color: '#f97360', strokeWidth: 8 },
+    ];
     let offset = 0;
 
-    return values.map((value, index) => {
-        const length = total > 0 ? (value / total) * circumference : 0;
+    return statuses.map((status) => {
+        const length = totalMemosCount.value > 0
+            ? (status.value / totalMemosCount.value) * circumference
+            : 0;
+        const segmentGap = Math.min(4, length * 0.2);
+        const visibleLength = Math.max(length - segmentGap, 0);
         const segment = {
-            color: colors[index],
-            dasharray: `${length} ${circumference - length}`,
+            ...status,
+            dasharray: `${visibleLength} ${circumference - visibleLength}`,
             dashoffset: -offset,
         };
         offset += length;
+
         return segment;
     });
 });
@@ -165,19 +198,39 @@ const activityDays = computed(() => {
 
 const chartPoints = computed(() => props.chartData?.[chartPeriod.value] || []);
 
-const chartMax = computed(() => Math.max(...chartPoints.value.map((point) => point.approved + point.submitted + point.rejected), 1));
+const chartMax = computed(() => Math.max(...chartPoints.value.flatMap((point) => [point.memo, point.ba].map((document) =>
+    (Number(document?.approved) || 0) + (Number(document?.submitted) || 0) + (Number(document?.rejected) || 0)
+)), 1));
 
 const chartTicks = computed(() => {
     const step = Math.max(Math.ceil(chartMax.value / 4), 1);
     return [step * 4, step * 3, step * 2, step, 0];
 });
 
+const createDocumentBar = (counts = {}, type, shortLabel) => {
+    const approved = Number(counts.approved) || 0;
+    const submitted = Number(counts.submitted) || 0;
+    const rejected = Number(counts.rejected) || 0;
+
+    return {
+        type,
+        shortLabel,
+        total: approved + submitted + rejected,
+        approved,
+        submitted,
+        rejected,
+        approvedHeight: (approved / chartMax.value) * 100,
+        submittedHeight: (submitted / chartMax.value) * 100,
+        rejectedHeight: (rejected / chartMax.value) * 100,
+    };
+};
+
 const chartBars = computed(() => chartPoints.value.map((point) => ({
-    ...point,
-    total: point.approved + point.submitted + point.rejected,
-    approvedHeight: (point.approved / chartMax.value) * 100,
-    submittedHeight: (point.submitted / chartMax.value) * 100,
-    rejectedHeight: (point.rejected / chartMax.value) * 100,
+    label: point.label,
+    documents: [
+        createDocumentBar(point.memo, 'Memo', 'M'),
+        createDocumentBar(point.ba, 'Berita Acara', 'BA'),
+    ],
 })));
 
 const statusChartData = computed(() => [
@@ -221,149 +274,19 @@ const statusChartData = computed(() => [
         </div>
 
         <!-- KPI Metric Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <!-- Pengajuan Masuk -->
-            <Link href="#" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-indigo-500/20 shadow-sm flex flex-col justify-between block transition-all">
-                <div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengajuan Masuk</span>
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <a-row :gutter="[16, 16]" class="mb-8">
+            <a-col v-for="card in kpiCards" :key="card.title" flex="1 1 200px">
+                <Link :href="card.href" class="block h-full">
+                    <a-card :bordered="false" size="small" hoverable class="dashboard-ant-card h-full">
+                        <div class="flex items-start justify-between gap-3">
+                            <a-statistic :title="card.title" :value="card.value" :value-style="{ color: card.color, fontSize: '28px', fontWeight: 700 }" />
+                            <component :is="card.icon" :style="{ color: card.color, fontSize: '20px' }" />
                         </div>
-                    </div>
-                    <div class="mt-3 flex items-baseline gap-2">
-                        <span class="text-3xl font-bold text-white tracking-tight">{{ submissionStats.received ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">Memo + BA</span>
-                    </div>
-                </div>
-            </Link>
-
-            <!-- Card 1: Total Pengajuan -->
-            <Link href="#" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-indigo-500/20 shadow-sm flex flex-col justify-between block transition-all">
-                <div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pengajuan</span>
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        </div>
-                    </div>
-                    <div class="mt-3 flex items-baseline gap-2">
-                        <span class="text-3xl font-bold text-white tracking-tight">{{ submissionStats.total ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">Memo + BA</span>
-                    </div>
-                </div>
-                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-                    <span>{{ submissionStats.approved ?? 0 }} Disetujui</span>
-                    <span>{{ submissionStats.draft ?? 0 }} Draft</span>
-                </div>
-            </Link>
-
-            <!-- Card 2: Menunggu Persetujuan AM -->
-            <Link href="#" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-amber-500/20 shadow-sm flex flex-col justify-between block transition-all">
-                <div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-amber-400/90 uppercase tracking-wider">Menunggu AM</span>
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                    </div>
-                    <div class="mt-3 flex items-baseline gap-2">
-                        <span class="text-3xl font-bold text-amber-300 tracking-tight">{{ submissionStats.submitted ?? 0 }}</span>
-                        <span class="text-xs font-medium text-amber-400/80">Perlu Review AM</span>
-                    </div>
-                </div>
-                <div class="mt-4 pt-3 border-t border-white/5 flex items-center text-xs text-amber-400/75 gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span>Menunggu Verifikasi</span>
-                </div>
-            </Link>
-
-            <!-- Card 3: Template Memo -->
-            <Link :href="route('admin.templates.index')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-emerald-500/20 shadow-sm flex flex-col justify-between block transition-all">
-                <div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Template Form</span>
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm10 0a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>
-                        </div>
-                    </div>
-                    <div class="mt-3 flex items-baseline gap-2">
-                        <span class="text-3xl font-bold text-white tracking-tight">{{ stats.total_templates ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">Skema Aktif</span>
-                    </div>
-                </div>
-                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-                    <span class="text-emerald-400">Format standar cabang</span>
-                </div>
-            </Link>
-
-            <!-- Card 4: Pengguna & Jaringan Cabang -->
-            <Link :href="route('admin.users.index')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-cyan-500/20 shadow-sm flex flex-col justify-between block transition-all">
-                <div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengguna</span>
-                        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        </div>
-                    </div>
-                    <div class="mt-3 flex items-baseline gap-2">
-                        <span class="text-3xl font-bold text-white tracking-tight">{{ stats.total_users ?? 0 }}</span>
-                        <span class="text-xs font-medium text-slate-400">Akun Terdaftar</span>
-                    </div>
-                </div>
-                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-                    <span>{{ stats.total_branches ?? 0 }} Cabang</span>
-                    <span>{{ stats.total_areas ?? 0 }} Area</span>
-                </div>
-            </Link>
-        </div>
-
-        <section class="mb-8 rounded-2xl border border-white/5 bg-slate-800/50 p-5 shadow-sm">
-            <div class="mb-4 flex items-center justify-between gap-3">
-                <div>
-                    <h2 class="text-base font-bold text-white">Ringkasan Berita Acara</h2>
-                    <p class="mt-1 text-xs text-slate-400">Pemantauan BA dari seluruh cabang.</p>
-                </div>
-                <span class="text-xs text-slate-400">{{ baStats.total ?? 0 }} dokumen</span>
-            </div>
-
-            <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <div class="rounded-xl border border-white/5 bg-slate-900/40 p-3">
-                    <div class="text-xs text-slate-400">Draft</div>
-                    <div class="mt-1 text-xl font-semibold text-slate-200">{{ baStats.draft ?? 0 }}</div>
-                </div>
-                <div class="rounded-xl border border-amber-500/10 bg-slate-900/40 p-3">
-                    <div class="text-xs text-amber-300">Menunggu AM</div>
-                    <div class="mt-1 text-xl font-semibold text-amber-300">{{ baStats.submitted ?? 0 }}</div>
-                </div>
-                <div class="rounded-xl border border-emerald-500/10 bg-slate-900/40 p-3">
-                    <div class="text-xs text-emerald-300">Disetujui</div>
-                    <div class="mt-1 text-xl font-semibold text-emerald-300">{{ baStats.approved ?? 0 }}</div>
-                </div>
-                <div class="rounded-xl border border-rose-500/10 bg-slate-900/40 p-3">
-                    <div class="text-xs text-rose-300">Perlu Revisi</div>
-                    <div class="mt-1 text-xl font-semibold text-rose-300">{{ baStats.rejected ?? 0 }}</div>
-                </div>
-            </div>
-
-            <div class="divide-y divide-white/5">
-                <Link
-                    v-for="ba in recentBA"
-                    :key="ba.id"
-                    :href="route('approvals.ba.history', ba.id)"
-                    class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                    <div class="min-w-0">
-                        <div class="truncate text-sm font-medium text-slate-100">{{ ba.title }}</div>
-                        <div class="mt-1 text-xs text-slate-400">{{ ba.code }} · {{ ba.branch?.name || '-' }} · {{ ba.creator?.name || '-' }}</div>
-                    </div>
-                    <span class="shrink-0 text-xs" :class="baStatusConfig[ba.status]?.class || 'text-slate-300'">
-                        {{ baStatusConfig[ba.status]?.label || ba.status }}
-                    </span>
+                        <a-typography-text type="secondary" class="mt-3 block text-xs">{{ card.note }}</a-typography-text>
+                    </a-card>
                 </Link>
-                <p v-if="recentBA.length === 0" class="py-3 text-sm text-slate-400">Belum ada Berita Acara.</p>
-            </div>
-        </section>
+            </a-col>
+        </a-row>
 
         <!-- Activity Overview -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -371,17 +294,15 @@ const statusChartData = computed(() => [
                 <div class="flex items-start justify-between gap-4 mb-5">
                     <div>
                         <h2 class="text-base font-bold text-white tracking-tight">Aktivitas Pengajuan</h2>
-                        <div class="dashboard-chart-legend">
-                            <span><i class="dashboard-chart-dot dashboard-chart-dot-approved"></i>Disetujui</span>
-                            <span><i class="dashboard-chart-dot dashboard-chart-dot-submitted"></i>Menunggu</span>
-                            <span><i class="dashboard-chart-dot dashboard-chart-dot-rejected"></i>Ditolak</span>
-                        </div>
+                        <a-space size="small" wrap>
+                            <a-badge color="#4f6ee8" text="Disetujui" />
+                            <a-badge color="#f2ac3d" text="Menunggu" />
+                            <a-badge color="#28b886" text="Ditolak" />
+                            <a-tag color="blue">M · Memo</a-tag>
+                            <a-tag color="cyan">BA · Berita Acara</a-tag>
+                        </a-space>
                     </div>
-                    <div class="dashboard-chart-periods" role="group" aria-label="Periode grafik">
-                        <button v-for="period in ['week', 'month', 'year']" :key="period" type="button" :class="{ active: chartPeriod === period }" @click="chartPeriod = period">
-                            {{ period === 'week' ? 'Week' : period === 'month' ? 'Month' : 'Year' }}
-                        </button>
-                    </div>
+                    <a-segmented v-model:value="chartPeriod" :options="chartPeriodOptions" aria-label="Periode grafik" />
                 </div>
 
                 <div class="dashboard-stacked-chart">
@@ -389,14 +310,23 @@ const statusChartData = computed(() => [
                         <span v-for="tick in chartTicks" :key="tick">{{ tick }}</span>
                     </div>
                     <div class="dashboard-chart-plot">
-                        <div v-for="bar in chartBars" :key="bar.label" class="dashboard-stacked-column">
-                            <span class="dashboard-bar-value">{{ bar.total || '' }}</span>
-                            <div class="dashboard-stacked-track" :title="`${bar.label}: ${bar.total} memo`">
-                                <div class="dashboard-stacked-segment approved" :style="{ height: `${bar.approvedHeight}%` }"></div>
-                                <div class="dashboard-stacked-segment submitted" :style="{ height: `${bar.submittedHeight}%` }"></div>
-                                <div class="dashboard-stacked-segment rejected" :style="{ height: `${bar.rejectedHeight}%` }"></div>
+                        <div v-for="bar in chartBars" :key="bar.label" class="dashboard-period-group">
+                            <div class="dashboard-period-bars">
+                                <div
+                                    v-for="documentBar in bar.documents"
+                                    :key="documentBar.type"
+                                    class="dashboard-document-column"
+                                    :title="`${bar.label} ${documentBar.type}: ${documentBar.total} total, ${documentBar.approved} disetujui, ${documentBar.submitted} menunggu, ${documentBar.rejected} ditolak`"
+                                >
+                                    <div class="dashboard-stacked-track">
+                                        <div class="dashboard-stacked-segment approved" :style="{ height: `${documentBar.approvedHeight}%` }"></div>
+                                        <div class="dashboard-stacked-segment submitted" :style="{ height: `${documentBar.submittedHeight}%` }"></div>
+                                        <div class="dashboard-stacked-segment rejected" :style="{ height: `${documentBar.rejectedHeight}%` }"></div>
+                                    </div>
+                                    <span class="dashboard-document-type-label">{{ documentBar.shortLabel }}</span>
+                                </div>
                             </div>
-                            <span class="dashboard-bar-label">{{ bar.label }}</span>
+                            <span class="dashboard-period-label">{{ bar.label }}</span>
                         </div>
                     </div>
                 </div>
@@ -406,7 +336,7 @@ const statusChartData = computed(() => [
                 <div class="flex items-start justify-between mb-4">
                     <div>
                         <h2 class="text-base font-bold text-white tracking-tight">Approval Status</h2>
-                        <p class="text-xs text-slate-400 mt-1">Ringkasan status seluruh memo.</p>
+                        <p class="text-xs text-slate-400 mt-1">Ringkasan status Memo dan Berita Acara.</p>
                     </div>
                 </div>
 
@@ -415,13 +345,14 @@ const statusChartData = computed(() => [
                         <svg class="dashboard-status-svg" viewBox="0 0 100 100" aria-label="Grafik status persetujuan">
                             <circle class="dashboard-status-track" cx="50" cy="50" r="42" />
                             <circle
-                                v-for="(segment, index) in donutSegments"
-                                :key="index"
+                                v-for="segment in donutSegments"
+                                :key="segment.label"
                                 class="dashboard-status-segment"
                                 cx="50"
                                 cy="50"
                                 r="42"
                                 :stroke="segment.color"
+                                :style="{ strokeWidth: `${segment.strokeWidth}px` }"
                                 :stroke-dasharray="segment.dasharray"
                                 :stroke-dashoffset="segment.dashoffset"
                             />
@@ -433,18 +364,9 @@ const statusChartData = computed(() => [
                     </div>
 
                     <div class="dashboard-approval-legend">
-                        <div class="dashboard-legend-row">
-                            <span><i class="dashboard-legend-dot dashboard-legend-pending"></i>Pending</span>
-                            <strong>{{ pendingCount }}</strong>
-                        </div>
-                        <div class="dashboard-legend-row">
-                            <span><i class="dashboard-legend-dot dashboard-legend-approved"></i>Approved</span>
-                            <strong>{{ approvedCount }}</strong>
-                        </div>
-                        <div class="dashboard-legend-row">
-                            <span><i class="dashboard-legend-dot dashboard-legend-rejected"></i>Rejected</span>
-                            <strong>{{ rejectedCount }}</strong>
-                        </div>
+                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-approved"></i>Approved</span><strong>{{ approvedCount }}</strong></div>
+                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-pending"></i>Pending</span><strong>{{ pendingCount }}</strong></div>
+                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-rejected"></i>Rejected</span><strong>{{ rejectedCount }}</strong></div>
                     </div>
                 </div>
 
@@ -452,188 +374,89 @@ const statusChartData = computed(() => [
             </a-card>
         </div>
 
-        <!-- 2-Column Main Workspace -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Left 8 Columns: Recent Memos Table with Live Search & Tabs -->
             <div class="lg:col-span-8 flex flex-col gap-4">
                 <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-6 shadow-sm">
-                    <!-- Table Header & Controls -->
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-white/5">
                         <div>
-                            <h2 class="text-lg font-bold text-white tracking-tight">Pengajuan Memo Terkini</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Monitoring pergerakan dan status persetujuan memo dari seluruh cabang.</p>
+                            <h2 class="text-lg font-bold text-white tracking-tight">Pengajuan Terkini</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Monitoring Memo dan Berita Acara dari seluruh cabang.</p>
                         </div>
-
-                        <!-- Live Search Input -->
                         <div class="relative w-full md:w-64">
-                            <input
-                                v-model="searchQuery"
-                                type="text"
-                                placeholder="Cari kode, judul, cabang..."
-                                class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                            />
+                            <input v-model="searchQuery" type="text" placeholder="Cari kode, judul, cabang, Memo/BA..." class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all" />
                             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
                     </div>
 
-                    <!-- Filter Status Tabs -->
-                    <div class="flex items-center gap-1.5 py-3 overflow-x-auto text-xs border-b border-white/5 scrollbar-none">
-                        <a-button size="small"
-                            @click="statusFilter = 'all'"
-                            :class="[
-                                statusFilter === 'all'
-                                    ? 'bg-indigo-600 text-white font-medium shadow-sm'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5',
-                                'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                            ]"
-                        >
-                            Semua ({{ recentMemos.length }})
-                        </a-button>
-                        <a-button size="small"
-                            @click="statusFilter = 'submitted'"
-                            :class="[
-                                statusFilter === 'submitted'
-                                    ? 'bg-amber-500/20 text-amber-300 font-medium border border-amber-500/30'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5',
-                                'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                            ]"
-                        >
-                            Menunggu Review ({{ recentMemos.filter(m => m.status === 'submitted').length }})
-                        </a-button>
-                        <a-button size="small"
-                            @click="statusFilter = 'approved'"
-                            :class="[
-                                statusFilter === 'approved'
-                                    ? 'bg-emerald-500/20 text-emerald-300 font-medium border border-emerald-500/30'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5',
-                                'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                            ]"
-                        >
-                            Disetujui ({{ recentMemos.filter(m => m.status === 'approved').length }})
-                        </a-button>
-                        <a-button size="small"
-                            @click="statusFilter = 'draft'"
-                            :class="[
-                                statusFilter === 'draft'
-                                    ? 'bg-slate-700 text-white font-medium'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5',
-                                'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                            ]"
-                        >
-                            Draft ({{ recentMemos.filter(m => m.status === 'draft').length }})
-                        </a-button>
-                        <a-button size="small"
-                            @click="statusFilter = 'rejected'"
-                            :class="[
-                                statusFilter === 'rejected'
-                                    ? 'bg-rose-500/20 text-rose-300 font-medium border border-rose-500/30'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5',
-                                'px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap'
-                            ]"
-                        >
-                            Ditolak ({{ recentMemos.filter(m => m.status === 'rejected').length }})
-                        </a-button>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 border-b border-white/5 text-xs">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-500">Jenis</span>
+                            <a-button v-for="type in [{ value: 'all', label: 'Semua' }, { value: 'memo', label: 'Memo' }, { value: 'ba', label: 'BA' }]" :key="type.value" size="small" :type="documentTypeFilter === type.value ? 'primary' : 'default'" @click="documentTypeFilter = type.value">{{ type.label }}</a-button>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <a-button size="small" :type="statusFilter === 'all' ? 'primary' : 'default'" @click="statusFilter = 'all'">Semua ({{ documents.length }})</a-button>
+                            <a-button size="small" :type="statusFilter === 'submitted' ? 'primary' : 'default'" @click="statusFilter = 'submitted'">Menunggu Review ({{ documents.filter(document => document.status === 'submitted').length }})</a-button>
+                            <a-button size="small" :type="statusFilter === 'approved' ? 'primary' : 'default'" @click="statusFilter = 'approved'">Disetujui ({{ documents.filter(document => document.status === 'approved').length }})</a-button>
+                            <a-button size="small" :type="statusFilter === 'draft' ? 'primary' : 'default'" @click="statusFilter = 'draft'">Draft ({{ documents.filter(document => document.status === 'draft').length }})</a-button>
+                            <a-button size="small" :type="statusFilter === 'rejected' ? 'primary' : 'default'" @click="statusFilter = 'rejected'">Ditolak ({{ documents.filter(document => document.status === 'rejected').length }})</a-button>
+                        </div>
                     </div>
 
                     <!-- Enterprise Table -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full min-w-[820px] text-left table-head-pgi">
-                            <thead>
-                                <tr class="text-[11px] font-semibold uppercase tracking-wider">
-                                    <th class="px-6 py-3.5">Kode &amp; Tanggal</th>
-                                    <th class="px-6 py-3.5">Perihal Memo</th>
-                                    <th class="px-6 py-3.5">Cabang &amp; Pembuat</th>
-                                    <th class="px-6 py-3.5">Status</th>
-                                    <th class="px-6 py-3.5 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-white/5">
-                                <tr
-                                    v-for="memo in filteredMemos"
-                                    :key="memo.id"
-                                    class="hover:bg-white/[0.02] transition-colors group animate-in fade-in duration-500"
-                                >
-                                    <!-- Kode & Tanggal -->
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex flex-col">
-                                            <span class="font-mono text-xs font-semibold text-indigo-400 group-hover:text-indigo-300 transition-colors">
-                                                {{ memo.code }}
-                                            </span>
-                                            <span class="text-[11px] text-slate-500 mt-0.5">
-                                                {{ formatDate(memo.created_at) }} <span class="text-slate-600">•</span> {{ formatTime(memo.created_at) }}
-                                            </span>
-                                        </div>
-                                    </td>
-
-                                    <!-- Perihal Memo -->
-                                    <td class="px-6 py-4 max-w-xs">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-medium text-white line-clamp-1 group-hover:text-indigo-200 transition-colors">
-                                                {{ memo.title }}
-                                            </span>
-                                            <span v-if="memo.template" class="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
-                                                {{ memo.template.name }}
-                                            </span>
-                                        </div>
-                                    </td>
-
-                                    <!-- Cabang & Pembuat -->
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-7 h-7 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-semibold text-slate-300">
-                                                {{ memo.creator?.name?.charAt(0) || 'U' }}
-                                            </div>
-                                            <div class="flex flex-col">
-                                                <span class="text-xs font-medium text-slate-200">{{ memo.creator?.name || '-' }}</span>
-                                                <span class="text-[11px] text-slate-400">
-                                                    {{ memo.branch?.name || 'Kantor Cabang' }}
-                                                    <span v-if="memo.branch?.area?.name" class="text-slate-500">({{ memo.branch.area.name }})</span>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="dashboard-status-badge inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap" :class="[statusConfig[memo.status]?.badgeClass || 'bg-slate-500/15 text-slate-300 border-slate-500/30', { 'dashboard-status-draft': memo.status === 'draft' }]">
-                                            <span>{{ statusConfig[memo.status]?.label || memo.status }}</span>
-                                        </div>
-                                    </td>
-
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <Link
-                                            :href="route('memos.show', memo.id)"
-                                            class="btn-secondary-anim inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white text-xs font-medium border border-white/5 hover:border-transparent shadow-sm"
-                                        >
-                                            <span>Lihat Memo</span>
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                        </Link>
-                                    </td>
-                                </tr>
-
-                                <tr v-if="filteredMemos.length === 0">
-                                    <td colspan="5" class="px-6 py-12 text-center">
-                                        <div class="flex flex-col items-center justify-center">
-                                            <div class="w-12 h-12 rounded-2xl bg-slate-800/80 border border-white/10 flex items-center justify-center text-slate-500 mb-3">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            </div>
-                                            <p class="text-sm font-medium text-slate-300">Tidak ada memo yang sesuai</p>
-                                            <p class="text-xs text-slate-500 mt-1 max-w-sm">Coba sesuaikan kata kunci pencarian atau ganti filter status untuk melihat data memo lainnya.</p>
-                                            <button
-                                                v-if="searchQuery || statusFilter !== 'all'"
-                                                @click="searchQuery = ''; statusFilter = 'all'"
-                                                class="mt-3 text-xs text-indigo-400 hover:text-indigo-300 underline font-medium"
-                                            >
-                                                Reset Filter & Pencarian
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <a-table
+                        class="admin-document-table"
+                        :data-source="filteredDocuments"
+                        :columns="documentColumns"
+                        :row-key="document => `${document._documentType}-${document.id}`"
+                        :pagination="false"
+                        :scroll="{ x: 930 }"
+                        size="small"
+                    >
+                        <template #bodyCell="{ column, record }">
+                            <template v-if="column.key === 'code'">
+                                <div class="flex flex-col whitespace-nowrap">
+                                    <span class="font-mono text-xs font-semibold text-indigo-400">{{ record.code }}</span>
+                                    <span class="mt-0.5 text-[11px] text-slate-500">{{ formatDate(record.created_at) }} · {{ formatTime(record.created_at) }}</span>
+                                </div>
+                            </template>
+                            <template v-else-if="column.key === 'subject'">
+                                <div class="flex min-w-36 flex-col">
+                                    <span class="line-clamp-1 text-sm font-medium text-white">{{ record.title }}</span>
+                                    <span v-if="record.template" class="mt-0.5 line-clamp-1 text-[11px] text-slate-400">{{ record.template.name }}</span>
+                                </div>
+                            </template>
+                            <template v-else-if="column.key === 'type'">
+                                <a-tag :color="record._documentType === 'ba' ? 'cyan' : 'blue'">{{ record._documentType === 'ba' ? 'Berita Acara' : 'Memo' }}</a-tag>
+                            </template>
+                            <template v-else-if="column.key === 'creator'">
+                                <div class="flex min-w-40 items-center gap-2.5">
+                                    <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-slate-800 text-xs font-semibold text-slate-300">{{ record.creator?.name?.charAt(0) || 'U' }}</div>
+                                    <div class="flex min-w-0 flex-col">
+                                        <span class="truncate text-xs font-medium text-slate-200">{{ record.creator?.name || '-' }}</span>
+                                        <span class="truncate text-[11px] text-slate-400">{{ record.branch?.name || 'Kantor Cabang' }}</span>
+                                    </div>
+                                </div>
+                            </template>
+                            <template v-else-if="column.key === 'status'">
+                                <a-tag :color="{ draft: 'default', submitted: 'processing', approved: 'success', rejected: 'error' }[record.status] || 'default'">{{ statusConfig[record.status]?.label || record.status }}</a-tag>
+                            </template>
+                            <template v-else-if="column.key === 'action'">
+                                <Link :href="route(record._documentType === 'ba' ? 'approvals.ba.history' : 'memos.show', record.id)">
+                                    <a-button type="primary" ghost size="small">{{ record._documentType === 'ba' ? 'Lihat BA' : 'Lihat Memo' }}</a-button>
+                                </Link>
+                            </template>
+                        </template>
+                        <template #emptyText>
+                            <a-empty description="Tidak ada dokumen yang sesuai">
+                                <a-button v-if="searchQuery || statusFilter !== 'all' || documentTypeFilter !== 'all'" @click="searchQuery = ''; statusFilter = 'all'; documentTypeFilter = 'all'">
+                                    Reset Filter &amp; Pencarian
+                                </a-button>
+                            </a-empty>
+                        </template>
+                    </a-table>
 
                     <div class="pt-4 mt-2 border-t border-white/5 flex items-center justify-between text-xs text-slate-500">
-                        <span>Menampilkan {{ filteredMemos.length }} dari {{ recentMemos.length }} memo terkini</span>
+                        <span>Menampilkan {{ filteredDocuments.length }} dari {{ documents.length }} dokumen terkini</span>
                         <span class="hidden sm:inline">Data diperbarui secara otomatis</span>
                     </div>
                 </div>
@@ -641,89 +464,27 @@ const statusChartData = computed(() => [
 
             <!-- Right 4 Columns: Widgets (Breakdown, Shortcuts, SOP Info) -->
             <div class="lg:col-span-4 flex flex-col gap-6">
-                <div class="bg-slate-800/50 border border-white/5 rounded-2xl p-5 shadow-sm">
-                    <h3 class="text-sm font-bold text-white tracking-tight mb-3">Pusat Akses Master Data</h3>
-                    <div class="space-y-2">
-                        <Link
-                            :href="route('admin.templates.index')"
-                            class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 hover:border-indigo-500/30 transition-all group"
-                        >
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z"/></svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-semibold text-white group-hover:text-indigo-400 transition-colors">Kelola Template Memo</h4>
-                                    <p class="text-[11px] text-slate-400">Atur skema form & field dinamis</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-indigo-400 transition-colors">
-                                <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 font-semibold text-[11px]">{{ stats.total_templates ?? 0 }}</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                            </div>
-                        </Link>
-
-                        <!-- Kelola Cabang -->
-                        <Link
-                            :href="route('admin.branches.index')"
-                            class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 hover:border-emerald-500/30 transition-all group"
-                        >
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-semibold text-white group-hover:text-emerald-400 transition-colors">Kelola Kantor Cabang</h4>
-                                    <p class="text-[11px] text-slate-400">Daftar cabang & alokasi area</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-emerald-400 transition-colors">
-                                <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 font-semibold text-[11px]">{{ stats.total_branches ?? 0 }}</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                            </div>
-                        </Link>
-
-                        <!-- Kelola Area -->
-                        <Link
-                            :href="route('admin.areas.index')"
-                            class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 hover:border-cyan-500/30 transition-all group"
-                        >
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-semibold text-white group-hover:text-cyan-400 transition-colors">Kelola Wilayah Area</h4>
-                                    <p class="text-[11px] text-slate-400">Pembagian area operasional</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-cyan-400 transition-colors">
-                                <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 font-semibold text-[11px]">{{ stats.total_areas ?? 0 }}</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                            </div>
-                        </Link>
-
-                        <!-- Kelola User -->
-                        <Link
-                            :href="route('admin.users.index')"
-                            class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 hover:border-purple-500/30 transition-all group"
-                        >
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-105 transition-transform">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-semibold text-white group-hover:text-purple-400 transition-colors">Kelola Data User</h4>
-                                    <p class="text-[11px] text-slate-400">Akun KC, AM, & Administrator</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-purple-400 transition-colors">
-                                <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 font-semibold text-[11px]">{{ stats.total_users ?? 0 }}</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                            </div>
-                        </Link>
-                    </div>
-                </div>
+                    <a-card :bordered="false" class="dashboard-ant-card" title="Pusat Akses Master Data">
+                        <a-list :data-source="masterDataLinks" item-layout="horizontal" :split="false">
+                            <template #renderItem="{ item }">
+                                <a-list-item>
+                                    <Link :href="route(item.route)" class="flex w-full items-center justify-between gap-3">
+                                        <a-list-item-meta :title="item.title" :description="item.description">
+                                            <template #avatar>
+                                                <a-avatar>
+                                                    <component :is="item.icon" />
+                                                </a-avatar>
+                                            </template>
+                                        </a-list-item-meta>
+                                        <a-space>
+                                            <a-tag>{{ item.count }}</a-tag>
+                                            <RightOutlined />
+                                        </a-space>
+                                    </Link>
+                                </a-list-item>
+                            </template>
+                        </a-list>
+                    </a-card>
             </div>
         </div>
     </AuthenticatedLayout>

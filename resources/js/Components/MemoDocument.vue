@@ -48,23 +48,62 @@ const isPlaceholderSignerName = (name) => !name || name.trim().toLowerCase() ===
 const configuredSignatures = computed(() => {
     const custom = props.memo.field_values?.custom_signers;
     if (Array.isArray(custom) && custom.length > 0) {
-        return custom.map((slot) => {
+        const customSlots = custom.map((slot) => {
             let user = null;
             if (slot.role === 'Kepala Cabang') user = props.memo.creator;
             else if (isAreaManagerRole(slot.role)) user = props.showAmSignature ? props.memo.area_manager : null;
             
             return {
                 ...slot,
-                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (slot.role === 'Area Manager' ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
-                name: isAreaManagerRole(slot.role) && isPlaceholderSignerName(slot.name) ? areaManagerName() : (slot.name || ''),
+                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (isAreaManagerRole(slot.role) ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
+                name: slot.name || (slot.role === 'Kepala Cabang' ? props.memo.creator?.name || '' : (isAreaManagerRole(slot.role) ? areaManagerName() : '')),
                 role: slot.role || '',
                 location: slot.location || 'document',
                 user: user,
             };
         });
+
+        const customKc = customSlots.find((slot) => slot.role === 'Kepala Cabang') || {};
+        const customAm = customSlots.find((slot) => isAreaManagerRole(slot.role)) || {};
+        const templateSchema = props.memo.template?.signature_schema || [];
+        const additionalSlots = [2, 3]
+            .map((index) => {
+                const isMemoOverride = custom[index] !== undefined && custom[index] !== null;
+                const slot = custom[index] ?? templateSchema[index];
+                if (!slot) return null;
+
+                return {
+                    ...slot,
+                    name: slot.name || slot.user?.name || (isMemoOverride ? '' : 'Penandatangan'),
+                    role: slot.role || '',
+                    location: slot.location || 'document',
+                    user: slot.user || props.memo.template?.signature_people?.[slot.user_id] || null,
+                };
+            })
+            .filter(Boolean);
+
+        return [
+            {
+                ...customKc,
+                label: customKc.label || 'Dibuat Oleh,',
+                name: customKc.name || props.memo.creator?.name || '',
+                role: 'Kepala Cabang',
+                location: 'document',
+                user: props.memo.creator,
+            },
+            {
+                ...customAm,
+                label: customAm.label || 'Diketahui Oleh,',
+                name: isPlaceholderSignerName(customAm.name) ? areaManagerName() : (customAm.name || areaManagerName()),
+                role: 'Manager',
+                location: 'document',
+                user: props.showAmSignature ? props.memo.area_manager : null,
+            },
+            ...additionalSlots,
+        ];
     }
 
-    return (props.memo.template?.signature_schema || [])
+    const templateSlots = (props.memo.template?.signature_schema || [])
         .map((slot) => {
             let user = slot.user || props.memo.template?.signature_people?.[slot.user_id];
             let name = slot.name || slot.user?.name || 'Penandatangan';
@@ -79,12 +118,36 @@ const configuredSignatures = computed(() => {
 
             return {
                 ...slot,
-                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (slot.role === 'Area Manager' ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
+                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (isAreaManagerRole(slot.role) ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
                 name: name,
                 user: user,
             };
         })
         .filter((slot) => slot.name && slot.role);
+
+    const templateKc = templateSlots.find((slot) => slot.role === 'Kepala Cabang') || {};
+    const templateAm = templateSlots.find((slot) => isAreaManagerRole(slot.role)) || {};
+    const additionalSlots = templateSlots.filter((slot) => slot.role !== 'Kepala Cabang' && !isAreaManagerRole(slot.role));
+
+    return [
+        {
+            ...templateKc,
+            label: templateKc.label || 'Dibuat Oleh,',
+            name: isPlaceholderSignerName(templateKc.name) ? (props.memo.creator?.name || '') : templateKc.name,
+            role: 'Kepala Cabang',
+            location: 'document',
+            user: props.memo.creator,
+        },
+        {
+            ...templateAm,
+            label: templateAm.label || 'Diketahui Oleh,',
+            name: isPlaceholderSignerName(templateAm.name) ? areaManagerName() : (templateAm.name || areaManagerName()),
+            role: 'Manager',
+            location: 'document',
+            user: props.showAmSignature ? props.memo.area_manager : null,
+        },
+        ...additionalSlots,
+    ];
 });
 
 const documentSignatures = computed(() => configuredSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
@@ -139,8 +202,27 @@ const handleImgError = (event) => {
 
         <div class="mb-10">
             <KipasMemo v-if="isKipas" :memo="memo" :items="memoItems" :document-signatures="documentSignatures" />
-            <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" :approver-name="memoMeta.penyetuju_akhir" />
-            <div v-else-if="!memo.template" class="whitespace-pre-wrap text-justify">{{ memo.field_values?.body }}</div>
+            <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" :signature-slots="configuredSignatures" :approver-name="memoMeta.penyetuju_akhir" />
+            <template v-else-if="!memo.template">
+                <table v-if="memoItems.some((item) => item?.uraian || item?.keterangan)" class="w-full text-xs border-collapse border border-black mb-5">
+                    <thead>
+                        <tr class="bg-[#0284c7] text-white">
+                            <th class="border border-black px-2.5 py-1.5 w-10 text-center font-bold">No.</th>
+                            <th class="border border-black px-3 py-1.5 text-left font-bold">Uraian</th>
+                            <th class="border border-black px-3 py-1.5 text-left font-bold">Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, index) in memoItems" :key="'other-' + index">
+                            <td class="border border-black px-2.5 py-1.5 text-center">{{ index + 1 }}.</td>
+                            <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ item?.uraian || '-' }}</td>
+                            <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ item?.keterangan || '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div v-else-if="memo.field_values?.body" class="whitespace-pre-wrap text-justify">{{ memo.field_values.body }}</div>
+                <p class="mt-2 whitespace-pre-wrap">{{ memo.field_values?.penutup || 'Demikian Internal Memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.' }}</p>
+            </template>
             <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
         </div>
 

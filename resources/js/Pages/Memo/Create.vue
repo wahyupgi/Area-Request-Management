@@ -15,6 +15,7 @@ const props = defineProps({
 });
 
 const blankTemplateValue = '__blank__';
+const defaultClosing = 'Demikian Internal Memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
 
 const form = useForm({
     code: null,
@@ -25,7 +26,7 @@ const form = useForm({
         penutup: '',
         body: '',
         items: [{}],
-        meta: { direktorat: '', divisi: '', perihal: '', kepada: '', kepada_jabatan: '', penyetuju_akhir: '', lampiran: '' },
+        meta: { direktorat: '', divisi: '', perihal: '', kepada: '', kepada_jabatan: '', lampiran: '' },
     },
     submit_after_save: false,
 });
@@ -42,7 +43,6 @@ const defaultDocumentMeta = {
     perihal: '',
     kepada: '',
     kepada_jabatan: '',
-    penyetuju_akhir: '',
     lampiran: '',
 };
 
@@ -80,9 +80,9 @@ watch(() => form.template_id, (val) => {
         pengantar: documentDefaults.pengantar || (selectedTemplate.value
             ? `Sehubungan dengan pengajuan ${selectedTemplate.value.name}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`
             : ''),
-        penutup: documentDefaults.penutup || '',
+        penutup: documentDefaults.penutup || defaultClosing,
         body: '',
-        items: [{}],
+        items: val === blankTemplateValue ? [{ uraian: '', keterangan: '' }] : [{}],
         meta: {
             ...defaultDocumentMeta,
             ...Object.fromEntries(Object.entries(documentDefaults).filter(([key]) => !['pengantar', 'penutup'].includes(key))),
@@ -234,9 +234,6 @@ const submitAndSign = () => {
                             >
                                 <a-textarea v-model:value="form.field_values.pengantar" :rows="5" />
                             </a-form-item>
-                            <a-form-item v-if="selectedTemplate?.category === 'Keringanan Jasa'" label="Kalimat Penutup" class="mb-0">
-                                <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
-                            </a-form-item>
                         </a-card>
 
                         <!-- Informasi Dokumen -->
@@ -258,9 +255,6 @@ const submitAndSign = () => {
                             </a-form-item>
                             <a-form-item label="Jabatan Penerima" extra="Jabatan penerima memo." class="mb-3">
                                 <a-input v-model:value="form.field_values.meta.kepada_jabatan" placeholder="Contoh: Area Manager" />
-                            </a-form-item>
-                            <a-form-item label="Penyetuju Akhir" extra="Nama penyetuju akhir. Nantinya dapat diatur otomatis oleh admin." class="mb-3">
-                                <a-input v-model:value="form.field_values.meta.penyetuju_akhir" placeholder="Nama penyetuju akhir" />
                             </a-form-item>
                             <a-form-item label="Lampiran" extra="keterangan teks" class="mb-0">
                                 <a-input v-model:value="form.field_values.meta.lampiran" placeholder="contoh: 1 Lembar, 3 Berkas" />
@@ -284,9 +278,26 @@ const submitAndSign = () => {
                 <a-col :xs="24" :lg="14">
                     <!-- Dynamic Fields -->
                     <a-card v-if="isBlankMemo" :bordered="false" class="rounded-lg shadow-sm">
-                        <h2 class="text-sm font-semibold mb-4">Isi Memo</h2>
-                        <a-form-item label="Isi / Rincian Memo" class="mb-0">
-                            <a-textarea v-model:value="form.field_values.body" :rows="12" placeholder="Tuliskan isi memo..." />
+                        <h2 class="text-sm font-semibold mb-4">Rincian Memo</h2>
+                        <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                            <a-form-item :label="`Uraian ${itemIndex + 1}`" class="mb-0">
+                                <a-input v-model:value="item.uraian" placeholder="Masukkan uraian" />
+                            </a-form-item>
+                            <a-form-item label="Keterangan" class="mb-0">
+                                <div class="flex gap-2">
+                                    <a-input v-model:value="item.keterangan" placeholder="Masukkan keterangan" />
+                                    <a-button v-if="form.field_values.items.length > 1" type="text" danger @click="removeItem(itemIndex)">
+                                        <template #icon><delete-outlined /></template>
+                                    </a-button>
+                                </div>
+                            </a-form-item>
+                        </div>
+                        <a-button type="dashed" block @click="addItem">
+                            <template #icon><plus-outlined /></template>
+                            Tambah Baris
+                        </a-button>
+                        <a-form-item label="Kalimat Penutup" class="mt-5 mb-0">
+                            <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
                         </a-form-item>
 
                         <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
@@ -351,6 +362,9 @@ const submitAndSign = () => {
                             <template #icon><plus-outlined /></template>
                             Tambah Item
                         </a-button>
+                        <a-form-item label="Kalimat Penutup" class="mt-5 mb-0">
+                            <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
+                        </a-form-item>
 
                         <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
                             <a-button size="large" type="default" class="memo-save-draft-button" @click="submit" :loading="form.processing && !form.submit_after_save">

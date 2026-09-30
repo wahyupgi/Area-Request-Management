@@ -2,7 +2,55 @@
 const props = defineProps({
     memo: { type: Object, required: true },
     values: { type: Object, required: true },
+    signatureSlots: { type: Array, default: () => [] },
     approverName: { type: String, default: '' },
+});
+
+const signatureColumns = computed(() => {
+    const configured = props.signatureSlots || [];
+    const schemaAdditional = props.memo.template?.signature_schema?.slice(2, 4) || [];
+    const hasConfiguredAdditional = configured.length > 2 || schemaAdditional.length > 0;
+    const maxDocumentSlot = Math.max(2, ...configured.map((slot, index) => (
+        (slot.location || 'document') === 'document' ? Number(slot.slotNumber || index + 1) : 0
+    )));
+    const additionalColumns = [];
+
+    for (let slotIndex = 2; slotIndex < maxDocumentSlot; slotIndex += 1) {
+        const slot = configured[slotIndex];
+        additionalColumns.push(slot && (slot.location || 'document') === 'document'
+            ? {
+                label: slot.label || 'Disetujui oleh,',
+                name: slot.name || slot.user?.name || '',
+                role: slot.role || '',
+                signature: slot.user?.digital_signature?.signature_image || '',
+            }
+            : { label: 'Disetujui oleh,', name: '', role: '', signature: '' });
+    }
+
+    if (additionalColumns.length === 0 && !hasConfiguredAdditional) {
+        additionalColumns.push({
+            label: 'Disetujui oleh,',
+            name: props.approverName || props.values.penyetuju_akhir || props.memo.template?.document_defaults?.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko',
+            role: 'Senior Executive Vice President Bisnis dan Operasional',
+            signature: '',
+        });
+    }
+
+    return [
+        {
+            label: 'Dibuat oleh,',
+            name: props.memo.creator?.name || '',
+            role: 'Kepala Cabang',
+            signature: props.memo.creator?.digital_signature?.signature_image || '',
+        },
+        {
+            label: 'Disetujui oleh,',
+            name: props.memo.area_manager?.name || 'Bpk. Fathurrahman M',
+            role: 'Manager',
+            signature: props.memo.status === 'approved' ? props.memo.area_manager?.digital_signature?.signature_image || '' : '',
+        },
+        ...additionalColumns,
+    ];
 });
 
 const handleImgError = (event) => {
@@ -27,35 +75,21 @@ const handleImgError = (event) => {
     </table>
 
     <div class="mt-2 text-[11px] leading-[1.5] text-black" style="font-family: Tahoma, sans-serif;">
-        <p class="m-0">Demikianlah Internal Memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
-        <p class="mt-1 m-0">Terima kasih atas perhatiannya.</p>
+        <p v-if="memo.field_values?.penutup" class="m-0 whitespace-pre-wrap">{{ memo.field_values.penutup }}</p>
+        <template v-else>
+            <p class="m-0">Demikianlah Internal Memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
+            <p class="mt-1 m-0">Terima kasih atas perhatiannya.</p>
+        </template>
     </div>
 
-    <div class="mt-4 grid grid-cols-3 gap-3 items-start text-xs w-full max-w-3xl mx-auto px-1 mb-4">
-        <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1">Dibuat oleh,</p>
+    <div class="mt-4 grid gap-3 items-start text-xs w-full max-w-3xl mx-auto px-1 mb-4" :style="{ gridTemplateColumns: `repeat(${signatureColumns.length}, minmax(0, 1fr))` }">
+        <div v-for="(slot, index) in signatureColumns" :key="`cash-out-signature-${index}`" class="flex min-w-0 flex-col items-center text-center">
+            <p class="mb-1">{{ slot.label }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">
-                <img v-if="memo.creator?.digital_signature?.signature_image" :src="'/storage/' + memo.creator.digital_signature.signature_image" alt="Tanda tangan pembuat" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
+                <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-0 text-black leading-none">{{ memo.creator?.name }}</p>
-            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Kepala Cabang</p>
-        </div>
-        <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1">Disetujui oleh,</p>
-            <div class="h-16 w-full flex items-end justify-center relative">
-                <img v-if="memo.status === 'approved' && memo.area_manager?.digital_signature?.signature_image" :src="'/storage/' + memo.area_manager.digital_signature.signature_image" alt="Tanda tangan AM" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
-            </div>
-            <p class="relative top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-0 text-black leading-none">{{ memo.area_manager?.name || 'Bpk. Fathurrahman M' }}</p>
-            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Manager</p>
-        </div>
-        <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1">Disetujui oleh,</p>
-            <div class="h-16 w-full"></div>
-            <p class="relative top-1 w-full whitespace-nowrap text-[10px] mt-0 text-black leading-none">{{ approverName || values.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko' }}</p>
-            <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
-                <span class="block whitespace-nowrap">Senior Executive Vice President</span>
-                <span class="block whitespace-nowrap">Bisnis dan Operasional</span>
-            </p>
+            <p class="relative top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-0 text-black leading-none">{{ slot.name }}</p>
+            <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.role }}</p>
         </div>
     </div>
 

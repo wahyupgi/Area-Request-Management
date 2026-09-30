@@ -9,8 +9,8 @@ use App\Models\Memo;
 use App\Models\MemoTemplate;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class DashboardStatsService
 {
@@ -150,14 +150,28 @@ class DashboardStatsService
             ];
         })->values();
 
-        $chartMemos = Memo::query()
-            ->where('created_at', '>=', now()->startOfYear())
-            ->get(['status', 'created_at']);
+        $chartPeriodStart = now()->startOfYear();
+        $chartDocuments = Memo::query()
+            ->where('created_at', '>=', $chartPeriodStart)
+            ->get(['status', 'created_at'])
+            ->map(fn (Memo $memo) => [
+                'status' => $memo->status,
+                'created_at' => $memo->created_at,
+                'type' => 'memo',
+            ])
+            ->concat(BeritaAcara::query()
+                ->where('created_at', '>=', $chartPeriodStart)
+                ->get(['status', 'created_at'])
+                ->map(fn (BeritaAcara $ba) => [
+                    'status' => $ba->status,
+                    'created_at' => $ba->created_at,
+                    'type' => 'ba',
+                ]));
 
         $chartData = [
-            'week' => $this->buildChartPeriod($chartMemos, 'week'),
-            'month' => $this->buildChartPeriod($chartMemos, 'month'),
-            'year' => $this->buildChartPeriod($chartMemos, 'year'),
+            'week' => $this->buildChartPeriod($chartDocuments, 'week'),
+            'month' => $this->buildChartPeriod($chartDocuments, 'month'),
+            'year' => $this->buildChartPeriod($chartDocuments, 'year'),
         ];
 
         $baStats = $this->beritaAcaraStats(clone $baScope);
@@ -228,7 +242,7 @@ class DashboardStatsService
         return $stats;
     }
 
-    private function buildChartPeriod(Collection $memos, string $period): array
+    private function buildChartPeriod(Collection $documents, string $period): array
     {
         if ($period === 'week') {
             $periods = collect(range(6, 0))->map(function (int $daysAgo) {
@@ -259,8 +273,8 @@ class DashboardStatsService
             });
         }
 
-        $grouped = $memos->groupBy(function (Memo $memo) use ($period) {
-            $date = $memo->created_at;
+        $grouped = $documents->groupBy(function (array $document) use ($period) {
+            $date = $document['created_at'];
 
             return match ($period) {
                 'week' => $date->toDateString(),
@@ -270,16 +284,24 @@ class DashboardStatsService
         });
 
         return $periods->map(function (array $periodItem) use ($grouped) {
-            $counts = $grouped->get($periodItem['key'], collect())
-                ->countBy('status')
-                ->all();
+            $byType = $grouped->get($periodItem['key'], collect())->groupBy('type');
 
             return [
                 'label' => $periodItem['label'],
-                'approved' => (int) ($counts['approved'] ?? 0),
-                'submitted' => (int) ($counts['submitted'] ?? 0),
-                'rejected' => (int) ($counts['rejected'] ?? 0),
+                'memo' => $this->chartStatusCounts($byType->get('memo', collect())),
+                'ba' => $this->chartStatusCounts($byType->get('ba', collect())),
             ];
         })->values()->all();
+    }
+
+    private function chartStatusCounts(Collection $documents): array
+    {
+        $counts = $documents->countBy('status');
+
+        return [
+            'approved' => (int) $counts->get('approved', 0),
+            'submitted' => (int) $counts->get('submitted', 0),
+            'rejected' => (int) $counts->get('rejected', 0),
+        ];
     }
 }

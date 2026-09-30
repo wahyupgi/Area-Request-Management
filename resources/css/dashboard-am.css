@@ -736,7 +736,9 @@ html.theme-light .am-hero-date { color: #1677ff; font-weight: 700; }
 html.theme-light .am-hero-title { color: #0f172a; }
 html.theme-light .am-hero-desc { color: #475569; }
 
-html.theme-light .am-stat-box { background: #ffffff; }
+html.theme-light .am-stat-box { background: #ffffff; border-color: #91caff; }
+html.theme-light .am-stat-box:hover { border-color: #69b1ff; box-shadow: 0 2px 8px rgba(22, 119, 255, 0.15); }
+html.theme-light .am-stat-box .am-stat-number { color: #1677ff; }
 html.theme-light .am-stat-box-pending { border-color: #91caff; }
 html.theme-light .am-stat-box-pending:hover { border-color: #69b1ff; box-shadow: 0 2px 8px rgba(22, 119, 255, 0.15); }
 html.theme-light .am-stat-box-pending .am-stat-number { color: #1677ff; }

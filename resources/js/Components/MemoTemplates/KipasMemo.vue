@@ -12,66 +12,51 @@ const getApprovedSignature = () => {
     return approval?.signature ?? null;
 };
 
+const isAreaManagerRole = (role) => ['Area Manager', 'Manager'].includes(String(role || '').trim());
+
 const signatures = computed(() => {
+    const documentSlots = props.documentSignatures || [];
+    const configuredKc = documentSlots.find((slot) => slot.role === 'Kepala Cabang');
+    const configuredAm = documentSlots.find((slot) => isAreaManagerRole(slot.role));
+    const additionalSlots = documentSlots
+        .filter((slot) => slot.role !== 'Kepala Cabang' && !isAreaManagerRole(slot.role))
+        .slice(0, 2);
+
     const creatorSig = {
         displayName: props.memo.creator?.name || '',
         displayRole: 'Kepala Cabang',
         signature: props.memo.creator?.digital_signature?.signature_image,
-        label: 'Tanda tangan KC',
+        label: 'Dibuat Oleh,',
     };
-
     const isApproved = props.memo.status === 'approved';
     const amSig = {
         displayName: props.memo.area_manager?.name || 'Bpk. Fathurrahman M',
-        displayRole: 'Area Manager',
-        // Only show AM signature after memo is approved
+        displayRole: 'Manager',
         signature: isApproved
             ? (getApprovedSignature()?.signature_image || props.memo.area_manager?.digital_signature?.signature_image)
             : null,
-        label: 'Tanda tangan AM',
+        label: 'Diketahui Oleh,',
     };
-
-    if (props.documentSignatures && props.documentSignatures.length > 0) {
-        const slot1 = props.documentSignatures[0] ? {
-            displayName: props.documentSignatures[0].name || creatorSig.displayName,
-            displayRole: props.documentSignatures[0].role || creatorSig.displayRole,
-            signature: props.documentSignatures[0].user?.digital_signature?.signature_image || creatorSig.signature,
-            label: props.documentSignatures[0].label || 'Dibuat oleh',
-        } : creatorSig;
-
-        const slot2 = props.documentSignatures[1] ? {
-            displayName: props.documentSignatures[1].name || props.documentSignatures[1].user?.name || amSig.displayName,
-            displayRole: props.documentSignatures[1].role || amSig.displayRole,
-            signature: props.documentSignatures[1].user?.digital_signature?.signature_image || amSig.signature,
-            label: props.documentSignatures[1].label || 'Disetujui oleh',
-        } : amSig;
-
-        const slot3 = props.documentSignatures[2] ? {
-            displayName: props.documentSignatures[2].name || '',
-            displayRole: props.documentSignatures[2].role || '',
-            signature: props.documentSignatures[2].user?.digital_signature?.signature_image || '',
-            label: props.documentSignatures[2].label || 'Disetujui oleh',
-        } : { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 3' };
-
-        const slot4 = props.documentSignatures[3] ? {
-            displayName: props.documentSignatures[3].name || '',
-            displayRole: props.documentSignatures[3].role || '',
-            signature: props.documentSignatures[3].user?.digital_signature?.signature_image || '',
-            label: props.documentSignatures[3].label || 'Disetujui oleh',
-        } : { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 4' };
-
-        return [slot1, slot2, slot3, slot4];
-    }
+    const normalizeSlot = (slot, fallback) => slot ? {
+        displayName: slot.name || slot.user?.name || fallback.displayName,
+        displayRole: slot.role || fallback.displayRole,
+        signature: slot.user?.digital_signature?.signature_image || fallback.signature,
+        label: slot.label || fallback.label,
+    } : fallback;
 
     return [
-        creatorSig,
-        amSig,
-        { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 3' },
-        { displayName: '', displayRole: '', signature: '', label: 'Tanda tangan 4' },
+        normalizeSlot(configuredKc, creatorSig),
+        normalizeSlot(configuredAm, amSig),
+        ...additionalSlots.map((slot) => normalizeSlot(slot, {
+            displayName: '',
+            displayRole: '',
+            signature: '',
+            label: 'Disetujui Oleh,',
+        })),
     ];
 });
 
-const signatureCount = computed(() => props.documentSignatures.length || 4);
+const signatureCount = computed(() => signatures.value.length);
 const signatureGridStyle = computed(() => ({
     gridTemplateColumns: signatureCount.value >= 4
         ? '17% 21% 21% 41%'
@@ -160,8 +145,11 @@ const roleLines = (role) => {
     </table>
 
     <div class="mt-2 text-[11px] leading-[1.5] text-black" style="font-family: Tahoma, sans-serif;">
-        <p class="m-0">Demikianlah Internal Memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
-        <p class="mt-1 m-0">Terima kasih atas perhatiannya.</p>
+        <p v-if="memo.field_values?.penutup" class="m-0 whitespace-pre-wrap">{{ memo.field_values.penutup }}</p>
+        <template v-else>
+            <p class="m-0">Demikianlah Internal Memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya.</p>
+            <p class="mt-1 m-0">Terima kasih atas perhatiannya.</p>
+        </template>
     </div>
 
     <div class="mt-4 grid gap-2 items-start text-xs w-full mb-4" :style="signatureGridStyle">
