@@ -82,11 +82,15 @@ class SignatureController extends Controller
         abort_unless(auth()->user()->isAM(), 403);
 
         $validated = $request->validated();
+        $additionalSlots = collect($validated['signature_schema'] ?? [])->slice(2);
 
         $template->update([
-            'signature_schema' => collect($validated['signature_schema'] ?? [])
+            'signature_schema' => collect([
+                ['label' => 'Dibuat oleh,', 'role' => 'Kepala Cabang', 'location' => 'document'],
+                ['label' => 'Diketahui oleh,', 'role' => 'Area Manager', 'location' => 'document'],
+            ])->concat($additionalSlots)
                 ->map(fn ($slot) => [
-                    'name' => $slot['name'],
+                    'name' => $slot['name'] ?? '',
                     'role' => $slot['role'],
                     'location' => $slot['location'],
                 ])->values()->all(),

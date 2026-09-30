@@ -15,7 +15,7 @@ class UpdateSignatureSettingsRequest extends FormRequest
     {
         return [
             'signature_schema' => ['nullable', 'array', 'max:6'],
-            'signature_schema.*.name' => ['required', 'string', 'max:255'],
+            'signature_schema.*.name' => ['nullable', 'string', 'max:255'],
             'signature_schema.*.role' => ['required', 'string', 'max:100'],
             'signature_schema.*.location' => ['required', 'in:document,bottom_right'],
         ];

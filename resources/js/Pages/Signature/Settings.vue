@@ -2,40 +2,73 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { reactive } from 'vue';
-import { PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons-vue';
+import { DeleteOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     templates: Array,
 });
 
 const forms = reactive({});
+const visibleAdditionalSlots = reactive({});
 
-const defaultSlots = (template) => (template.signature_schema || []).map((slot) => ({
-    name: slot.name || slot.label || '',
-    role: slot.role || '',
-    location: slot.location || 'document',
-}));
+const automaticSlots = [
+    { name: '', role: 'Kepala Cabang', location: 'document' },
+    { name: '', role: 'Area Manager', location: 'document' },
+];
+
+const defaultSlots = (template) => {
+    const configuredSlots = (template.signature_schema || []).map((slot) => ({
+        name: slot.name || '',
+        role: slot.role || '',
+        location: slot.location || 'document',
+    }));
+    const additionalSlots = configuredSlots.slice(2);
+
+    while (additionalSlots.length < 2) {
+        additionalSlots.push({ name: '', role: '', location: 'document' });
+    }
+
+    return [...automaticSlots.map((slot) => ({ ...slot })), ...additionalSlots];
+};
 
 (props.templates || []).forEach((template) => {
+    visibleAdditionalSlots[template.id] = Math.min(2, Math.max(0, (template.signature_schema || []).length - 2));
     forms[template.id] = useForm({
         signature_schema: defaultSlots(template),
     });
 });
 
 const addSlot = (template) => {
-    forms[template.id].signature_schema.push({
-        name: '',
-        role: '',
-        location: 'document',
-    });
+    const form = forms[template.id];
+    const nextIndex = visibleAdditionalSlots[template.id] + 2;
+    if (nextIndex >= 4) return;
+
+    if (!form.signature_schema[nextIndex]) {
+        form.signature_schema.splice(nextIndex, 0, { name: '', role: '', location: 'document' });
+    }
+
+    visibleAdditionalSlots[template.id] += 1;
 };
 
-const removeSlot = (template, index) => {
-    forms[template.id].signature_schema.splice(index, 1);
+const removeSlot = (template, additionalIndex) => {
+    forms[template.id].signature_schema.splice(additionalIndex + 2, 1);
+    visibleAdditionalSlots[template.id] -= 1;
 };
 
 const save = (template) => {
-    forms[template.id].put(route('signature.settings.update', template.id), {
+    const form = forms[template.id];
+    const signatureSchema = form.signature_schema.map((slot) => ({ ...slot }));
+
+    while (signatureSchema.length > 2) {
+        const lastSlot = signatureSchema[signatureSchema.length - 1];
+        if (lastSlot.name || lastSlot.role) break;
+        signatureSchema.pop();
+    }
+
+    signatureSchema[0] = { ...automaticSlots[0] };
+    signatureSchema[1] = { ...automaticSlots[1] };
+
+    form.transform(() => ({ signature_schema: signatureSchema })).put(route('signature.settings.update', template.id), {
         preserveScroll: true,
     });
 };
@@ -51,7 +84,7 @@ const save = (template) => {
         <div class="am-signature-page max-w-5xl space-y-6">
             <a-alert
                 message="Pengaturan Penandatangan per Template"
-                description="Isi nama lengkap dan jabatan penandatangan. Slot juga dapat ditempatkan di kotak paraf kanan bawah."
+                description="Slot 1 dan 2 otomatis diisi oleh KC dan AM. Atur penandatangan tambahan pada slot 3 dan 4. Slot juga dapat ditempatkan di kotak paraf kanan bawah."
                 type="info"
                 show-icon
                 class="bg-sky-500/10 border-sky-500/20 text-sky-100 custom-dark-alert"
@@ -70,30 +103,27 @@ const save = (template) => {
                     </div>
                 </template>
                 <template #extra>
-                    <a-button type="dashed" size="small" @click="addSlot(template)">
+                    <a-button
+                        type="dashed"
+                        size="small"
+                        :disabled="visibleAdditionalSlots[template.id] >= 2"
+                        @click="addSlot(template)"
+                    >
                         <template #icon><PlusOutlined /></template>
                         Tambah Slot
                     </a-button>
                 </template>
-
-                <a-empty 
-                    v-if="forms[template.id].signature_schema.length === 0" 
-                    description="Belum ada slot tanda tangan" 
-                    :image="false" 
-                    class="py-6 border border-dashed border-white/10 rounded-xl"
-                />
-
                 <a-form layout="vertical">
                     <div 
-                        v-for="(slot, index) in forms[template.id].signature_schema" 
-                        :key="index" 
+                        v-for="(slot, additionalIndex) in forms[template.id].signature_schema.slice(2, 2 + visibleAdditionalSlots[template.id])" 
+                        :key="additionalIndex" 
                         class="bg-slate-700/30 rounded-xl p-5 relative border border-white/5 mb-4"
                     >
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="text-slate-400 text-xs font-semibold uppercase tracking-wider m-0">Slot {{ index + 1 }}</h4>
-                            <a-button type="text" danger size="small" @click="removeSlot(template, index)">
+                            <h4 class="text-slate-400 text-xs font-semibold uppercase tracking-wider m-0">Slot {{ additionalIndex + 3 }}</h4>
+                            <a-button type="text" danger size="small" @click="removeSlot(template, additionalIndex)">
                                 <template #icon><DeleteOutlined /></template>
-                                Hapus
+                                Hapus Slot
                             </a-button>
                         </div>
                         
