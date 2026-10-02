@@ -33,11 +33,23 @@ const signatureSlots = computed(() => {
         slots.push({ name: hr?.name || 'Ibu Ella Safitri', role: hr?.jabatan || 'SPV HC Payroll', user: hr });
     }
 
-    return slots;
+    const overrides = beritaAcara.meta?.signature_signers || [];
+    const defaultSlotCount = slots.length;
+    while (slots.length < 4) slots.push({ name: '', role: '', user: null });
+
+    return slots.map((slot, index) => ({
+        ...slot,
+        name: overrides[index]?.name ?? slot.name,
+        role: overrides[index]?.role ?? slot.role,
+    })).filter((_, index) => index < 2 || (overrides[index]?.enabled ?? index < defaultSlotCount));
 });
-const signatureWidths = computed(() => isSeizedGoods.value
+const signatureWidths = computed(() => isSeizedGoods.value && signatureSlots.value.length === 4
     ? ['19%', '19%', '19%', '43%']
     : signatureSlots.value.map(() => `${100 / signatureSlots.value.length}%`));
+const footerBoxCount = computed(() => {
+    const defaultCount = isSeizedGoods.value ? 1 : 2;
+    return Math.min(2, Math.max(1, Number(props.beritaAcara.meta?.footer_box_count) || defaultCount));
+});
 
 const handleImgError = (event) => {
     event.target.style.display = 'none';
@@ -181,7 +193,7 @@ const formatCurrency = (value) => {
             <p class="m-0">{{ beritaAcara.penutup }}</p>
         </div>
 
-        <table style="width:100%;table-layout:fixed;border-collapse:collapse;margin-top:1rem;margin-bottom:1rem;font-family:Tahoma,sans-serif;font-size:11px;">
+        <table style="width:100%;table-layout:fixed;border-collapse:collapse;margin-top:1rem;margin-bottom:1rem;font-family:Tahoma,sans-serif;font-size:12px;">
             <colgroup>
                 <col v-for="(width, index) in signatureWidths" :key="'signature-column-' + index" :style="{ width }" />
             </colgroup>
@@ -191,7 +203,7 @@ const formatCurrency = (value) => {
                 </tr>
                 <tr>
                     <td v-for="(slot, index) in signatureSlots" :key="'signature-' + index" style="height:60px;text-align:center;vertical-align:bottom;padding:0 4px;">
-                        <img v-if="(index === 0 || beritaAcara.status === 'approved') && slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="'TTD ' + slot.role" @error="handleImgError" style="max-height:52px;max-width:100%;object-fit:contain;" />
+                        <img v-if="(index === 0 || beritaAcara.status === 'approved') && slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="'TTD ' + slot.role" @error="handleImgError" style="display:block;margin:0 auto;max-height:52px;max-width:100%;object-fit:contain;" />
                     </td>
                 </tr>
                 <tr>
@@ -211,12 +223,16 @@ const formatCurrency = (value) => {
             </tbody>
         </table>
 
-        <div class="flex justify-end gap-2 mt-4 pt-2 mb-1">
-            <div v-if="isSeizedGoods" class="w-12 h-12 border border-black"></div>
-            <div v-else class="flex">
-                <div class="w-7 h-7 border border-black"></div>
-                <div class="w-7 h-7 border border-black border-l-0"></div>
-            </div>
+        <div class="flex justify-end mt-4 pt-2 mb-1">
+            <div
+                v-for="index in footerBoxCount"
+                :key="'footer-box-' + index"
+                :class="[
+                    isSeizedGoods && footerBoxCount === 1 ? 'w-12 h-12' : 'w-7 h-7',
+                    'border border-black',
+                    index > 1 ? 'border-l-0' : '',
+                ]"
+            ></div>
         </div>
         <div class="flex justify-between text-[10px] font-medium pt-1 text-gray-800">
             <span>{{ isSeizedGoods ? 'No. ' + beritaAcara.code : beritaAcara.code }}</span>
@@ -242,7 +258,7 @@ const formatCurrency = (value) => {
     height: 28px;
     align-items: flex-end;
     justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 14px;
 }
 

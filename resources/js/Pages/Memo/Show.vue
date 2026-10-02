@@ -33,21 +33,51 @@ const formatDate = (dateString) => {
 };
 
 const attachmentUrl = (attachment) => '/storage/' + attachment.file_path;
+const printFileName = () => `Internal Memo - ${[props.memo.title, props.memo.code].filter(Boolean).join(' - ') || 'Dokumen'}`
+    .replace(/[<>:"|?*]/g, '-')
+    .replaceAll('/', '-')
+    .replaceAll('\\', '-')
+    .replace(/[\u0000-\u001F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const printableHtml = (element) => {
+    if (!element) return '';
+
+    const clone = element.cloneNode(true);
+    const sourceCanvases = element.querySelectorAll('canvas');
+    clone.querySelectorAll('canvas').forEach((canvas, index) => {
+        const source = sourceCanvases[index];
+        if (!source) return;
+
+        try {
+            const image = document.createElement('img');
+            image.src = source.toDataURL('image/png');
+            image.className = source.className;
+            image.style.cssText = source.style.cssText;
+            image.setAttribute('aria-label', source.getAttribute('aria-label') || 'Halaman lampiran');
+            canvas.replaceWith(image);
+        } catch {
+        }
+    });
+
+    return clone.outerHTML;
+};
 
 const printMemo = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const memo = document.querySelector('#printable-memo')?.outerHTML || '';
-    const attachments = document.querySelector('.memo-print-attachments')?.outerHTML || '';
+    const memo = printableHtml(document.querySelector('#printable-memo'));
+    const attachments = printableHtml(document.querySelector('.memo-print-attachments'));
     const stylesheetUrls = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.href);
     const activeStyles = Array.from(document.querySelectorAll('style')).map((style) => style.textContent).join('\n');
 
-    const waitForDocx = new Promise((resolve) => {
+    const waitForAttachments = new Promise((resolve) => {
         const startedAt = Date.now();
         const check = () => {
             const isReady = !document.querySelector('[data-attachment-loading]');
-            if (isReady || Date.now() - startedAt > 5000) {
+            if (isReady || Date.now() - startedAt > 30000) {
                 resolve();
                 return;
             }
@@ -56,16 +86,23 @@ const printMemo = () => {
         check();
     });
 
-    waitForDocx.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
+    waitForAttachments.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
         printWindow.document.write(`<!doctype html><html><head><title>Memo-${props.memo.code || 'Dokumen'}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
             @page { size: A4 portrait; margin: 0; }
             html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
             body * { visibility: visible !important; }
-            #printable-memo { position: relative !important; width: 210mm !important; min-height: 297mm !important; page-break-after: always !important; break-after: page !important; box-sizing: border-box !important; }
+            .memo-print-page { width: 210mm !important; box-sizing: border-box !important; }
+            #printable-memo { position: relative !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; }
             .memo-print-attachments { display: block !important; width: 210mm !important; }
-            .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 297mm !important; page-break-before: always !important; break-before: page !important; box-sizing: border-box !important; }
-        </style></head><body>${memo}${attachments}</body></html>`);
+            .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; }
+            .memo-print-attachment:first-child { page-break-before: always !important; break-before: page !important; }
+            .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
+            .memo-pdf-page-list { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 0 !important; }
+            .memo-pdf-page { width: auto !important; height: auto !important; max-width: 100% !important; max-height: 295mm !important; margin: 0 auto !important; object-fit: contain !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+            .memo-pdf-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
+        </style></head><body><div class="memo-print-page">${memo}</div>${attachments}</body></html>`);
         printWindow.onload = () => {
+            printWindow.document.title = printFileName();
             printWindow.onafterprint = () => printWindow.close();
             printWindow.focus();
             printWindow.print();

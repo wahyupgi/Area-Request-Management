@@ -9,7 +9,7 @@ class MemoAttachment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['memo_id', 'file_path', 'original_name', 'uploaded_at'];
+    protected $fillable = ['memo_id', 'file_path', 'preview_path', 'original_name', 'uploaded_at'];
 
     protected $casts = [
         'uploaded_at' => 'datetime',

@@ -7,13 +7,18 @@
 }
 .ga-filter-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(180px, 1fr) minmax(320px, 1.5fr) auto;
     gap: 16px;
+    align-items: end;
 }
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .ga-filter-grid {
         grid-template-columns: 1fr;
     }
+}
+.ga-filter-actions {
+    align-self: end;
+    margin-bottom: 0;
 }
 .ga-filter-item {
     display: flex;

@@ -24,6 +24,7 @@ Route::middleware('role:AM')->group(function () {
     // Berita Acara Approval for AM
     Route::get('/approvals/ba/{beritaAcara}/review', [BeritaAcaraApprovalController::class, 'review'])->name('approvals.ba.review');
     Route::post('/approvals/ba/{beritaAcara}/code', [BeritaAcaraApprovalController::class, 'updateCode'])->name('approvals.ba.updateCode');
+    Route::post('/approvals/ba/{beritaAcara}/signers', [BeritaAcaraApprovalController::class, 'updateSigners'])->name('approvals.ba.updateSigners');
     Route::post('/approvals/ba/{beritaAcara}/approve', [BeritaAcaraApprovalController::class, 'approve'])->name('approvals.ba.approve');
     Route::post('/approvals/ba/{beritaAcara}/reject', [BeritaAcaraApprovalController::class, 'reject'])->name('approvals.ba.reject');
 

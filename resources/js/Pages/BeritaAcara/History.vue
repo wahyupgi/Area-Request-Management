@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BeritaAcaraDocument from '@/Components/BeritaAcaraDocument.vue';
+import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { useTheme } from '@/composables/useTheme';
 import {
@@ -24,6 +25,11 @@ const backUrl = isKcUser
 const backLabel = isKcUser ? 'Daftar Berita Acara' : 'Antrean Berita Acara';
 
 const attachmentUrl = () => '/storage/' + props.beritaAcara.attachment_path;
+const printAttachments = props.beritaAcara.attachment_path ? [{
+    id: props.beritaAcara.id,
+    file_path: props.beritaAcara.attachment_path,
+    original_name: props.beritaAcara.attachment_name,
+}] : [];
 
 const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -152,6 +158,7 @@ const printBA = () => {
                     </a-card>
                 </a-col>
             </a-row>
+            <MemoAttachments :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
         </div>
     </AuthenticatedLayout>
 </template>

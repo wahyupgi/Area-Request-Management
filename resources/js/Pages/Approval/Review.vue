@@ -34,6 +34,37 @@ const rejectForm = useForm({
 });
 
 const attachmentUrl = (attachment) => '/storage/' + attachment.file_path;
+const isWordAttachment = (attachment) => /\.docx?$/i.test(attachment.original_name || attachment.file_path || '');
+const printFileName = () => `Internal Memo - ${[props.memo.title, props.memo.code].filter(Boolean).join(' - ') || 'Dokumen'}`
+    .replace(/[<>:"|?*]/g, '-')
+    .replaceAll('/', '-')
+    .replaceAll('\\', '-')
+    .replace(/[\u0000-\u001F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const printableHtml = (element) => {
+    if (!element) return '';
+
+    const clone = element.cloneNode(true);
+    const sourceCanvases = element.querySelectorAll('canvas');
+    clone.querySelectorAll('canvas').forEach((canvas, index) => {
+        const source = sourceCanvases[index];
+        if (!source) return;
+
+        try {
+            const image = document.createElement('img');
+            image.src = source.toDataURL('image/png');
+            image.className = source.className;
+            image.style.cssText = source.style.cssText;
+            image.setAttribute('aria-label', source.getAttribute('aria-label') || 'Halaman lampiran');
+            canvas.replaceWith(image);
+        } catch {
+        }
+    });
+
+    return clone.outerHTML;
+};
 
 const handleApprove = () => {
     approveForm.post(route('approvals.approve', props.memo.id), {
@@ -52,8 +83,8 @@ const printMemo = () => {
     if (!printWindow) return;
 
     const originalTitle = document.title;
-    const memo = document.querySelector('#printable-memo')?.outerHTML || '';
-    const attachments = document.querySelector('.memo-print-attachments')?.outerHTML || '';
+    const memo = printableHtml(document.querySelector('#printable-memo'));
+    const attachments = printableHtml(document.querySelector('.memo-print-attachments'));
     const stylesheetUrls = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.href);
     const activeStyles = Array.from(document.querySelectorAll('style')).map((style) => style.textContent).join('\n');
 
@@ -61,7 +92,7 @@ const printMemo = () => {
         const startedAt = Date.now();
         const check = () => {
             const isReady = !document.querySelector('[data-attachment-loading]');
-            if (isReady || Date.now() - startedAt > 5000) {
+            if (isReady || Date.now() - startedAt > 30000) {
                 resolve();
                 return;
             }
@@ -75,11 +106,18 @@ const printMemo = () => {
             @page { size: A4 portrait; margin: 0; }
             html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
             body * { visibility: visible !important; }
-            #printable-memo { position: relative !important; width: 210mm !important; min-height: 297mm !important; page-break-after: always !important; break-after: page !important; box-sizing: border-box !important; }
+            .memo-print-page { width: 210mm !important; box-sizing: border-box !important; }
+            #printable-memo { position: relative !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; }
             .memo-print-attachments { display: block !important; width: 210mm !important; }
-            .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 297mm !important; page-break-before: always !important; break-before: page !important; box-sizing: border-box !important; }
-        </style></head><body>${memo}${attachments}</body></html>`);
+            .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; }
+            .memo-print-attachment:first-child { page-break-before: always !important; break-before: page !important; }
+            .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
+            .memo-pdf-page-list { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 0 !important; }
+            .memo-pdf-page { width: auto !important; height: auto !important; max-width: 100% !important; max-height: 295mm !important; margin: 0 auto !important; object-fit: contain !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+            .memo-pdf-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
+        </style></head><body><div class="memo-print-page">${memo}</div>${attachments}</body></html>`);
         printWindow.onload = () => {
+            printWindow.document.title = printFileName();
             printWindow.onafterprint = () => printWindow.close();
             printWindow.focus();
             printWindow.print();
@@ -210,10 +248,10 @@ const formatDate = (dateString) => {
                         Menunggu Persetujuan
                     </a-tag>
 
-                    <a-button class="hidden sm:inline-flex print:hidden" @click="printMemo">
+                    <a-button v-if="memo.status === 'approved'" class="hidden sm:inline-flex print:hidden" @click="printMemo">
                         <template #icon><printer-outlined /></template> Cetak Dokumen
                     </a-button>
-                    <a-button class="hidden sm:inline-flex print:hidden" @click="printMemo">
+                    <a-button v-if="memo.status === 'approved'" class="hidden sm:inline-flex print:hidden" @click="printMemo">
                         <template #icon><download-outlined /></template> Download / Simpan PDF
                     </a-button>
                 </div>
@@ -228,6 +266,7 @@ const formatDate = (dateString) => {
                     <div class="w-full max-w-[210mm] print:max-w-none print:w-full shadow-md print:shadow-none bg-white">
                         <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
                     </div>
+                    <MemoAttachments :attachments="memo.attachments" :subject="memo.field_values?.meta?.perihal || memo.title" />
                 </a-col>
 
                 <!-- Right: Action & Inspector Sidebar -->
@@ -359,12 +398,18 @@ const formatDate = (dateString) => {
                                 <a-list-item>
                                     <a-list-item-meta>
                                         <template #title>
-                                            <a :href="attachmentUrl(item)" target="_blank" class="text-blue-600 hover:underline text-sm truncate block max-w-[200px]">
+                                            <a :href="attachmentUrl(item)" :download="item.original_name" target="_blank" class="text-blue-600 hover:underline text-sm truncate block max-w-[200px]">
                                                 {{ item.original_name || item.file_path }}
                                             </a>
                                         </template>
                                         <template #avatar><paper-clip-outlined class="text-gray-400" /></template>
                                     </a-list-item-meta>
+                                    <template #actions>
+                                        <a-button v-if="isWordAttachment(item)" type="link" size="small" :href="attachmentUrl(item)" :download="item.original_name" title="Unduh Word asli">
+                                            <template #icon><download-outlined /></template>
+                                            Word
+                                        </a-button>
+                                    </template>
                                 </a-list-item>
                             </template>
                         </a-list>
@@ -384,7 +429,6 @@ const formatDate = (dateString) => {
                     </a-card>
                 </a-col>
             </a-row>
-            <MemoAttachments :attachments="memo.attachments" :subject="memo.field_values?.meta?.perihal || memo.title" />
         </div>
 
         <!-- Approve Confirm Modal -->

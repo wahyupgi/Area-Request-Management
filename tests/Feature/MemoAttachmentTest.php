@@ -31,6 +31,41 @@ class MemoAttachmentTest extends TestCase
         $this->assertDatabaseCount('memo_attachments', 0);
     }
 
+    public function test_pdf_attachment_can_be_uploaded_to_a_draft_memo(): void
+    {
+        Storage::fake('public');
+        [$user, $memo] = $this->createMemo();
+
+        $response = $this->actingAs($user)->post(
+            route('memos.attachments.upload', $memo),
+            ['file' => UploadedFile::fake()->create('berita-acara.pdf', 100, 'application/pdf')]
+        );
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('memo_attachments', [
+            'memo_id' => $memo->id,
+            'original_name' => 'berita-acara.pdf',
+        ]);
+    }
+
+    public function test_docx_attachment_is_kept_when_libreoffice_is_unavailable(): void
+    {
+        Storage::fake('public');
+        config(['services.libreoffice.binary' => 'missing-libreoffice-binary']);
+        [$user, $memo] = $this->createMemo();
+
+        $response = $this->actingAs($user)->post(
+            route('memos.attachments.upload', $memo),
+            ['file' => UploadedFile::fake()->create('berita-acara.docx', 100, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')]
+        );
+
+        $response->assertSessionHasNoErrors();
+        $attachment = MemoAttachment::where('memo_id', $memo->id)->firstOrFail();
+        $this->assertSame('berita-acara.docx', $attachment->original_name);
+        $this->assertNull($attachment->preview_path);
+        Storage::disk('public')->assertExists($attachment->file_path);
+    }
+
     public function test_attachment_must_belong_to_the_memo_in_the_route_before_it_can_be_deleted(): void
     {
         Storage::fake('public');

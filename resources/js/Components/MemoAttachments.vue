@@ -1,6 +1,10 @@
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue';
 import { renderAsync } from 'docx-preview';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const props = defineProps({
     attachments: { type: Array, default: () => [] },
@@ -9,8 +13,12 @@ const props = defineProps({
 
 const docxContainers = {};
 const docxObservers = {};
+const pdfContainers = {};
+const pdfLoadingTasks = {};
 const docxLoading = reactive({});
 const docxErrors = reactive({});
+const pdfLoading = reactive({});
+const pdfErrors = reactive({});
 const attachmentUrl = (attachment) => '/storage/' + attachment.file_path;
 const isImageAttachment = (attachment) => /\.(jpe?g|png|gif|webp)$/i.test(attachment.file_path || '');
 const isPdfAttachment = (attachment) => /\.pdf$/i.test(attachment.file_path || '');
@@ -19,6 +27,60 @@ const isDocxAttachment = (attachment) => /\.docx?$/i.test(attachment.file_path |
 const setDocxContainer = (id, element) => {
     if (element) docxContainers[id] = element;
     else delete docxContainers[id];
+};
+
+const setPdfContainer = (id, element) => {
+    if (element) pdfContainers[id] = element;
+    else delete pdfContainers[id];
+};
+
+const pdfUrl = (attachment) => attachment.preview_path
+    ? '/storage/' + attachment.preview_path
+    : attachmentUrl(attachment);
+
+const renderPdf = async (attachment) => {
+    const container = pdfContainers[attachment.id];
+    if (!container) return;
+
+    pdfLoading[attachment.id] = true;
+    pdfErrors[attachment.id] = '';
+    container.replaceChildren();
+
+    try {
+        const response = await fetch(pdfUrl(attachment), { credentials: 'same-origin' });
+        if (!response.ok) throw new Error(`File PDF tidak dapat dimuat (${response.status}).`);
+
+        const data = new Uint8Array(await response.arrayBuffer());
+        const loadingTask = getDocument({ data });
+        pdfLoadingTasks[attachment.id] = loadingTask;
+        const document = await loadingTask.promise;
+
+        for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+            const page = await document.getPage(pageNumber);
+            const cssViewport = page.getViewport({ scale: 1 });
+            const renderViewport = page.getViewport({ scale: 1.5 });
+            const canvas = window.document.createElement('canvas');
+            const context = canvas.getContext('2d', { alpha: false });
+
+            canvas.className = 'memo-pdf-page';
+            canvas.width = renderViewport.width;
+            canvas.height = renderViewport.height;
+            canvas.style.width = `${cssViewport.width}px`;
+            canvas.style.height = `${cssViewport.height}px`;
+            canvas.setAttribute('aria-label', `Halaman ${pageNumber}`);
+            container.appendChild(canvas);
+
+            await page.render({ canvasContext: context, viewport: renderViewport }).promise;
+        }
+    } catch (error) {
+        console.error('Memo attachment PDF preview failed.', attachment.id, error);
+        pdfErrors[attachment.id] = error instanceof Error
+            ? `Lampiran PDF gagal ditampilkan: ${error.message}`
+            : 'Lampiran PDF tidak dapat ditampilkan.';
+    } finally {
+        pdfLoading[attachment.id] = false;
+        delete pdfLoadingTasks[attachment.id];
+    }
 };
 
 const fitDocxPages = (container, pageWidth) => {
@@ -98,7 +160,11 @@ const renderDocx = async (attachment) => {
 };
 
 onMounted(() => {
-    props.attachments.filter(isDocxAttachment).forEach((attachment) => {
+    props.attachments
+        .filter((attachment) => isPdfAttachment(attachment) || (isDocxAttachment(attachment) && attachment.preview_path))
+        .forEach((attachment) => renderPdf(attachment));
+
+    props.attachments.filter((attachment) => isDocxAttachment(attachment) && !attachment.preview_path).forEach((attachment) => {
         docxLoading[attachment.id] = true;
         renderDocx(attachment);
     });
@@ -106,6 +172,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     Object.values(docxObservers).forEach((observer) => observer.disconnect());
+    Object.values(pdfLoadingTasks).forEach((task) => task.destroy());
 });
 </script>
 
@@ -114,32 +181,42 @@ onBeforeUnmount(() => {
         <div
             v-for="attachment in attachments"
             :key="'print-attachment-' + attachment.id"
-            class="memo-print-attachment mt-6 min-h-[270mm] w-full bg-white p-6 shadow-md print:mt-0 print:min-h-0 print:p-0 print:shadow-none"
-            style="page-break-before: always; break-before: page;"
+            class="memo-print-attachment mt-6 w-full bg-white p-4 shadow-md print:mt-0 print:min-h-0 print:p-0 print:shadow-none"
         >
-            <p v-if="subject" :class="['mb-2 text-center text-xs font-medium print:mb-1', { 'print:hidden': isDocxAttachment(attachment) }]">Perihal: {{ subject }}</p>
-            <h2 :class="['mb-4 text-center text-sm font-bold print:mb-2', { 'print:hidden': isDocxAttachment(attachment) }]">Lampiran: {{ attachment.original_name || attachment.file_path }}</h2>
+            <p v-if="subject" class="mb-2 text-center text-xs font-medium print:hidden">Perihal: {{ subject }}</p>
+            <h2 :class="['mb-4 text-center text-sm font-bold print:mb-2', { 'print:hidden': isDocxAttachment(attachment) || isPdfAttachment(attachment) }]">Lampiran: {{ attachment.original_name || attachment.file_path }}</h2>
             <img
                 v-if="isImageAttachment(attachment)"
                 :src="attachmentUrl(attachment)"
                 :alt="attachment.original_name || 'Lampiran memo'"
                 class="mx-auto max-h-[250mm] max-w-full object-contain"
             />
-            <iframe
-                v-else-if="isPdfAttachment(attachment)"
-                :src="attachmentUrl(attachment)"
-                title="Lampiran PDF"
-                class="h-[250mm] w-full border-0"
-            ></iframe>
+            <div v-else-if="isPdfAttachment(attachment)" class="memo-pdf-pages">
+                <div :ref="(element) => setPdfContainer(attachment.id, element)" class="memo-pdf-page-list"></div>
+                <div v-if="pdfLoading[attachment.id]" data-attachment-loading class="py-12 text-center text-sm text-gray-500">Lampiran PDF sedang dimuat...</div>
+                <div v-else-if="pdfErrors[attachment.id]" class="py-12 text-center text-sm text-red-600">
+                    {{ pdfErrors[attachment.id] }}
+                    <a :href="attachmentUrl(attachment)" target="_blank" class="ml-1 underline">Buka file</a>
+                </div>
+            </div>
             <div v-else-if="isDocxAttachment(attachment)" class="memo-attachment-docx overflow-x-auto print:overflow-visible">
-                <div :ref="(element) => setDocxContainer(attachment.id, element)"></div>
-                <div v-if="docxLoading[attachment.id]" data-attachment-loading class="py-12 text-center text-sm text-gray-500">
-                    Lampiran sedang disiapkan untuk dicetak...
-                </div>
-                <div v-else-if="docxErrors[attachment.id]" class="py-12 text-center text-sm text-red-600">
-                    {{ docxErrors[attachment.id] }}
-                    <a :href="attachmentUrl(attachment)" target="_blank" class="ml-1 underline">Unduh file</a>
-                </div>
+                <template v-if="attachment.preview_path">
+                    <div class="memo-pdf-pages">
+                        <div :ref="(element) => setPdfContainer(attachment.id, element)" class="memo-pdf-page-list"></div>
+                        <div v-if="pdfLoading[attachment.id]" data-attachment-loading class="py-12 text-center text-sm text-gray-500">Preview PDF sedang dimuat...</div>
+                        <div v-else-if="pdfErrors[attachment.id]" class="py-12 text-center text-sm text-red-600">Preview PDF tidak dapat ditampilkan.</div>
+                    </div>
+                </template>
+                <template v-else>
+                    <div :ref="(element) => setDocxContainer(attachment.id, element)"></div>
+                    <div v-if="docxLoading[attachment.id]" data-attachment-loading class="py-12 text-center text-sm text-gray-500">
+                        Lampiran sedang disiapkan untuk dicetak...
+                    </div>
+                    <div v-else-if="docxErrors[attachment.id]" class="py-12 text-center text-sm text-red-600">
+                        {{ docxErrors[attachment.id] }}
+                    </div>
+                    <p class="mt-2 text-xs text-amber-700 print:hidden">Preview DOCX dapat berbeda dari format Word asli karena konversi PDF belum tersedia.</p>
+                </template>
             </div>
             <div v-else class="py-12 text-center text-sm text-gray-500">
                 <p class="mb-3">Format lampiran ini tidak dapat ditampilkan langsung di browser.</p>
@@ -155,6 +232,41 @@ onBeforeUnmount(() => {
 .memo-attachment-docx {
     color: #000;
     background: #fff;
+}
+
+.memo-pdf-pages {
+    padding: 12px;
+    background: #f3f4f6;
+}
+
+.memo-pdf-page-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.memo-pdf-page {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    background: #fff;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.16);
+}
+
+@media print {
+    .memo-pdf-pages {
+        padding: 0;
+        background: #fff;
+    }
+
+    .memo-pdf-page-list {
+        gap: 0;
+    }
+
+    .memo-pdf-page {
+        box-shadow: none;
+    }
 }
 
 .memo-attachment-docx .docx-wrapper {

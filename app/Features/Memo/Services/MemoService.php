@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Mail\MemoSubmitted;
 use Illuminate\Mail\Mailable;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Storage;
 
 class MemoService
 {
+    public function __construct(private DocxPreviewGenerator $docxPreviewGenerator) {}
+
     /**
      * Create a new memo as draft.
      */
@@ -58,15 +61,23 @@ class MemoService
         }
 
         if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            MemoAttachment::create([
-                'memo_id' => $memo->id,
-                'file_path' => $file->store('attachments/' . $memo->id, 'public'),
-                'original_name' => $file->getClientOriginalName(),
-            ]);
+            $this->storeAttachment($memo, $request->file('attachment'));
         }
 
         return $memo;
+    }
+
+    public function storeAttachment(Memo $memo, UploadedFile $file): MemoAttachment
+    {
+        $attachment = MemoAttachment::create([
+            'memo_id' => $memo->id,
+            'file_path' => $file->store('attachments/' . $memo->id, 'public'),
+            'original_name' => $file->getClientOriginalName(),
+        ]);
+
+        $this->docxPreviewGenerator->generate($attachment);
+
+        return $attachment;
     }
 
     /**
@@ -194,7 +205,7 @@ class MemoService
      */
     public function deleteAttachment(MemoAttachment $attachment): void
     {
-        Storage::disk('public')->delete($attachment->file_path);
+        Storage::disk('public')->delete(array_filter([$attachment->file_path, $attachment->preview_path]));
         $attachment->delete();
     }
 
@@ -204,7 +215,7 @@ class MemoService
     public function deleteMemo(Memo $memo): void
     {
         foreach ($memo->attachments as $attachment) {
-            Storage::disk('public')->delete($attachment->file_path);
+            Storage::disk('public')->delete(array_filter([$attachment->file_path, $attachment->preview_path]));
         }
         $memo->delete();
     }

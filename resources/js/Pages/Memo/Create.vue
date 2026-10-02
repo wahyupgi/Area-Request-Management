@@ -267,10 +267,10 @@ const submitAndSign = () => {
                             <input
                                 type="file"
                                 @change="selectAttachment"
-                                accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                             />
-                            <p class="text-xs text-gray-400 mt-2">Format: .doc atau .docx. Maksimal 10MB.</p>
+                            <p class="text-xs text-gray-400 mt-2">Format: .doc, .docx, atau .pdf. Untuk menjaga format dokumen, unggah PDF. Maksimal 10MB.</p>
                         </a-card>
                     </div>
                 </a-col>

@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import MemoDocument from '@/Components/MemoDocument.vue';
+import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head } from '@inertiajs/vue3';
 import { 
     ArrowLeftOutlined,
@@ -70,5 +71,6 @@ const props = defineProps({ memo: Object });
                 </a-card>
             </a-col>
         </a-row>
+        <MemoAttachments :attachments="memo.attachments || []" :subject="memo.field_values?.meta?.perihal || memo.title" />
     </AuthenticatedLayout>
 </template>

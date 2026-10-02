@@ -195,13 +195,7 @@ class MemoController extends Controller
         }
 
         $file = $request->file('file');
-        $path = $file->store('attachments/' . $memo->id, 'public');
-
-        MemoAttachment::create([
-            'memo_id' => $memo->id,
-            'file_path' => $path,
-            'original_name' => $file->getClientOriginalName(),
-        ]);
+        $this->service->storeAttachment($memo, $file);
 
         return back()->with('success', 'Lampiran berhasil diupload.');
     }

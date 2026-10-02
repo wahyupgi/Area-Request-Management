@@ -66,6 +66,37 @@ class BeritaAcaraApprovalController extends Controller
     }
 
     /**
+     * Update the names and roles shown in the BA signature columns.
+     */
+    public function updateSigners(Request $request, BeritaAcara $beritaAcara)
+    {
+        $user = auth()->user();
+
+        if ($beritaAcara->area_manager_id !== $user->id) {
+            abort(403);
+        }
+
+        if ($beritaAcara->status !== BeritaAcara::STATUS_SUBMITTED) {
+            return back()->withErrors(['status' => 'Penandatangan BA hanya dapat diubah saat menunggu persetujuan.']);
+        }
+
+        $validated = $request->validate([
+            'signers' => ['required', 'array', 'min:1', 'max:4'],
+            'signers.*.name' => ['nullable', 'string', 'max:255'],
+            'signers.*.role' => ['nullable', 'string', 'max:255'],
+            'signers.*.enabled' => ['required', 'boolean'],
+            'footer_box_count' => ['required', 'integer', 'in:1,2'],
+        ]);
+
+        $meta = $beritaAcara->meta ?? [];
+        $meta['signature_signers'] = $validated['signers'];
+        $meta['footer_box_count'] = $validated['footer_box_count'];
+        $beritaAcara->update(['meta' => $meta]);
+
+        return back()->with('success', 'Penandatangan BA berhasil diperbarui.');
+    }
+
+    /**
      * Approve Berita Acara.
      */
     public function approve(Request $request, BeritaAcara $beritaAcara)

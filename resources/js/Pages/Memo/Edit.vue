@@ -250,7 +250,7 @@ const deleteMemo = async () => {
                                         ref="fileInput"
                                         type="file"
                                         @change="uploadFile"
-                                        accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                        accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                     />
                                     <span v-if="uploading" class="text-sm text-gray-500">Mengupload...</span>

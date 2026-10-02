@@ -183,7 +183,7 @@ const focusDocuments = (status) => {
         </div>
 
         <!-- Stats Cards Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <!-- Memo Masuk -->
             <button type="button" @click="focusDocuments('received')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
                 <span class="text-xs font-semibold text-slate-400 tracking-wider">Pengajuan Masuk</span>
@@ -191,12 +191,7 @@ const focusDocuments = (status) => {
                 <p class="text-[11px] text-slate-500 mt-2">Memo dan BA terkirim</p>
             </button>
 
-            <!-- Total -->
-            <button type="button" @click="focusDocuments('all')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-slate-400 tracking-wider">Total Pengajuan</span>
-                <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.total ?? 0 }}</p>
-                <p class="text-[11px] text-slate-500 mt-2">Semua riwayat</p>
-            </button>
+
 
             <!-- Draft -->
             <button type="button" @click="focusDocuments('draft')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-slate-500/20 shadow-sm block w-full text-left transition-all">

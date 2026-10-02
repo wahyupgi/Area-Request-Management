@@ -18,6 +18,7 @@ import {
     BankOutlined,
     TeamOutlined,
     LogoutOutlined,
+    DownOutlined,
     RightOutlined,
     BarChartOutlined,
     AuditOutlined,

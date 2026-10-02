@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BeritaAcaraDocument from '@/Components/BeritaAcaraDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import {
     ArrowLeftOutlined,
     PrinterOutlined,
@@ -21,6 +21,52 @@ const props = defineProps({
 const showRejectModal = ref(false);
 const showApproveConfirm = ref(false);
 const showDocumentModal = ref(false);
+const showSignersModal = ref(false);
+
+const defaultSigners = () => {
+    const creator = props.beritaAcara.creator;
+    const manager = props.beritaAcara.area_manager || props.beritaAcara.areaManager;
+    const template = props.beritaAcara.meta?.template;
+    const isSeizedGoods = template === 'penghapusan_barang_sitaan';
+    const isCostRequest = template === 'permohonan_biaya_kost';
+    const executive = {
+        name: props.beritaAcara.meta?.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko',
+        role: 'Senior Executive Vice President Bisnis dan Operasional',
+    };
+    const signers = [
+        { name: creator?.name || '', role: 'Kepala Cabang' },
+        { name: manager?.name || 'Bpk. Fathurrahman M', role: manager?.jabatan || 'Manager' },
+    ];
+
+    if (isSeizedGoods) {
+        signers.push({ name: 'Bpk. Yudha', role: 'Legal' }, executive);
+    } else {
+        signers.push(executive);
+        if (!isCostRequest) signers.push({ name: 'Ibu Ella Safitri', role: 'SPV HC Payroll' });
+    }
+
+    return signers;
+};
+
+const createSignerSettings = () => {
+    const defaults = defaultSigners();
+    const saved = props.beritaAcara.meta?.signature_signers || [];
+    const isSeizedGoods = props.beritaAcara.meta?.template === 'penghapusan_barang_sitaan';
+
+    return {
+        signers: Array.from({ length: 4 }, (_, index) => ({
+            ...(saved[index] || defaults[index] || { name: '', role: '' }),
+        })),
+        slot3_enabled: saved[2]?.enabled ?? defaults.length > 2,
+        slot4_enabled: saved[3]?.enabled ?? defaults.length > 3,
+        footer_box_count: Number(props.beritaAcara.meta?.footer_box_count ?? (isSeizedGoods ? 1 : 2)),
+    };
+};
+
+const signatureForm = useForm(createSignerSettings());
+const visibleSigners = computed(() => signatureForm.signers.filter((_, index) =>
+    index < 2 || (index === 2 && signatureForm.slot3_enabled) || (index === 3 && signatureForm.slot4_enabled)
+));
 
 const approveForm = useForm({});
 const documentForm = useForm({
@@ -45,6 +91,24 @@ const saveDocumentInfo = () => {
         preserveScroll: true,
         onSuccess: () => { showDocumentModal.value = false; },
     });
+};
+
+const saveSigners = () => {
+    signatureForm.transform((data) => ({
+        signers: data.signers.map((signer, index) => ({
+            ...signer,
+            enabled: index < 2 || (index === 2 ? data.slot3_enabled : data.slot4_enabled),
+        })),
+        footer_box_count: data.footer_box_count,
+    })).post(route('approvals.ba.updateSigners', props.beritaAcara.id), {
+        preserveScroll: true,
+        onSuccess: () => { showSignersModal.value = false; },
+    });
+};
+
+const cancelSignerEdits = () => {
+    Object.assign(signatureForm, createSignerSettings());
+    showSignersModal.value = false;
 };
 
 const handleApprove = () => {
@@ -215,6 +279,20 @@ const formatDate = (dateString) => {
                         </div>
                     </a-card>
 
+                    <!-- Signatories -->
+                    <a-card title="Penandatangan Berita Acara" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
+                        <template #extra>
+                            <a-button v-if="beritaAcara.status === 'submitted'" type="link" size="small" @click="showSignersModal = true">
+                                <template #icon><edit-outlined /></template> Edit
+                            </a-button>
+                        </template>
+                        <a-list item-layout="horizontal" size="small">
+                            <a-list-item v-for="(signer, index) in visibleSigners" :key="index">
+                                <a-list-item-meta :title="signer.name || '(Belum diisi)'" :description="signer.role || '-'" />
+                            </a-list-item>
+                        </a-list>
+                    </a-card>
+
                     <!-- Meta Data -->
                     <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm" size="small">
                         <template #extra>
@@ -272,6 +350,41 @@ const formatDate = (dateString) => {
                 <a-form-item label="Lampiran" :help="documentForm.errors['meta.lampiran']" :validateStatus="documentForm.errors['meta.lampiran'] ? 'error' : ''" class="mb-0">
                     <a-input v-model:value="documentForm.meta.lampiran" placeholder="Contoh: 1 Lembar, 3 Berkas" />
                 </a-form-item>
+            </a-form>
+        </a-modal>
+
+        <a-modal
+            v-model:open="showSignersModal"
+            title="Sesuaikan Penandatangan Berita Acara"
+            :confirmLoading="signatureForm.processing"
+            @ok="saveSigners"
+            @cancel="cancelSignerEdits"
+            okText="Simpan Penandatangan"
+            cancelText="Batal"
+            centered
+        >
+            <p class="text-sm text-gray-500 mb-4">Atur nama dan jabatan yang tampil pada setiap kolom tanda tangan dokumen BA ini.</p>
+            <a-form layout="vertical">
+                <a-form-item label="Jumlah kotak persegi di footer">
+                    <a-select v-model:value="signatureForm.footer_box_count">
+                        <a-select-option :value="1">1 kotak</a-select-option>
+                        <a-select-option :value="2">2 kotak</a-select-option>
+                    </a-select>
+                </a-form-item>
+
+                <a-card v-for="(signer, index) in signatureForm.signers" :key="index" :title="`Penandatangan ${index + 1}`" size="small" class="mb-3 bg-gray-50">
+                    <template v-if="index >= 2" #extra>
+                        <a-switch v-model:checked="signatureForm[index === 2 ? 'slot3_enabled' : 'slot4_enabled']" size="small" />
+                    </template>
+                    <template v-if="index < 2 || signatureForm[index === 2 ? 'slot3_enabled' : 'slot4_enabled']">
+                    <a-form-item label="Nama Lengkap" class="mb-2">
+                        <a-input v-model:value="signer.name" placeholder="Nama penandatangan" />
+                    </a-form-item>
+                    <a-form-item label="Jabatan" class="mb-0">
+                        <a-input v-model:value="signer.role" placeholder="Jabatan penandatangan" />
+                    </a-form-item>
+                    </template>
+                </a-card>
             </a-form>
         </a-modal>
 

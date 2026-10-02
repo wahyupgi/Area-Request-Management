@@ -79,7 +79,6 @@ const userDisplayName = computed(() => {
 
     const kpiCards = computed(() => [
         { title: 'Pengajuan Masuk', value: props.submissionStats?.received ?? 0, note: 'Memo + BA', icon: InboxOutlined, color: '#818cf8', href: '#' },
-        { title: 'Total Pengajuan', value: props.submissionStats?.total ?? 0, note: `${props.submissionStats?.approved ?? 0} Disetujui · ${props.submissionStats?.draft ?? 0} Draft`, icon: FileTextOutlined, color: '#818cf8', href: '#' },
         { title: 'Menunggu AM', value: props.submissionStats?.submitted ?? 0, note: 'Perlu review AM', icon: ClockCircleOutlined, color: '#fbbf24', href: '#' },
         { title: 'Template Form', value: props.stats?.total_templates ?? 0, note: 'Skema aktif', icon: AppstoreOutlined, color: '#34d399', href: route('admin.templates.index') },
         { title: 'Pengguna', value: props.stats?.total_users ?? 0, note: `${props.stats?.total_branches ?? 0} Cabang · ${props.stats?.total_areas ?? 0} Area`, icon: TeamOutlined, color: '#22d3ee', href: route('admin.users.index') },

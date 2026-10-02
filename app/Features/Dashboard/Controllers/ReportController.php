@@ -3,10 +3,8 @@
 namespace App\Features\Dashboard\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Branch;
 use App\Models\Memo;
 use App\Models\MemoTemplate;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -29,12 +27,6 @@ class ReportController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        // Branches visible to this AM (that have GA memos)
-        $branches = Branch::whereHas('memos', function ($q) use ($user) {
-            $q->where('area_manager_id', $user->id)
-              ->whereHas('template', fn ($t) => $t->where('category', 'GA'));
-        })->orderBy('name')->get(['id', 'name']);
-
         // Base query: GA memos for this AM
         $query = Memo::with([
             'template:id,name,category',
@@ -55,9 +47,6 @@ class ReportController extends Controller
         if ($request->filled('template_id') && is_numeric($request->template_id)) {
             $query->where('template_id', $request->template_id);
         }
-        if ($request->filled('branch_id') && is_numeric($request->branch_id)) {
-            $query->where('branch_id', $request->branch_id);
-        }
         if ($request->filled('date_from')) {
             $query->whereDate('submitted_at', '>=', $request->date_from);
         }
@@ -71,8 +60,7 @@ class ReportController extends Controller
             'reportMode'  => true,
             'gaReport'    => $memos,
             'gaTemplates' => $gaTemplates,
-            'branches'    => $branches,
-            'filters'     => $request->only(['status', 'template_id', 'branch_id', 'date_from', 'date_to']),
+            'filters'     => $request->only(['status', 'template_id', 'date_from', 'date_to']),
         ]);
     }
 
@@ -104,9 +92,6 @@ class ReportController extends Controller
 
         if ($request->filled('template_id') && is_numeric($request->template_id)) {
             $query->where('template_id', $request->template_id);
-        }
-        if ($request->filled('branch_id') && is_numeric($request->branch_id)) {
-            $query->where('branch_id', $request->branch_id);
         }
         if ($request->filled('date_from')) {
             $query->whereDate('submitted_at', '>=', $request->date_from);

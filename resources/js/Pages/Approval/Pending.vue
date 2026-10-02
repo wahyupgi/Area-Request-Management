@@ -11,7 +11,27 @@ import {
 } from '@ant-design/icons-vue';
 
 const downloadCsv = () => {
-    window.location.href = route('memos.export-csv');
+    const rows = [
+        ['Jenis Dokumen', 'Nomor Dokumen', 'Perihal', 'Pembuat', 'Cabang', 'Status', 'Tanggal'],
+        ...filteredItems.value.map(item => [
+            item._itemType === 'memo' ? 'Memo' : 'Berita Acara',
+            item.code || '-',
+            item.title || '-',
+            item.creator?.name || '-',
+            item.branch?.name || '-',
+            historyStatusConfig[item.status]?.label || item.status || '-',
+            formatDate(item._date),
+        ]),
+    ];
+    const csv = '\uFEFF' + rows
+        .map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kotak-masuk-${activeTab.value}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
 };
 
 const props = defineProps({
@@ -21,6 +41,10 @@ const props = defineProps({
 });
 
 const activeTab = ref(props.defaultTab || 'masuk');
+const searchText = ref('');
+const selectedType = ref('all');
+const selectedStartDate = ref(null);
+const selectedEndDate = ref(null);
 
 const combinedItems = computed(() => {
     const memoItems = (props.allMemos?.data || []).map(m => ({
@@ -49,6 +73,26 @@ const displayedItems = computed(() => {
     if (activeTab.value === 'rejected') return itemsRejected.value;
     if (activeTab.value === 'riwayat') return itemsHistory.value;
     return itemsPending.value;
+});
+
+const filteredItems = computed(() => {
+    const query = searchText.value.trim().toLocaleLowerCase('id');
+    const startDate = selectedStartDate.value?.startOf('day').valueOf();
+    const endDate = selectedEndDate.value?.endOf('day').valueOf();
+
+    return displayedItems.value.filter(item => {
+        const matchesQuery = !query || [
+            item.code,
+            item.title,
+            item.creator?.name,
+            item.branch?.name,
+        ].some(value => String(value || '').toLocaleLowerCase('id').includes(query));
+        const matchesType = selectedType.value === 'all' || item._itemType === selectedType.value;
+        const itemDate = new Date(item._date).getTime();
+        const matchesDate = (!startDate || itemDate >= startDate) && (!endDate || itemDate <= endDate);
+
+        return matchesQuery && matchesType && matchesDate;
+    });
 });
 
 const unifiedColumns = computed(() => [
@@ -81,23 +125,33 @@ const goToDetail = (record) => {
         router.visit(record.status === 'submitted' ? route('approvals.ba.review', record.id) : route('approvals.ba.history', record.id));
     }
 };
+
+const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > new Date().setHours(0, 0, 0, 0);
 </script>
 
 <template>
     <Head title="Kotak Masuk AM" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center w-full">
+            <div class="w-full">
                 <h1 class="am-approval-header-title text-xl font-bold mb-0">Kotak Masuk & Riwayat Dokumen</h1>
-                <a-button type="default" @click="downloadCsv">
-                    <template #icon><download-outlined /></template>
-                    Export/Download CSV
-                </a-button>
             </div>
         </template>
 
         <a-card :bordered="false" class="am-approval-page rounded-lg shadow-sm">
             <a-tabs v-model:activeKey="activeTab" size="large" :animated="false">
+                <template #rightExtra>
+                    <a-button
+                        type="primary"
+                        size="large"
+                        style="height: 48px; background-color: #16a34a; border-color: #16a34a;"
+                        title="Export/Download CSV"
+                        @click="downloadCsv"
+                    >
+                        <template #icon><download-outlined /></template>
+                        Export CSV
+                    </a-button>
+                </template>
                 <a-tab-pane key="masuk">
                     <template #tab>
                         <span>
@@ -112,12 +166,46 @@ const goToDetail = (record) => {
 
             <Transition name="inbox-table" mode="out-in">
                 <div :key="activeTab" class="am-inbox-table-shell">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 mt-5 mb-5">
+                        <a-input-search
+                            v-model:value="searchText"
+                            placeholder="Cari nomor dokumen, perihal, pembuat, atau cabang"
+                            allow-clear
+                            size="large"
+                            class="w-full sm:flex-1 sm:min-w-0"
+                        />
+                        <a-select v-model:value="selectedType" aria-label="Filter tipe dokumen" size="large" class="w-full sm:w-60 sm:flex-none">
+                            <a-select-option value="all">Semua tipe dokumen</a-select-option>
+                            <a-select-option value="memo">Memo</a-select-option>
+                            <a-select-option value="ba">Berita Acara</a-select-option>
+                        </a-select>
+                        <div class="grid grid-cols-2 gap-2 w-full sm:w-80 sm:flex-none">
+                            <a-date-picker
+                                v-model:value="selectedStartDate"
+                                aria-label="Filter dari tanggal"
+                                placeholder="Tanggal awal"
+                                format="DD MMM YYYY"
+                                size="large"
+                                :disabled-date="disableFutureEndDate"
+                                class="w-full min-w-0"
+                            />
+                            <a-date-picker
+                                v-model:value="selectedEndDate"
+                                aria-label="Filter sampai tanggal"
+                                placeholder="Tanggal akhir"
+                                format="DD MMM YYYY"
+                                size="large"
+                                :disabled-date="disableFutureEndDate"
+                                class="w-full min-w-0"
+                            />
+                        </div>
+                    </div>
                     <a-table
-                        :data-source="displayedItems"
+                        :data-source="filteredItems"
                         :columns="unifiedColumns"
                         table-layout="fixed"
                         row-key="id"
-                        :pagination="false"
+                        :pagination="{ pageSize: 10, showSizeChanger: false, hideOnSinglePage: true }"
                         class="am-inbox-table"
                     >
                         <template #bodyCell="{ column, record }">
@@ -169,7 +257,7 @@ const goToDetail = (record) => {
     color: #ffffff;
 }
 .am-approval-page .ant-tabs-nav::before {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 0;
 }
 .am-approval-page .ant-table {
     background: transparent !important;
@@ -246,6 +334,85 @@ html:not(.theme-light) .am-approval-page .ant-tag-default {
     color: #e2e8f0 !important;
 }
 
+html:not(.theme-light) .am-approval-page .ant-tag-blue {
+    background: rgba(59, 130, 246, 0.18) !important;
+    border-color: rgba(96, 165, 250, 0.45) !important;
+    color: #bfdbfe !important;
+}
+html:not(.theme-light) .am-approval-page .ant-tag-purple {
+    background: rgba(168, 85, 247, 0.18) !important;
+    border-color: rgba(192, 132, 252, 0.45) !important;
+    color: #e9d5ff !important;
+}
+html:not(.theme-light) .am-approval-page .ant-picker,
+html:not(.theme-light) .am-approval-page .ant-select:not(.ant-select-customize-input) .ant-select-selector,
+html:not(.theme-light) .am-approval-page .ant-input-affix-wrapper,
+html:not(.theme-light) .am-approval-page .ant-input-search .ant-input,
+html:not(.theme-light) .am-approval-page .ant-input-search .ant-input-search-button {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+    box-shadow: none !important;
+}
+html:not(.theme-light) .am-approval-page .ant-picker-input > input,
+html:not(.theme-light) .am-approval-page .ant-select-selection-item,
+html:not(.theme-light) .am-approval-page .ant-input {
+    background: transparent !important;
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+    caret-color: #f8fafc !important;
+}
+html:not(.theme-light) .am-approval-page .ant-picker-input > input::placeholder,
+html:not(.theme-light) .am-approval-page .ant-input::placeholder {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+html:not(.theme-light) .am-approval-page .ant-picker-suffix,
+html:not(.theme-light) .am-approval-page .ant-picker-clear,
+html:not(.theme-light) .am-approval-page .ant-select-arrow,
+html:not(.theme-light) .am-approval-page .ant-input-clear-icon,
+html:not(.theme-light) .am-approval-page .ant-input-search-button .anticon {
+    background: #1e293b !important;
+    color: #cbd5e1 !important;
+}
+html:not(.theme-light) .am-approval-page .ant-input-search .ant-input-group-addon,
+html:not(.theme-light) .am-approval-page .ant-input-search .ant-input-search-button {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: none !important;
+}
+html:not(.theme-light) .am-approval-page .ant-input-search .ant-input-search-button:hover {
+    background: #273449 !important;
+    color: #f8fafc !important;
+}
+html:not(.theme-light) .am-approval-page .ant-input-search .ant-input-search-button .anticon {
+    background: transparent !important;
+}
+html:not(.theme-light) .am-approval-page .ant-input-search .ant-input-affix-wrapper {
+    border-inline-end: 0 !important;
+}
+html:not(.theme-light) .am-approval-page .ant-pagination .ant-pagination-item a,
+html:not(.theme-light) .am-approval-page .ant-pagination .ant-pagination-prev button,
+html:not(.theme-light) .am-approval-page .ant-pagination .ant-pagination-next button,
+html:not(.theme-light) .am-approval-page .ant-pagination .ant-pagination-item-ellipsis {
+    color: #e2e8f0 !important;
+}
+html:not(.theme-light) .am-approval-page .ant-pagination .ant-pagination-item-active {
+    background: transparent !important;
+    border-color: #60a5fa !important;
+}
+html:not(.theme-light) .ant-select-dropdown {
+    background: #1e293b !important;
+}
+html:not(.theme-light) .ant-select-item {
+    color: #e2e8f0 !important;
+}
+html:not(.theme-light) .ant-select-item-option-active,
+html:not(.theme-light) .ant-select-item-option-selected {
+    background: rgba(59, 130, 246, 0.25) !important;
+}
+
 /* Light mode overrides */
 html.theme-light .am-approval-page {
     background: #ffffff !important;
@@ -259,7 +426,7 @@ html.theme-light .am-approval-page .ant-tabs-tab-active {
     color: #0f172a;
 }
 html.theme-light .am-approval-page .ant-tabs-nav::before {
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 0;
 }
 html.theme-light .am-approval-page .ant-table {
     background: #ffffff !important;

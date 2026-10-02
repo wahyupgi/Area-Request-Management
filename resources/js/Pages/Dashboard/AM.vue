@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, h, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
@@ -22,7 +22,6 @@ const props = defineProps({
     reportMode:  { type: Boolean, default: false },
     gaReport:    { type: Object,  default: null },
     gaTemplates: { type: Array,   default: () => [] },
-    branches:    { type: Array,   default: () => [] },
     filters:     { type: Object,  default: () => ({}) },
 });
 
@@ -118,34 +117,20 @@ const showReport = ref(props.reportMode);
 // Local filter state (initialised from server-side filters prop)
 const f = reactive({
     status:      props.filters?.status      ?? undefined,
-    template_id: props.filters?.template_id ?? undefined,
-    branch_id:   props.filters?.branch_id   ?? undefined,
+    template_id: props.filters?.template_id != null ? String(props.filters.template_id) : undefined,
     date_from:   props.filters?.date_from   ?? '',
     date_to:     props.filters?.date_to     ?? '',
 });
 
-// DateRangePicker value [dayjs, dayjs] | null
-
-const dateRange = ref(
-    props.filters?.date_from && props.filters?.date_to ? [
-        props.filters.date_from,
-        props.filters.date_to,
-    ] : null
-);
-
-function onDateRangeChange(_, dateStrings) {
-    f.date_from = dateStrings?.[0] ?? '';
-    f.date_to   = dateStrings?.[1] ?? '';
-}
+const disableFutureReportDate = (date) => date && date.startOf('day').valueOf() > new Date().setHours(0, 0, 0, 0);
 
 function applyFilters() {
     router.get(route('reports.ga'), cleanFilters(), { preserveScroll: true });
 }
 
 function resetFilters() {
-    f.template_id = undefined; f.branch_id = undefined;
+    f.template_id = undefined;
     f.date_from = ''; f.date_to = '';
-    dateRange.value = null;
     router.get(route('reports.ga'), {}, { preserveScroll: true });
 }
 
@@ -276,10 +261,6 @@ const activeFilterSummary = computed(() => {
         const t = props.gaTemplates.find(t => String(t.id) === String(f.template_id));
         if (t) parts.push(`Kategori: ${t.name}`);
     }
-    if (f.branch_id) {
-        const b = props.branches.find(b => String(b.id) === String(f.branch_id));
-        if (b) parts.push(`Cabang: ${b.name}`);
-    }
     if (f.date_from && f.date_to) parts.push(`Periode: ${f.date_from} s/d ${f.date_to}`);
     else if (f.date_from) parts.push(`Dari: ${f.date_from}`);
     else if (f.date_to) parts.push(`Sampai: ${f.date_to}`);
@@ -371,7 +352,7 @@ const pagination = computed(() => {
                 </a-col>
             </a-row>
 
-            <div class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <div class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <div>
                     <Link :href="route('approvals.pending')">
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-pending">
@@ -381,15 +362,7 @@ const pagination = computed(() => {
                         </a-card>
                     </Link>
                 </div>
-                <div>
-                    <Link :href="route('approvals.pending', { tab: 'riwayat' })">
-                        <a-card :bordered="false" size="small" hoverable class="am-stat-box">
-                            <div class="am-stat-title">Total Pengajuan</div>
-                            <div class="am-stat-number">{{ combinedStats.total }}</div>
-                            <div class="am-stat-desc">Termasuk draft</div>
-                        </a-card>
-                    </Link>
-                </div>
+
                 <div>
                     <Link :href="route('approvals.pending')">
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-pending">
@@ -543,65 +516,64 @@ const pagination = computed(() => {
                     </a-space>
                 </template>
                 <template #extra>
-                    <a-button type="primary" :icon="h(EyeOutlined)" @click="openExportPreview">
+                    <a-button
+                        type="primary"
+                        :icon="h(EyeOutlined)"
+                        style="background-color: #16a34a; border-color: #16a34a;"
+                        @click="openExportPreview"
+                    >
                         Unduh CSV
                     </a-button>
                 </template>
 
                 <!-- ── Filter Panel ── -->
                 <a-card class="ga-filter-card" :bordered="false">
-                    <div class="ga-filter-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="ga-filter-grid">
 
                         <!-- Kategori -->
                         <div class="ga-filter-item">
-                            <label class="ga-filter-label">Kategori</label>
                             <a-select
                                 v-model:value="f.template_id"
                                 placeholder="Semua Kategori"
+                                option-label-prop="label"
                                 allow-clear
                                 style="width:100%"
                             >
-                                <a-select-option v-for="t in gaTemplates" :key="t.id" :value="t.id">
+                                <a-select-option v-for="t in gaTemplates" :key="t.id" :value="String(t.id)" :label="t.name">
                                     {{ t.name }}
-                                </a-select-option>
-                            </a-select>
-                        </div>
-                        <!-- Cabang -->
-                        <div class="ga-filter-item">
-                            <label class="ga-filter-label">Cabang</label>
-                            <a-select
-                                v-model:value="f.branch_id"
-                                placeholder="Semua Cabang"
-                                allow-clear
-                                style="width:100%"
-                            >
-                                <a-select-option v-for="b in branches" :key="b.id" :value="b.id">
-                                    {{ b.name }}
                                 </a-select-option>
                             </a-select>
                         </div>
                         <!-- Date Range -->
                         <div class="ga-filter-item">
-                            <label class="ga-filter-label">Rentang Tanggal</label>
-                            <a-range-picker
-                                v-model:value="dateRange"
-                                format="YYYY-MM-DD"
-                                value-format="YYYY-MM-DD"
-                                :placeholder="['Dari Tanggal', 'Sampai Tanggal']"
-                                style="width:100%"
-                                @change="onDateRangeChange"
-                            />
+                            <div class="grid grid-cols-2 gap-2">
+                                <a-date-picker
+                                    v-model:value="f.date_from"
+                                    format="DD MMM YYYY"
+                                    value-format="YYYY-MM-DD"
+                                    placeholder="Tanggal awal"
+                                    :disabled-date="disableFutureReportDate"
+                                    style="width:100%"
+                                />
+                                <a-date-picker
+                                    v-model:value="f.date_to"
+                                    format="DD MMM YYYY"
+                                    value-format="YYYY-MM-DD"
+                                    placeholder="Tanggal akhir"
+                                    :disabled-date="disableFutureReportDate"
+                                    style="width:100%"
+                                />
+                            </div>
                         </div>
+                        <a-space class="ga-filter-actions">
+                            <a-button type="primary" :icon="h(FilterOutlined)" @click="applyFilters">
+                                Terapkan Filter
+                            </a-button>
+                            <a-button :icon="h(ReloadOutlined)" @click="resetFilters">
+                                Reset
+                            </a-button>
+                        </a-space>
                     </div>
-                    <!-- Actions -->
-                    <a-space style="margin-top:16px">
-                        <a-button type="primary" :icon="h(FilterOutlined)" @click="applyFilters">
-                            Terapkan Filter
-                        </a-button>
-                        <a-button :icon="h(ReloadOutlined)" @click="resetFilters">
-                            Reset
-                        </a-button>
-                    </a-space>
                 </a-card>
 
                 <!-- ── Table ── -->
