@@ -14,7 +14,7 @@ const downloadCsv = () => {
     const rows = [
         ['Jenis Dokumen', 'Nomor Dokumen', 'Perihal', 'Pembuat', 'Cabang', 'Status', 'Tanggal'],
         ...filteredItems.value.map(item => [
-            item._itemType === 'memo' ? 'Memo' : 'Berita Acara',
+            itemTypeLabel(item),
             item.code || '-',
             item.title || '-',
             item.creator?.name || '-',
@@ -38,7 +38,17 @@ const props = defineProps({
     allMemos: Object,
     defaultTab: String,
     pendingBA: { type: Array, default: () => [] },
+    pendingFormPengajuans: { type: Array, default: () => [] },
 });
+
+const formPengajuanTemplateLabels = {
+    form_permohonan_pinjaman: 'Form Permohonan Pinjaman (FPP)',
+    form_ijin_tidak_masuk_kerja: 'Form Ijin Tidak Masuk Kerja (FITMK)',
+};
+const isFormPengajuan = (item) => item._itemType === 'form_pengajuan';
+const itemTypeLabel = (item) => isFormPengajuan(item)
+    ? 'Form Pengajuan'
+    : item._itemType === 'memo' ? 'Memo' : 'BA';
 
 const activeTab = ref(props.defaultTab || 'masuk');
 const searchText = ref('');
@@ -58,8 +68,13 @@ const combinedItems = computed(() => {
         _itemType: 'ba',
         _date: ba.submitted_at || ba.created_at,
     }));
+    const formItems = (props.pendingFormPengajuans || []).map(form => ({
+        ...form,
+        _itemType: 'form_pengajuan',
+        _date: form.submitted_at || form.created_at,
+    }));
     
-    return [...memoItems, ...baItems].sort((a, b) => new Date(b._date) - new Date(a._date));
+    return [...memoItems, ...baItems, ...formItems].sort((a, b) => new Date(b._date) - new Date(a._date));
 });
 
 const itemsPending = computed(() => combinedItems.value.filter(i => i.status === 'submitted'));
@@ -87,7 +102,8 @@ const filteredItems = computed(() => {
             item.creator?.name,
             item.branch?.name,
         ].some(value => String(value || '').toLocaleLowerCase('id').includes(query));
-        const matchesType = selectedType.value === 'all' || item._itemType === selectedType.value;
+        const matchesType = selectedType.value === 'all' ||
+            (selectedType.value === 'form_pengajuan' ? isFormPengajuan(item) : item._itemType === selectedType.value && !isFormPengajuan(item));
         const itemDate = new Date(item._date).getTime();
         const matchesDate = (!startDate || itemDate >= startDate) && (!endDate || itemDate <= endDate);
 
@@ -121,6 +137,8 @@ const formatDate = (dateStr) => {
 const goToDetail = (record) => {
     if (record._itemType === 'memo') {
         router.visit(record.status === 'submitted' ? route('approvals.review', record.id) : route('approvals.history', record.id));
+    } else if (isFormPengajuan(record)) {
+        router.visit(record.status === 'submitted' ? route('approvals.form-pengajuan.review', record.id) : route('approvals.form-pengajuan.history', record.id));
     } else {
         router.visit(record.status === 'submitted' ? route('approvals.ba.review', record.id) : route('approvals.ba.history', record.id));
     }
@@ -178,6 +196,7 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
                             <a-select-option value="all">Semua tipe dokumen</a-select-option>
                             <a-select-option value="memo">Memo</a-select-option>
                             <a-select-option value="ba">Berita Acara</a-select-option>
+                            <a-select-option value="form_pengajuan">Form Pengajuan</a-select-option>
                         </a-select>
                         <div class="grid grid-cols-2 gap-2 w-full sm:w-80 sm:flex-none">
                             <a-date-picker
@@ -212,10 +231,11 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
                             <template v-if="column.key === 'title_type' || column.dataIndex === 'title'">
                                 <div class="font-semibold">{{ record.title }}</div>
                                 <div class="text-xs opacity-70 mt-1 flex items-center gap-2">
-                                    <a-tag :color="record._itemType === 'memo' ? 'blue' : 'purple'" style="margin-right: 0;">
-                                        {{ record._itemType === 'memo' ? 'Memo' : 'Berita Acara' }}
+                                    <a-tag :color="record._itemType === 'memo' ? 'blue' : isFormPengajuan(record) ? 'green' : 'purple'" style="margin-right: 0;">
+                                        {{ itemTypeLabel(record) }}
                                     </a-tag>
                                     <span v-if="record._itemType === 'memo'">{{ record.template?.name || '' }}</span>
+                                    <span v-else-if="isFormPengajuan(record)">{{ formPengajuanTemplateLabels[record.template] || '' }}</span>
                                 </div>
                             </template>
                             <template v-if="column.key === 'creator' || column.dataIndex === 'creator'">{{ record.creator?.name || '-' }}</template>

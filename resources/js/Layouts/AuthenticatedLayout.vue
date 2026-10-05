@@ -107,12 +107,21 @@ const navItems = computed(() => {
                     ],
                 },
                 {
-                    name: 'Berita Acara',
+                    name: 'BA',
                     key: 'berita-acara-submenu',
                     icon: AuditOutlined,
                     children: [
                         { name: 'Buat BA', route: 'berita-acara.create', icon: FormOutlined },
                         { name: 'Riwayat BA', route: 'berita-acara.index', icon: FileTextOutlined },
+                    ],
+                },
+                {
+                    name: 'Form Pengajuan',
+                    key: 'form-pengajuan-submenu',
+                    icon: FormOutlined,
+                    children: [
+                        { name: 'Buat Form Pengajuan', route: 'form-pengajuan.create', icon: FormOutlined },
+                        { name: 'Riwayat Form Pengajuan', route: 'form-pengajuan.index', icon: FileTextOutlined },
                     ],
                 },
             ],

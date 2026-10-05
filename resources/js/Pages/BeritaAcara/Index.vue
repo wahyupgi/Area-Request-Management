@@ -35,7 +35,7 @@ const statusLabel = (status) => {
 };
 
 const columns = [
-    { title: 'Nomor BA',   dataIndex: 'code',   key: 'code', width: 240 },
+    { title: 'Nomor Pengajuan', dataIndex: 'code', key: 'code', width: 240 },
     { title: 'Judul',      dataIndex: 'title',  key: 'title', width: 280, ellipsis: true },
     { title: 'Status',     dataIndex: 'status', key: 'status', width: 170 },
     { title: 'Tanggal',    dataIndex: 'created_at', key: 'created_at', width: 190 },
@@ -77,6 +77,10 @@ const columns = [
                 :scroll="{ x: 976 }"
             >
                 <template #bodyCell="{ column, record }">
+                    <template v-if="column.key === 'title'">
+                        <div class="font-medium">{{ record.title }}</div>
+                        <a-tag color="purple" class="mt-1">Berita Acara</a-tag>
+                    </template>
                     <template v-if="column.key === 'status'">
                         <a-badge :status="statusColor(record.status)" :text="statusLabel(record.status)" />
                     </template>
@@ -88,7 +92,7 @@ const columns = [
                             class="ba-detail-button"
                             type="text"
                             title="Detail"
-                            aria-label="Detail Berita Acara"
+                            aria-label="Detail Pengajuan"
                             @click="router.visit(route('approvals.ba.history', record.id))"
                         >
                             <template #icon>
@@ -99,9 +103,9 @@ const columns = [
                 </template>
 
                 <template #emptyText>
-                    <a-empty description="Belum ada Berita Acara yang diajukan.">
+                    <a-empty description="Belum ada pengajuan.">
                         <a-button type="primary" @click="router.visit(route('berita-acara.create'))">
-                            Buat Berita Acara Pertama
+                            Buat Pengajuan Pertama
                         </a-button>
                     </a-empty>
                 </template>

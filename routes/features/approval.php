@@ -2,6 +2,7 @@
 
 use App\Features\Approval\Controllers\ApprovalController;
 use App\Features\Approval\Controllers\BeritaAcaraApprovalController;
+use App\Features\FormPengajuan\Controllers\FormPengajuanController;
 use App\Features\Signature\Controllers\SignatureController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,10 @@ Route::middleware('role:AM')->group(function () {
     Route::post('/approvals/ba/{beritaAcara}/approve', [BeritaAcaraApprovalController::class, 'approve'])->name('approvals.ba.approve');
     Route::post('/approvals/ba/{beritaAcara}/reject', [BeritaAcaraApprovalController::class, 'reject'])->name('approvals.ba.reject');
 
+    Route::get('/approvals/form-pengajuan/{formPengajuan}/review', [FormPengajuanController::class, 'review'])->name('approvals.form-pengajuan.review');
+    Route::post('/approvals/form-pengajuan/{formPengajuan}/approve', [FormPengajuanController::class, 'approve'])->name('approvals.form-pengajuan.approve');
+    Route::post('/approvals/form-pengajuan/{formPengajuan}/reject', [FormPengajuanController::class, 'reject'])->name('approvals.form-pengajuan.reject');
+
     // Template signature schema management
     Route::get('/signature/settings', [SignatureController::class, 'settings'])->name('signature.settings');
     Route::put('/signature/settings/{template}', [SignatureController::class, 'updateSettings'])->name('signature.settings.update');
@@ -37,3 +42,4 @@ Route::middleware('role:AM')->group(function () {
 Route::get('/approvals/{memo}/history', [ApprovalController::class, 'history'])->name('approvals.history');
 Route::post('/approvals/{memo}/update-meta', [ApprovalController::class, 'updateMeta'])->name('approvals.updateMeta');
 Route::get('/approvals/ba/{beritaAcara}/history', [BeritaAcaraApprovalController::class, 'history'])->name('approvals.ba.history');
+Route::get('/approvals/form-pengajuan/{formPengajuan}/history', [FormPengajuanController::class, 'history'])->name('approvals.form-pengajuan.history');

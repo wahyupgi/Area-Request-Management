@@ -19,10 +19,17 @@ const props = defineProps({
 const page = usePage();
 const { theme } = useTheme();
 const isKcUser = page.props.auth.user?.role === 'KC';
-const backUrl = isKcUser
-    ? route('berita-acara.index')
-    : route('approvals.pending', { tab: 'ba-approved' });
-const backLabel = isKcUser ? 'Daftar Berita Acara' : 'Antrean Berita Acara';
+const isAdminUser = page.props.auth.user?.role === 'ADMIN';
+const backUrl = isAdminUser
+    ? route('dashboard')
+    : isKcUser
+        ? route('berita-acara.index')
+        : route('approvals.pending', { tab: 'ba-approved' });
+const backLabel = isAdminUser
+    ? 'Dashboard'
+    : isKcUser
+        ? 'Riwayat Pengajuan'
+        : 'Kotak Masuk';
 
 const attachmentUrl = () => '/storage/' + props.beritaAcara.attachment_path;
 const printAttachments = props.beritaAcara.attachment_path ? [{
@@ -45,7 +52,7 @@ const printBA = () => {
 </script>
 
 <template>
-    <Head :title="'Riwayat Berita Acara: ' + beritaAcara.code" />
+    <Head :title="`Riwayat Berita Acara: ${beritaAcara.code}`" />
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between w-full">
@@ -135,10 +142,10 @@ const printBA = () => {
                         </template>
 
                         <div v-if="beritaAcara.status === 'approved'" class="space-y-4">
-                            <a-alert type="success" show-icon message="Berita Acara ini telah disetujui secara resmi." />
+                            <a-alert type="success" show-icon :message="`Pengajuan ini telah disetujui secara resmi.`" />
                         </div>
                         <div v-else-if="beritaAcara.status === 'rejected'" class="space-y-4">
-                            <a-alert type="error" show-icon message="Berita Acara ini ditolak." />
+                            <a-alert type="error" show-icon message="Pengajuan ini ditolak." />
                         </div>
                         <div v-else>
                             <a-alert type="info" show-icon message="Sedang menunggu keputusan." />

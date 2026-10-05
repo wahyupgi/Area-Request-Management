@@ -178,7 +178,7 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-    <Head :title="'Review Berita Acara: ' + beritaAcara.code" />
+    <Head :title="`Review Berita Acara: ${beritaAcara.code}`" />
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between w-full">
@@ -259,10 +259,10 @@ const formatDate = (dateString) => {
                         </template>
 
                         <div v-if="beritaAcara.status === 'approved'" class="space-y-4">
-                            <a-alert type="success" show-icon message="Berita Acara ini telah disetujui." />
+                            <a-alert type="success" show-icon message="Pengajuan ini telah disetujui." />
                         </div>
                         <div v-else-if="beritaAcara.status === 'rejected'" class="space-y-4">
-                            <a-alert type="error" show-icon message="Berita Acara ini telah ditolak." />
+                            <a-alert type="error" show-icon message="Pengajuan ini telah ditolak." />
                         </div>
                         <div v-else class="space-y-3">
                             <p class="text-sm text-gray-500 mb-4">
@@ -270,11 +270,11 @@ const formatDate = (dateString) => {
                             </p>
 
                             <a-button type="primary" block size="large" class="bg-green-600 hover:bg-green-500 border-green-600" @click="showApproveConfirm = true">
-                                <template #icon><check-circle-outlined /></template> Setujui BA
+                                <template #icon><check-circle-outlined /></template> Setujui
                             </a-button>
 
                             <a-button danger block size="large" @click="showRejectModal = true">
-                                <template #icon><close-circle-outlined /></template> Tolak BA
+                                <template #icon><close-circle-outlined /></template> Tolak
                             </a-button>
                         </div>
                     </a-card>
@@ -400,7 +400,7 @@ const formatDate = (dateString) => {
             :okButtonProps="{ class: 'bg-green-600 hover:bg-green-500 border-green-600' }"
             centered
         >
-            <p class="text-gray-600">Apakah Anda yakin ingin menyetujui Berita Acara ini?</p>
+            <p class="text-gray-600">Apakah Anda yakin ingin menyetujui pengajuan ini?</p>
             <a-alert
                 v-if="approveForm.errors.signature"
                 class="mt-3"

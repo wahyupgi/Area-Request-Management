@@ -5,6 +5,7 @@ namespace App\Features\Dashboard\Services;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\BeritaAcara;
+use App\Models\FormPengajuan;
 use App\Models\Memo;
 use App\Models\MemoTemplate;
 use App\Models\User;
@@ -17,6 +18,7 @@ class DashboardStatsService
     public function forKcUser(User $user): array
     {
         $baScope = BeritaAcara::query()->where('created_by', $user->id);
+        $formScope = FormPengajuan::query()->where('created_by', $user->id);
         $memos = Memo::with([
             'template:id,name',
             'branch:id,name',
@@ -37,13 +39,20 @@ class DashboardStatsService
             )
             ->first();
         $baStats = $this->beritaAcaraStats(clone $baScope);
+        $formStats = $this->formPengajuanStats(clone $formScope);
 
         return [
             'memos' => $memos,
-            'submissionStats' => $this->combineSubmissionStats($memoStats, $baStats),
+            'submissionStats' => $this->combineSubmissionStats($memoStats, $baStats, $formStats),
             'baStats' => $baStats,
+            'formPengajuanStats' => $formStats,
             'recentBA' => (clone $baScope)
                 ->with('branch:id,name')
+                ->orderByDesc('updated_at')
+                ->limit(6)
+                ->get(),
+            'recentFormPengajuans' => (clone $formScope)
+                ->with(['branch:id,name', 'creator:id,name'])
                 ->orderByDesc('updated_at')
                 ->limit(6)
                 ->get(),
@@ -54,6 +63,7 @@ class DashboardStatsService
     public function forAmUser(User $user): array
     {
         $baScope = BeritaAcara::query()->where('area_manager_id', $user->id);
+        $formScope = FormPengajuan::query()->where('area_manager_id', $user->id);
         $pendingMemos = Memo::with([
             'template:id,name',
             'branch:id,name',
@@ -69,6 +79,13 @@ class DashboardStatsService
         $pendingBA = (clone $baScope)
             ->with(['branch:id,name', 'creator:id,name'])
             ->where('status', BeritaAcara::STATUS_SUBMITTED)
+            ->orderByDesc('submitted_at')
+            ->limit(6)
+            ->get();
+
+        $pendingFormPengajuans = (clone $formScope)
+            ->with(['branch:id,name', 'creator:id,name'])
+            ->where('status', FormPengajuan::STATUS_SUBMITTED)
             ->orderByDesc('submitted_at')
             ->limit(6)
             ->get();
@@ -95,15 +112,23 @@ class DashboardStatsService
             )
             ->first();
         $baStats = $this->beritaAcaraStats(clone $baScope);
+        $formStats = $this->formPengajuanStats(clone $formScope);
 
         return [
             'pendingMemos' => $pendingMemos,
             'pendingBA' => $pendingBA,
+            'pendingFormPengajuans' => $pendingFormPengajuans,
             'recentActions' => $recentActions,
-            'submissionStats' => $this->combineSubmissionStats($actionStats, $baStats),
+            'submissionStats' => $this->combineSubmissionStats($actionStats, $baStats, $formStats),
             'baStats' => $baStats,
+            'formPengajuanStats' => $formStats,
             'recentBA' => (clone $baScope)
                 ->with(['branch:id,name', 'creator:id,name'])
+                ->orderByDesc('updated_at')
+                ->limit(6)
+                ->get(),
+            'recentFormPengajuans' => (clone $formScope)
+                ->with(['branch:id,name', 'creator:id,name', 'approver:id,name'])
                 ->orderByDesc('updated_at')
                 ->limit(6)
                 ->get(),
@@ -118,6 +143,7 @@ class DashboardStatsService
     public function forAdmin(): array
     {
         $baScope = BeritaAcara::query();
+        $formScope = FormPengajuan::query();
         $memoStats = Memo::selectRaw(
             "COUNT(*) as total, ".
             "SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved, ".
@@ -158,15 +184,23 @@ class DashboardStatsService
                 'status' => $memo->status,
                 'created_at' => $memo->created_at,
                 'type' => 'memo',
-            ])
-            ->concat(BeritaAcara::query()
-                ->where('created_at', '>=', $chartPeriodStart)
-                ->get(['status', 'created_at'])
-                ->map(fn (BeritaAcara $ba) => [
-                    'status' => $ba->status,
-                    'created_at' => $ba->created_at,
-                    'type' => 'ba',
-                ]));
+            ]);
+        $chartDocuments = $chartDocuments->concat(BeritaAcara::query()
+            ->where('created_at', '>=', $chartPeriodStart)
+            ->get(['status', 'created_at'])
+            ->map(fn (BeritaAcara $ba) => [
+                'status' => $ba->status,
+                'created_at' => $ba->created_at,
+                'type' => 'ba',
+            ]));
+        $chartDocuments = $chartDocuments->concat(FormPengajuan::query()
+            ->where('created_at', '>=', $chartPeriodStart)
+            ->get(['status', 'created_at'])
+            ->map(fn (FormPengajuan $form) => [
+                'status' => $form->status,
+                'created_at' => $form->created_at,
+                'type' => 'formPengajuan',
+            ]));
 
         $chartData = [
             'week' => $this->buildChartPeriod($chartDocuments, 'week'),
@@ -175,14 +209,21 @@ class DashboardStatsService
         ];
 
         $baStats = $this->beritaAcaraStats(clone $baScope);
+        $formStats = $this->formPengajuanStats(clone $formScope);
 
         return [
-            'submissionStats' => $this->combineSubmissionStats($memoStats, $baStats),
+            'submissionStats' => $this->combineSubmissionStats($memoStats, $baStats, $formStats),
             'baStats' => $baStats,
+            'formPengajuanStats' => $formStats,
             'recentBA' => (clone $baScope)
                 ->with(['branch:id,name', 'creator:id,name'])
                 ->orderByDesc('updated_at')
                 ->limit(6)
+                ->get(),
+            'recentFormPengajuans' => (clone $formScope)
+                ->with(['branch:id,name', 'creator:id,name', 'areaManager:id,name'])
+                ->orderByDesc('created_at')
+                ->limit(8)
                 ->get(),
             'stats' => [
                 'total_memos' => (int) ($memoStats->total ?? 0),
@@ -231,11 +272,30 @@ class DashboardStatsService
         ];
     }
 
-    private function combineSubmissionStats(object $memoStats, array $baStats): array
+    private function formPengajuanStats(Builder $query): array
+    {
+        $stats = $query->selectRaw(
+            "COUNT(*) as total, ".
+            "SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft, ".
+            "SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted, ".
+            "SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved, ".
+            "SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected"
+        )->first();
+
+        return [
+            'total' => (int) ($stats->total ?? 0),
+            'draft' => (int) ($stats->draft ?? 0),
+            'submitted' => (int) ($stats->submitted ?? 0),
+            'approved' => (int) ($stats->approved ?? 0),
+            'rejected' => (int) ($stats->rejected ?? 0),
+        ];
+    }
+
+    private function combineSubmissionStats(object $memoStats, array $baStats, array $formStats): array
     {
         $stats = $this->memoStats($memoStats);
         foreach (['total', 'draft', 'submitted', 'approved', 'rejected'] as $key) {
-            $stats[$key] += $baStats[$key];
+            $stats[$key] += $baStats[$key] + $formStats[$key];
         }
         $stats['received'] = $stats['total'] - $stats['draft'];
 
@@ -290,6 +350,7 @@ class DashboardStatsService
                 'label' => $periodItem['label'],
                 'memo' => $this->chartStatusCounts($byType->get('memo', collect())),
                 'ba' => $this->chartStatusCounts($byType->get('ba', collect())),
+                'formPengajuan' => $this->chartStatusCounts($byType->get('formPengajuan', collect())),
             ];
         })->values()->all();
     }

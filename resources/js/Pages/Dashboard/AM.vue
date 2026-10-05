@@ -18,6 +18,9 @@ const props = defineProps({
     submissionStats: { type: Object, default: () => ({}) },
     baStats:       { type: Object, default: () => ({}) },
     recentBA:      { type: Array,  default: () => [] },
+    pendingFormPengajuans: { type: Array, default: () => [] },
+    recentFormPengajuans: { type: Array, default: () => [] },
+    formPengajuanStats: { type: Object, default: () => ({}) },
     // Report mode
     reportMode:  { type: Boolean, default: false },
     gaReport:    { type: Object,  default: null },
@@ -27,10 +30,12 @@ const props = defineProps({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const isFormPengajuan = (document) => document._documentType === 'form_pengajuan';
 
 const pendingDocuments = computed(() => [
     ...(props.pendingMemos || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
     ...(props.pendingBA || []).map((ba) => ({ ...ba, _documentType: 'ba' })),
+    ...(props.pendingFormPengajuans || []).map((form) => ({ ...form, _documentType: 'form_pengajuan' })),
 ].sort((a, b) => new Date(b.submitted_at || b.created_at) - new Date(a.submitted_at || a.created_at)));
 
 const recentDecisions = computed(() => [
@@ -38,6 +43,9 @@ const recentDecisions = computed(() => [
     ...(props.recentBA || [])
         .filter((ba) => ['approved', 'rejected'].includes(ba.status))
         .map((ba) => ({ ...ba, _documentType: 'ba' })),
+    ...(props.recentFormPengajuans || [])
+        .filter((form) => ['approved', 'rejected'].includes(form.status))
+        .map((form) => ({ ...form, _documentType: 'form_pengajuan' })),
 ].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 6));
 
 const combinedStats = computed(() => ({
@@ -358,7 +366,7 @@ const pagination = computed(() => {
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-pending">
                             <div class="am-stat-title">Pengajuan Masuk</div>
                             <div class="am-stat-number">{{ combinedStats.received }}</div>
-                            <div class="am-stat-desc">Memo dan Berita Acara</div>
+                            <div class="am-stat-desc">Memo, BA &amp; Form Pengajuan</div>
                         </a-card>
                     </Link>
                 </div>
@@ -368,7 +376,7 @@ const pagination = computed(() => {
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-pending">
                             <div class="am-stat-title">Menunggu AM</div>
                             <div class="am-stat-number">{{ combinedStats.pending }}</div>
-                            <div class="am-stat-desc">Memo dan Berita Acara</div>
+                            <div class="am-stat-desc">Memo, BA &amp; Form Pengajuan</div>
                         </a-card>
                     </Link>
                 </div>
@@ -377,7 +385,7 @@ const pagination = computed(() => {
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-approved">
                             <div class="am-stat-title">Disetujui</div>
                             <div class="am-stat-number">{{ combinedStats.approved }}</div>
-                            <div class="am-stat-desc">Memo dan Berita Acara</div>
+                            <div class="am-stat-desc">Memo, BA &amp; Form Pengajuan</div>
                         </a-card>
                     </Link>
                 </div>
@@ -386,7 +394,7 @@ const pagination = computed(() => {
                         <a-card :bordered="false" size="small" hoverable class="am-stat-box am-stat-box-rejected">
                             <div class="am-stat-title">Perlu Revisi</div>
                             <div class="am-stat-number">{{ combinedStats.rejected }}</div>
-                            <div class="am-stat-desc">Memo dan Berita Acara</div>
+                            <div class="am-stat-desc">Memo, BA &amp; Form Pengajuan</div>
                         </a-card>
                     </Link>
                 </div>
@@ -413,7 +421,7 @@ const pagination = computed(() => {
                         <template #renderItem="{ item: document }">
                             <a-list-item style="padding: 4px 0; border-bottom: none;">
                                 <a-card hoverable class="am-item-card w-full" size="small">
-                                    <Link :href="document._documentType === 'memo' ? route('approvals.review', document.id) : route('approvals.ba.review', document.id)" style="color: inherit; text-decoration: none;">
+                                    <Link :href="document._documentType === 'memo' ? route('approvals.review', document.id) : isFormPengajuan(document) ? route('approvals.form-pengajuan.review', document.id) : route('approvals.ba.review', document.id)" style="color: inherit; text-decoration: none;">
                                         <a-row type="flex" justify="space-between" align="middle">
                                             <a-col :span="18">
                                                 <div style="margin-bottom: 8px;">
@@ -426,7 +434,7 @@ const pagination = computed(() => {
                                                 </div>
                                                 <a-space wrap>
                                                     <a-tag v-if="document._documentType === 'memo'" color="blue">{{ document.template?.name || 'Memo' }}</a-tag>
-                                                    <a-tag v-else color="purple">Berita Acara</a-tag>
+                                                    <a-tag v-else :color="isFormPengajuan(document) ? 'green' : 'purple'">{{ isFormPengajuan(document) ? 'Form Pengajuan' : 'Berita Acara' }}</a-tag>
                                                     <a-tag>{{ document.branch?.name || '-' }}</a-tag>
                                                     <a-tag v-if="document._documentType === 'memo' && getUrgency(document.submitted_at) === 'critical'" color="error">Mendesak</a-tag>
                                                     <a-tag v-else-if="document._documentType === 'memo' && getUrgency(document.submitted_at) === 'high'" color="warning">Segera</a-tag>
@@ -468,13 +476,13 @@ const pagination = computed(() => {
                         <template #renderItem="{ item: document }">
                             <a-list-item style="padding: 4px 0; border-bottom: none;">
                                 <a-card hoverable class="am-item-card w-full" size="small">
-                                    <Link :href="document._documentType === 'memo' ? route('memos.show', document.id) : route('approvals.ba.history', document.id)" style="color: inherit; text-decoration: none;">
+                                    <Link :href="document._documentType === 'memo' ? route('memos.show', document.id) : isFormPengajuan(document) ? route('approvals.form-pengajuan.history', document.id) : route('approvals.ba.history', document.id)" style="color: inherit; text-decoration: none;">
                                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                             <div>
                                                 <div class="am-item-title" style="font-weight: 600; font-size: 13px;">{{ document.title }}</div>
                                                 <div style="margin-top: 4px; font-size: 11px;">
                                                     <a-space split="·">
-                                                        <a-tag :color="document._documentType === 'memo' ? 'blue' : 'purple'">{{ document._documentType === 'memo' ? 'Memo' : 'BA' }}</a-tag>
+                                                        <a-tag :color="document._documentType === 'memo' ? 'blue' : isFormPengajuan(document) ? 'green' : 'purple'">{{ document._documentType === 'memo' ? 'Memo' : isFormPengajuan(document) ? 'Form Pengajuan' : 'BA' }}</a-tag>
                                                         <span class="am-item-text">{{ document.branch?.name }}</span>
                                                         <a-badge :status="document.status === 'approved' ? 'success' : 'error'" :text="document.status === 'approved' ? 'Disetujui' : 'Ditolak'" />
                                                     </a-space>
@@ -714,4 +722,3 @@ const pagination = computed(() => {
 
     </AuthenticatedLayout>
 </template>
-

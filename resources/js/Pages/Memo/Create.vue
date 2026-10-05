@@ -217,6 +217,8 @@ const submitAndSign = () => {
                         placeholder="-- Pilih Kategori & Template Memo --"
                         :options="groupedTemplates"
                         :listHeight="420"
+                        placement="bottomLeft"
+                        :dropdownAlign="{ points: ['tl', 'bl'], overflow: { adjustX: false, adjustY: false } }"
                         popup-class-name="memo-template-dropdown"
                         style="width: 100%"
                         size="large"

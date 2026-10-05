@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue';
 
@@ -9,6 +9,13 @@ const props = defineProps({
     users: Array,
     areas: Array,
 });
+
+const sortedUsers = computed(() =>
+    [...(props.users ?? [])].sort((a, b) => {
+        if ((a.role === 'ADMIN') !== (b.role === 'ADMIN')) return a.role === 'ADMIN' ? -1 : 1;
+        return (a.name ?? '').localeCompare(b.name ?? '', 'id', { sensitivity: 'base' });
+    })
+);
 
 const showModal = ref(false);
 const editingId = ref(null);
@@ -78,13 +85,15 @@ const remove = (user) => {
     });
 };
 
+const headerCenter = () => ({ style: { textAlign: 'center' } });
+
 const columns = [
-    { title: 'Nama', dataIndex: 'name', key: 'name' },
-    { title: 'Username', dataIndex: 'username', key: 'username' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Role', dataIndex: 'role', key: 'role' },
-    { title: 'Wilayah', key: 'location' },
-    { title: 'Aksi', key: 'action', width: '150px' },
+    { title: 'Nama', dataIndex: 'name', key: 'name', customHeaderCell: headerCenter },
+    { title: 'Username', dataIndex: 'username', key: 'username', customHeaderCell: headerCenter },
+    { title: 'Email', dataIndex: 'email', key: 'email', customHeaderCell: headerCenter },
+    { title: 'Role', dataIndex: 'role', key: 'role', customHeaderCell: headerCenter },
+    { title: 'Wilayah', key: 'location', width: '180px', customHeaderCell: headerCenter },
+    { title: 'Aksi', key: 'action', width: '100px', customHeaderCell: headerCenter },
 ];
 </script>
 
@@ -112,7 +121,7 @@ const columns = [
                 </template>
 
                 <a-table 
-                    :dataSource="users" 
+                    :dataSource="sortedUsers"
                     :columns="columns" 
                     :rowKey="(record) => record.id"
                     :pagination="{ pageSize: 10 }"

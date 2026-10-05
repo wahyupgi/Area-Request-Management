@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Features\Approval\Services\ApprovalService;
 use App\Features\Memo\Repositories\MemoRepository;
 use App\Models\BeritaAcara;
+use App\Models\FormPengajuan;
 use App\Models\Memo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,10 +40,16 @@ class ApprovalController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
+        $pendingFormPengajuans = FormPengajuan::with(['branch:id,name', 'creator:id,name'])
+            ->where('area_manager_id', $user->id)
+            ->orderByDesc('updated_at')
+            ->get();
+
         return Inertia::render('Approval/Pending', [
             'allMemos'   => $allMemos,
             'defaultTab' => $request->query('tab', 'masuk'),
             'pendingBA'  => $pendingBA,
+            'pendingFormPengajuans' => $pendingFormPengajuans,
         ]);
     }
 

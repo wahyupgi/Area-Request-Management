@@ -34,6 +34,8 @@ class DashboardController extends Controller
             'submissionStats' => $dashboard['submissionStats'],
             'baStats' => $dashboard['baStats'],
             'recentBA' => $dashboard['recentBA'],
+            'recentFormPengajuans' => $dashboard['recentFormPengajuans'],
+            'formPengajuanStats' => $dashboard['formPengajuanStats'],
             'stats' => $dashboard['stats'],
         ]);
     }
@@ -45,10 +47,13 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard/AM', [
             'pendingMemos' => $dashboard['pendingMemos'],
             'pendingBA' => $dashboard['pendingBA'],
+            'pendingFormPengajuans' => $dashboard['pendingFormPengajuans'],
             'recentActions' => $dashboard['recentActions'],
             'submissionStats' => $dashboard['submissionStats'],
             'baStats' => $dashboard['baStats'],
             'recentBA' => $dashboard['recentBA'],
+            'recentFormPengajuans' => $dashboard['recentFormPengajuans'],
+            'formPengajuanStats' => $dashboard['formPengajuanStats'],
             'stats' => $dashboard['stats'],
         ]);
     }
@@ -65,6 +70,8 @@ class DashboardController extends Controller
             'submissionStats' => $dashboard['submissionStats'],
             'baStats' => $dashboard['baStats'],
             'recentBA' => $dashboard['recentBA'],
+            'recentFormPengajuans' => $dashboard['recentFormPengajuans'],
+            'formPengajuanStats' => $dashboard['formPengajuanStats'],
         ]);
     }
 }

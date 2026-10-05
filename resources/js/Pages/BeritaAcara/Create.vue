@@ -1,22 +1,36 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
-import { watch } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     branches: { type: Array, default: () => [] },
+    formPengajuanOnly: { type: Boolean, default: false },
 });
 
+const page = usePage();
 const { success } = useSweetAlert();
+const documentLabels = {
+    form_permohonan_pinjaman: 'Form Permohonan Pinjaman (FPP)',
+    form_ijin_tidak_masuk_kerja: 'Form Ijin Tidak Masuk Kerja (FITMK)',
+};
 
-const templates = [
+const beritaAcaraTemplates = [
     { value: 'permohonan_biaya_kost', label: 'Permohonan Biaya Kost' },
     { value: 'revisi_absensi', label: 'Permintaan Revisi Absensi' },
     { value: 'penghapusan_barang_sitaan', label: 'Penghapusan Barang Sitaan' },
     { value: 'lainnya', label: 'Lainnya' },
 ];
+const formPengajuanTemplates = [
+    { value: 'form_permohonan_pinjaman', label: 'Form Permohonan Pinjaman (FPP)' },
+    { value: 'form_ijin_tidak_masuk_kerja', label: 'Form Ijin Tidak Masuk Kerja (FITMK)' },
+];
+const availableTemplates = computed(() => props.formPengajuanOnly
+    ? formPengajuanTemplates
+    : beritaAcaraTemplates
+);
 
 const form = useForm({
     branch_id: null,
@@ -31,6 +45,7 @@ const form = useForm({
         kepada_jabatan: '',
         penyetuju_akhir: '',
         data: { rows: [], kronologi: '' },
+        request_data: {},
     },
     pengantar: 'Sehubungan dengan adanya berita acara ini, saya ingin memberitahukan bahwa...',
     rincian_data: [
@@ -46,14 +61,58 @@ const form = useForm({
 });
 
 watch(() => form.meta.template, (template) => {
-    const selected = templates.find((item) => item.value === template);
+    const selected = availableTemplates.value.find((item) => item.value === template);
     if (!selected) return;
 
     form.title = selected.label;
     form.meta.perihal = selected.label;
     form.meta.data = { rows: [], kronologi: '' };
 
-    if (template === 'permohonan_biaya_kost') {
+    if (template === 'form_permohonan_pinjaman') {
+        form.meta.request_data = {
+            full_name: page.props.auth.user?.name || '',
+            position: '',
+            work_location: props.branches.find((branch) => branch.id === form.branch_id)?.name || '',
+            employment_date: '',
+            late_months: '',
+            absence_months: '',
+            request_number: '',
+            salary_after_approval: '',
+            minimum_salary: '',
+            loan_amount: '',
+            repayment_months: '',
+            salary_deduction: 'Bersedia',
+            loan_type: 'pinjaman_uang',
+            reason: '',
+        };
+        form.meta.direktorat = '';
+        form.meta.divisi = '';
+        form.meta.kepada_nama = '';
+        form.meta.kepada_jabatan = '';
+        form.pengantar = '';
+        form.rincian_data = [];
+        form.keterangan_tambahan = '';
+        form.penutup = '';
+    } else if (template === 'form_ijin_tidak_masuk_kerja') {
+        form.meta.request_data = {
+            full_name: page.props.auth.user?.name || '',
+            leave_type: 'cuti_tahunan',
+            start_date: '',
+            duration: '',
+            reason: '',
+            handover: '',
+            substitute: '',
+            phone: '',
+        };
+        form.meta.direktorat = '';
+        form.meta.divisi = '';
+        form.meta.kepada_nama = '';
+        form.meta.kepada_jabatan = '';
+        form.pengantar = '';
+        form.rincian_data = [];
+        form.keterangan_tambahan = '';
+        form.penutup = '';
+    } else if (template === 'permohonan_biaya_kost') {
         form.meta.direktorat = 'Regional Branch Office';
         form.meta.divisi = 'Branch Leader';
         form.meta.kepada_nama = 'Bpk. Nugroho Samudra Sujatmiko, Ko';
@@ -107,6 +166,11 @@ watch(() => form.meta.template, (template) => {
     }
 });
 
+watch(() => form.branch_id, (branchId) => {
+    if (form.meta.template !== 'form_permohonan_pinjaman') return;
+    form.meta.request_data.work_location = props.branches.find((branch) => branch.id === branchId)?.name || '';
+});
+
 const selectAttachment = (event) => {
     form.attachment = event.target.files[0] || null;
 };
@@ -146,14 +210,38 @@ const parseNominalInput = (value) => {
 
 const submit = () => {
     form.submit_after_save = false;
-    form.transform(data => ({ ...data, attachment: form.attachment }))
-        .post(route('berita-acara.store'), {
+    form.transform(data => props.formPengajuanOnly
+        ? ({
+            branch_id: data.branch_id,
+            title: documentLabels[data.meta.template],
+            template: data.meta.template,
+            meta: { request_data: data.meta.request_data },
+            submit: false,
+            attachment: form.attachment,
+        })
+        : ({ ...data, attachment: form.attachment }))
+        .post(props.formPengajuanOnly ? route('form-pengajuan.store') : route('berita-acara.store'), {
             forceFormData: true,
-            onSuccess: () => success('Draft Berita Acara berhasil disimpan.'),
+            onSuccess: () => success(props.formPengajuanOnly
+                ? 'Draft Form Pengajuan berhasil disimpan.'
+                : 'Draft Berita Acara berhasil disimpan.'),
         });
 };
 
 const submitAndSign = () => {
+    if (props.formPengajuanOnly) {
+        form.submit_after_save = true;
+        form.transform(data => ({
+            branch_id: data.branch_id,
+            title: documentLabels[data.meta.template],
+            template: data.meta.template,
+            meta: { request_data: data.meta.request_data },
+            submit: true,
+            attachment: form.attachment,
+        })).post(route('form-pengajuan.store'), { forceFormData: true });
+        return;
+    }
+
     form.submit_after_save = true;
     form.transform(data => ({ ...data, attachment: form.attachment }))
         .post(route('berita-acara.store'), { forceFormData: true });
@@ -162,16 +250,16 @@ const submitAndSign = () => {
 
 
 <template>
-    <Head title="Buat Berita Acara" />
+    <Head :title="formPengajuanOnly ? 'Buat Form Pengajuan' : 'Buat Berita Acara'" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold mb-0">Buat Berita Acara Baru</h1>
+            <h1 class="text-xl font-bold mb-0">{{ formPengajuanOnly ? 'Buat Form Pengajuan' : 'Buat Berita Acara Baru' }}</h1>
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
                 <h2 class="text-sm font-semibold mb-3">Cabang Pengajuan</h2>
-                <a-alert v-if="!branches.length" type="warning" show-icon message="Tambahkan cabang di menu Cabang Saya sebelum membuat Berita Acara." />
+                <a-alert v-if="!branches.length" type="warning" show-icon message="Tambahkan cabang di menu Cabang Saya sebelum membuat dokumen." />
                 <a-form-item
                     v-else
                     label="Cabang"
@@ -188,7 +276,7 @@ const submitAndSign = () => {
             </a-card>
 
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
-                <h2 class="text-lg font-semibold mb-2">Pilih Template Berita Acara</h2>
+                <h2 class="text-lg font-semibold mb-2">{{ formPengajuanOnly ? 'Pilih Template Form Pengajuan' : 'Pilih Template Berita Acara' }}</h2>
                 <a-form-item
                     :validateStatus="form.errors['meta.template'] ? 'error' : ''"
                     :help="form.errors['meta.template']"
@@ -196,8 +284,8 @@ const submitAndSign = () => {
                 >
                     <a-select
                         v-model:value="form.meta.template"
-                        placeholder="Pilih kategori dan template Berita Acara"
-                        :options="templates"
+                        placeholder="Pilih template"
+                        :options="availableTemplates"
                         size="large"
                     />
                 </a-form-item>
@@ -206,7 +294,7 @@ const submitAndSign = () => {
             <a-row :gutter="24" v-if="form.meta.template">
                 <a-col :xs="24" :lg="10" class="mb-6">
                     <div class="flex flex-col gap-6">
-                        <a-card :bordered="false" class="rounded-lg shadow-sm">
+                        <a-card v-if="!formPengajuanOnly" :bordered="false" class="rounded-lg shadow-sm">
                             <h2 class="text-sm font-semibold mb-1">Informasi Dokumen</h2>
                             <p class="text-xs text-gray-500 mb-4">Detail header yang tampil di dokumen cetak.</p>
 
@@ -249,12 +337,12 @@ const submitAndSign = () => {
 
                         <!-- Lampiran Word -->
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
-                            <h2 class="text-sm font-semibold mb-1">Lampiran Dokumen Word</h2>
-                            <p class="text-xs text-gray-400 mb-3">Unggah berkas pendukung dalam format .doc atau .docx (Maks. 10MB).</p>
+                            <h2 class="text-sm font-semibold mb-1">Lampiran Pendukung</h2>
+                            <p class="text-xs text-gray-400 mb-3">Unggah dokumen atau bukti pendukung (PDF, Word, atau gambar; maks. 10MB).</p>
                             <input
                                 type="file"
                                 @change="selectAttachment"
-                                accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
                                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                             />
                             <p v-if="form.attachment" class="mt-2 text-xs text-green-600">✓ {{ form.attachment.name }}</p>
@@ -265,8 +353,40 @@ const submitAndSign = () => {
                 <a-col :xs="24" :lg="14">
                     <div class="flex flex-col gap-6">
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
-                            <h2 class="text-sm font-semibold mb-4">Isi Berita Acara</h2>
-                            
+                            <h2 class="text-sm font-semibold mb-4">{{ formPengajuanOnly ? 'Isi Form Pengajuan' : 'Isi Berita Acara' }}</h2>
+                            <template v-if="formPengajuanOnly && form.meta.template === 'form_permohonan_pinjaman'">
+                                <a-alert class="mb-4" type="info" show-icon message="Form Permohonan Pinjaman (FPP)" description="Lengkapi data pemohon dan rincian pinjaman. Lampirkan bukti pendukung bila diperlukan." />
+                                <a-row :gutter="12">
+                                    <a-col :xs="24" :md="12"><a-form-item label="Nama Lengkap" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']"><a-input v-model:value="form.meta.request_data.full_name" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Jabatan" :validateStatus="form.errors['meta.request_data.position'] ? 'error' : ''" :help="form.errors['meta.request_data.position']"><a-input v-model:value="form.meta.request_data.position" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Cabang / Lokasi Kerja" :validateStatus="form.errors['meta.request_data.work_location'] ? 'error' : ''" :help="form.errors['meta.request_data.work_location']"><a-input v-model:value="form.meta.request_data.work_location" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Tanggal Masuk Kerja" :validateStatus="form.errors['meta.request_data.employment_date'] ? 'error' : ''" :help="form.errors['meta.request_data.employment_date']"><a-input v-model:value="form.meta.request_data.employment_date" type="date" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="8"><a-form-item label="Terlambat (bulan)"><a-input-number v-model:value="form.meta.request_data.late_months" :min="0" class="w-full" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="8"><a-form-item label="Tidak Masuk (bulan)"><a-input-number v-model:value="form.meta.request_data.absence_months" :min="0" class="w-full" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="8"><a-form-item label="Permohonan ke-"><a-input v-model:value="form.meta.request_data.request_number" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Gaji setelah disetujui"><a-input v-model:value="form.meta.request_data.salary_after_approval" placeholder="Contoh: Rp 6.000.000" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Gaji minimal"><a-input v-model:value="form.meta.request_data.minimum_salary" placeholder="Contoh: Rp 4.500.000" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Jumlah pinjaman yang diajukan" :validateStatus="form.errors['meta.request_data.loan_amount'] ? 'error' : ''" :help="form.errors['meta.request_data.loan_amount']"><a-input v-model:value="form.meta.request_data.loan_amount" placeholder="Contoh: Rp 5.000.000" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Lama pengembalian (bulan)" :validateStatus="form.errors['meta.request_data.repayment_months'] ? 'error' : ''" :help="form.errors['meta.request_data.repayment_months']"><a-input-number v-model:value="form.meta.request_data.repayment_months" :min="1" class="w-full" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Bersedia potong gaji setiap bulan"><a-radio-group v-model:value="form.meta.request_data.salary_deduction"><a-radio value="Bersedia">Bersedia</a-radio><a-radio value="Tidak bersedia">Tidak bersedia</a-radio></a-radio-group></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Jenis Pinjaman"><a-radio-group v-model:value="form.meta.request_data.loan_type"><a-radio value="pinjaman_uang">Pinjaman Uang</a-radio><a-radio value="pembelian_barang">Pembelian Barang</a-radio></a-radio-group></a-form-item></a-col>
+                                    <a-col :span="24"><a-form-item label="Alasan Pinjaman" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']"><a-textarea v-model:value="form.meta.request_data.reason" :rows="4" /></a-form-item></a-col>
+                                </a-row>
+                            </template>
+                            <template v-else-if="formPengajuanOnly && form.meta.template === 'form_ijin_tidak_masuk_kerja'">
+                                <a-alert class="mb-4" type="info" show-icon message="Form Ijin Tidak Masuk Kerja (FITMK)" description="Isi detail ketidakhadiran dan serah terima pekerjaan." />
+                                <a-row :gutter="12">
+                                    <a-col :xs="24" :md="12"><a-form-item label="Nama" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']"><a-input v-model:value="form.meta.request_data.full_name" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Detail ijin tidak masuk kerja"><a-select v-model:value="form.meta.request_data.leave_type"><a-select-option value="cuti_tahunan">Cuti Tahunan</a-select-option><a-select-option value="ijin">Ijin (Belum Ada Hak Cuti)</a-select-option><a-select-option value="cuti_melahirkan">Cuti Melahirkan</a-select-option><a-select-option value="cuti_khusus">Cuti Khusus (Menikah/Kematian/Hari Raya)</a-select-option><a-select-option value="sakit">Sakit (Melampirkan Surat Dokter)</a-select-option><a-select-option value="lainnya">Lainnya</a-select-option></a-select></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Tanggal ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.start_date'] ? 'error' : ''" :help="form.errors['meta.request_data.start_date']"><a-input v-model:value="form.meta.request_data.start_date" type="date" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Durasi (hari)" :validateStatus="form.errors['meta.request_data.duration'] ? 'error' : ''" :help="form.errors['meta.request_data.duration']"><a-input-number v-model:value="form.meta.request_data.duration" :min="1" class="w-full" /></a-form-item></a-col>
+                                    <a-col :span="24"><a-form-item label="Alasan ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']"><a-textarea v-model:value="form.meta.request_data.reason" :rows="3" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Pekerjaan selama tidak masuk dilimpahkan ke"><a-input v-model:value="form.meta.request_data.handover" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Nama pengganti"><a-input v-model:value="form.meta.request_data.substitute" /></a-form-item></a-col>
+                                    <a-col :span="24"><a-form-item label="Kontak selama tidak masuk kerja (Telepon / HP)"><a-input v-model:value="form.meta.request_data.phone" /></a-form-item></a-col>
+                                </a-row>
+                            </template>
+                            <template v-else>
                             <a-form-item label="Kalimat Pengantar (Sehubungan dengan...)" class="mb-4">
                                 <a-textarea v-model:value="form.pengantar" :rows="3" />
                             </a-form-item>
@@ -362,6 +482,7 @@ const submitAndSign = () => {
                             <a-form-item label="Kalimat Penutup" class="mb-0">
                                 <a-textarea v-model:value="form.penutup" :rows="2" />
                             </a-form-item>
+                            </template>
                         </a-card>
 
                         <!-- Action Buttons -->
@@ -372,7 +493,7 @@ const submitAndSign = () => {
                             </a-button>
                             <a-button size="large" type="primary" @click="submitAndSign" class="bg-green-600 hover:bg-green-500 border-green-600">
                                 <template #icon><send-outlined /></template>
-                                Tanda Tangani & Kirim
+                                {{ formPengajuanOnly ? 'Kirim untuk Persetujuan' : 'Tanda Tangani & Kirim' }}
                             </a-button>
                         </div>
                     </div>

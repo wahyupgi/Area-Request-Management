@@ -27,7 +27,6 @@ class BeritaAcaraController extends Controller
     {
         $user = auth()->user();
         $assignedBranches = $user->assignedBranches();
-
         $validated = $request->validate([
             'branch_id'             => [
                 'nullable',
@@ -67,7 +66,7 @@ class BeritaAcaraController extends Controller
         $branchId = $validated['branch_id'] ?? null;
 
         if (!$branchId && $assignedBranches->count() > 1) {
-            return back()->withErrors(['branch_id' => 'Pilih cabang yang mengajukan Berita Acara.']);
+            return back()->withErrors(['branch_id' => 'Pilih cabang yang mengajukan dokumen.']);
         }
 
         $branch = $branchId

@@ -9,6 +9,8 @@ const props = defineProps({
     submissionStats: { type: Object, default: () => ({}) },
     baStats: { type: Object, default: () => ({}) },
     recentBA: { type: Array, default: () => [] },
+    formPengajuanStats: { type: Object, default: () => ({}) },
+    recentFormPengajuans: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -81,7 +83,14 @@ const baTemplateLabels = {
     revisi_absensi: 'Permintaan Revisi Absensi',
     penghapusan_barang_sitaan: 'Penghapusan Barang Sitaan',
     lainnya: 'Lainnya',
+    form_permohonan_pinjaman: 'Form Permohonan Pinjaman (FPP)',
+    form_ijin_tidak_masuk_kerja: 'Form Ijin Tidak Masuk Kerja (FITMK)',
 };
+const formTemplateLabels = {
+    form_permohonan_pinjaman: 'Form Permohonan Pinjaman (FPP)',
+    form_ijin_tidak_masuk_kerja: 'Form Ijin Tidak Masuk Kerja (FITMK)',
+};
+const isFormPengajuan = (record) => record._documentType === 'form_pengajuan';
 
 const documentColumns = [
     { title: 'Kode Dokumen', dataIndex: 'code', key: 'code' },
@@ -121,6 +130,7 @@ const formatTime = (dateString) => {
 const documents = computed(() => [
     ...(props.memos || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
     ...(props.recentBA || []).map((ba) => ({ ...ba, _documentType: 'ba' })),
+    ...(props.recentFormPengajuans || []).map((form) => ({ ...form, _documentType: 'form_pengajuan' })),
 ].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)));
 
 const filteredDocuments = computed(() => {
@@ -138,6 +148,7 @@ const filteredDocuments = computed(() => {
             (m.code && m.code.toLowerCase().includes(q)) ||
             (m.title && m.title.toLowerCase().includes(q)) ||
             (m.template?.name && m.template.name.toLowerCase().includes(q)) ||
+            (isFormPengajuan(m) && `form pengajuan ${formTemplateLabels[m.template] || ''}`.toLowerCase().includes(q)) ||
             (m._documentType === 'ba' && 'berita acara'.includes(q))
         );
     }
@@ -195,7 +206,7 @@ const focusDocuments = (status) => {
             <button type="button" @click="focusDocuments('received')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
                 <span class="text-xs font-semibold text-slate-400 tracking-wider">Pengajuan Masuk</span>
                 <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.received ?? 0 }}</p>
-                <p class="text-[11px] text-slate-500 mt-2">Memo dan BA terkirim</p>
+                <p class="text-[11px] text-slate-500 mt-2">Memo, BA &amp; Form Pengajuan terkirim</p>
             </button>
 
 
@@ -235,7 +246,7 @@ const focusDocuments = (status) => {
             <div class="kc-memo-list-heading">
                 <div>
                     <h2 class="kc-memo-list-title">Daftar Dokumen Kantor Cabang</h2>
-                    <p class="kc-memo-list-description">Memo dan Berita Acara dari akun kantor cabang Anda.</p>
+                    <p class="kc-memo-list-description">Memo, Berita Acara, dan Form Pengajuan dari akun kantor cabang Anda.</p>
                 </div>
 
                 <a-input-search
@@ -307,14 +318,17 @@ const focusDocuments = (status) => {
                             <small v-else-if="record._documentType === 'ba'">
                                 {{ baTemplateLabels[record.meta?.template] || 'Berita Acara' }}
                             </small>
+                            <small v-else-if="isFormPengajuan(record)">
+                                {{ formTemplateLabels[record.template] || 'Form Pengajuan' }}
+                            </small>
                         </div>
                     </template>
                     <template v-else-if="column.key === 'type'">
                         <a-tag
-                            :color="record._documentType === 'memo' ? 'blue' : 'purple'"
+                            :color="record._documentType === 'memo' ? 'blue' : isFormPengajuan(record) ? 'green' : 'purple'"
                             :class="['kc-memo-type-tag', record._documentType === 'memo' ? 'kc-memo-type-tag-memo' : 'kc-memo-type-tag-ba']"
                         >
-                            {{ record._documentType === 'memo' ? 'Memo' : 'Berita Acara' }}
+                            {{ record._documentType === 'memo' ? 'Memo' : isFormPengajuan(record) ? 'Form Pengajuan' : 'Berita Acara' }}
                         </a-tag>
                     </template>
                     <template v-else-if="column.key === 'created_at'">
@@ -351,7 +365,7 @@ const focusDocuments = (status) => {
                             <Link v-if="record._documentType === 'memo' && (record.status === 'draft' || record.status === 'rejected')" :href="route('memos.edit', record.id)">
                                 <a-button type="primary" ghost size="small">Edit</a-button>
                             </Link>
-                            <Link :href="record._documentType === 'memo' ? route('memos.show', record.id) : route('approvals.ba.history', record.id)">
+                            <Link :href="record._documentType === 'memo' ? route('memos.show', record.id) : isFormPengajuan(record) ? route('approvals.form-pengajuan.history', record.id) : route('approvals.ba.history', record.id)">
                                 <a-button type="primary" ghost size="small">Detail</a-button>
                             </Link>
                         </a-space>
@@ -360,9 +374,10 @@ const focusDocuments = (status) => {
 
                 <template #emptyText>
                     <a-empty description="Belum ada dokumen yang sesuai">
-                        <Link :href="route('memos.create')">
-                            <a-button type="primary">Buat Memo Sekarang</a-button>
-                        </Link>
+                        <a-space>
+                            <Link :href="route('berita-acara.create')"><a-button type="primary">Buat BA</a-button></Link>
+                            <Link :href="route('form-pengajuan.create')"><a-button>Buat Form Pengajuan</a-button></Link>
+                        </a-space>
                     </a-empty>
                 </template>
             </a-table>
@@ -706,5 +721,3 @@ html.theme-light .kc-memo-signature {
     }
 }
 </style>
-
-

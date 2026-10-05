@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { DeleteOutlined, EditOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue';
 
@@ -12,6 +12,11 @@ const props = defineProps({
 });
 
 const searchQuery = ref('');
+const kcPage = ref(1);
+const areaPage = ref(1);
+const KC_PAGE_SIZE = 8;
+const AREA_PAGE_SIZE = 6;
+watch(searchQuery, () => { kcPage.value = 1; });
 const editingKc = ref(null);
 const editingAreaId = ref(null);
 const areaModalOpen = ref(false);
@@ -162,22 +167,35 @@ const columns = [
                     :data-source="filteredKcUsers"
                     :columns="columns"
                     :row-key="(record) => record.id"
-                    :pagination="{ pageSize: 8, showSizeChanger: false, hideOnSinglePage: true }"
+                    :pagination="{ pageSize: KC_PAGE_SIZE, current: kcPage, showSizeChanger: false, hideOnSinglePage: true }"
                     :scroll="{ x: 900 }"
                     size="small"
                     class="admin-branch-mapping-table"
+                    @change="(pagination) => (kcPage = pagination.current)"
                 >
                     <template #bodyCell="{ column, record, index }">
-                        <template v-if="column.key === 'number'">{{ index + 1 }}</template>
+                        <template v-if="column.key === 'number'">{{ (kcPage - 1) * KC_PAGE_SIZE + index + 1 }}</template>
                         <template v-else-if="column.key === 'area'">{{ record.area?.name || 'Belum ditetapkan' }}</template>
                         <template v-else-if="column.key === 'branches'">
                             <div v-if="record.branches.length" class="admin-branch-tags">
                                 <a-tag v-for="branch in record.branches.slice(0, 3)" :key="branch.id" color="blue">
                                     {{ branch.name }}
                                 </a-tag>
-                                <a-tag v-if="record.branches.length > 3" color="default">
-                                    +{{ record.branches.length - 3 }}
-                                </a-tag>
+                                <a-popover v-if="record.branches.length > 3" trigger="click" placement="bottom">
+                                    <template #content>
+                                        <div class="max-w-64">
+                                            <p class="mb-2 text-xs font-medium">Cabang lainnya</p>
+                                            <div class="flex flex-col items-start gap-1">
+                                                <a-tag v-for="branch in record.branches.slice(3)" :key="branch.id" color="blue">
+                                                    {{ branch.name }}
+                                                </a-tag>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <a-tag color="default" class="cursor-pointer">
+                                        +{{ record.branches.length - 3 }}
+                                    </a-tag>
+                                </a-popover>
                             </div>
                             <span v-else class="text-slate-400">Belum ada cabang</span>
                         </template>
@@ -223,12 +241,13 @@ const columns = [
                         { title: 'Aksi', key: 'action', width: 100, align: 'center' },
                     ]"
                     :row-key="(record) => record.id"
-                    :pagination="{ pageSize: 6, showSizeChanger: false, hideOnSinglePage: true }"
+                    :pagination="{ pageSize: AREA_PAGE_SIZE, current: areaPage, showSizeChanger: false, hideOnSinglePage: true }"
                     size="small"
                     class="admin-branch-mapping-table"
+                    @change="(pagination) => (areaPage = pagination.current)"
                 >
                     <template #bodyCell="{ column, record, index }">
-                        <template v-if="column.key === 'number'">{{ index + 1 }}</template>
+                        <template v-if="column.key === 'number'">{{ (areaPage - 1) * AREA_PAGE_SIZE + index + 1 }}</template>
                         <template v-if="column.key === 'action'">
                             <a-space>
                                 <a-button type="link" aria-label="Edit wilayah" @click="openEditArea(record)">

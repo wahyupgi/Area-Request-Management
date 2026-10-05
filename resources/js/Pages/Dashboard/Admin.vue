@@ -18,6 +18,8 @@ const props = defineProps({
     recentMemos: { type: Array, default: () => [] },
     baStats: { type: Object, default: () => ({}) },
     recentBA: { type: Array, default: () => [] },
+    formPengajuanStats: { type: Object, default: () => ({}) },
+    recentFormPengajuans: { type: Array, default: () => [] },
     activity: Array,
     chartData: Object,
 });
@@ -76,9 +78,14 @@ const userDisplayName = computed(() => {
         approved: { label: 'Disetujui' },
         rejected: { label: 'Ditolak' },
     };
+    const formPengajuanTemplateLabels = {
+        form_permohonan_pinjaman: 'Form Permohonan Pinjaman (FPP)',
+        form_ijin_tidak_masuk_kerja: 'Form Ijin Tidak Masuk Kerja (FITMK)',
+    };
+    const isFormPengajuan = (document) => document._documentType === 'form_pengajuan';
 
     const kpiCards = computed(() => [
-        { title: 'Pengajuan Masuk', value: props.submissionStats?.received ?? 0, note: 'Memo + BA', icon: InboxOutlined, color: '#818cf8', href: '#' },
+        { title: 'Pengajuan Masuk', value: props.submissionStats?.received ?? 0, note: 'Memo + BA + Form Pengajuan', icon: InboxOutlined, color: '#818cf8', href: '#' },
         { title: 'Menunggu AM', value: props.submissionStats?.submitted ?? 0, note: 'Perlu review AM', icon: ClockCircleOutlined, color: '#fbbf24', href: '#' },
         { title: 'Template Form', value: props.stats?.total_templates ?? 0, note: 'Skema aktif', icon: AppstoreOutlined, color: '#34d399', href: route('admin.templates.index') },
         { title: 'Pengguna', value: props.stats?.total_users ?? 0, note: `${props.stats?.total_branches ?? 0} Cabang · ${props.stats?.total_areas ?? 0} Area`, icon: TeamOutlined, color: '#22d3ee', href: route('admin.users.index') },
@@ -104,6 +111,7 @@ const formatTime = (dateString) => {
 const documents = computed(() => [
     ...(props.recentMemos || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
     ...(props.recentBA || []).map((ba) => ({ ...ba, _documentType: 'ba' })),
+    ...(props.recentFormPengajuans || []).map((form) => ({ ...form, _documentType: 'form_pengajuan' })),
 ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
 
 const documentColumns = [
@@ -118,9 +126,11 @@ const documentColumns = [
 const filteredDocuments = computed(() => {
     let list = documents.value;
 
-    if (documentTypeFilter.value !== 'all') {
-        list = list.filter((document) => document._documentType === documentTypeFilter.value);
-    }
+if (documentTypeFilter.value === 'form_pengajuan') {
+    list = list.filter(isFormPengajuan);
+} else if (documentTypeFilter.value !== 'all') {
+    list = list.filter((document) => document._documentType === documentTypeFilter.value && !isFormPengajuan(document));
+}
     
     if (statusFilter.value !== 'all') {
         list = list.filter((document) => document.status === statusFilter.value);
@@ -134,7 +144,10 @@ const filteredDocuments = computed(() => {
             (document.creator?.name && document.creator.name.toLowerCase().includes(q)) ||
             (document.branch?.name && document.branch.name.toLowerCase().includes(q)) ||
             (document.template?.name && document.template.name.toLowerCase().includes(q)) ||
-            (document._documentType === 'ba' ? 'berita acara ba' : 'memo').includes(q)
+            (isFormPengajuan(document) && `form pengajuan ${formPengajuanTemplateLabels[document.template] || ''}`.toLowerCase().includes(q)) ||
+            (isFormPengajuan(document)
+                ? false
+                : (document._documentType === 'ba' ? 'berita acara ba' : 'memo').includes(q))
         );
     }
     
@@ -189,7 +202,7 @@ const activityDays = computed(() => {
 
 const chartPoints = computed(() => props.chartData?.[chartPeriod.value] || []);
 
-const chartMax = computed(() => Math.max(...chartPoints.value.flatMap((point) => [point.memo, point.ba].map((document) =>
+const chartMax = computed(() => Math.max(...chartPoints.value.flatMap((point) => [point.memo, point.ba, point.formPengajuan].map((document) =>
     (Number(document?.approved) || 0) + (Number(document?.submitted) || 0) + (Number(document?.rejected) || 0)
 )), 1));
 
@@ -221,6 +234,7 @@ const chartBars = computed(() => chartPoints.value.map((point) => ({
     documents: [
         createDocumentBar(point.memo, 'Memo', 'M'),
         createDocumentBar(point.ba, 'Berita Acara', 'BA'),
+        createDocumentBar(point.formPengajuan, 'Form Pengajuan', 'FP'),
     ],
 })));
 
@@ -247,7 +261,7 @@ const statusChartData = computed(() => [
                 <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
                     <span>{{ greeting.icon }} {{ greeting.text }}, <span class="dashboard-greeting-name">{{ userDisplayName }}</span>!</span>
                 </h1>
-                <p class="text-base font-medium text-slate-400 tracking-tight">Monitoring pengajuan Memo dan Berita Acara serta tata kelola master data sistem.</p>
+                <p class="text-base font-medium text-slate-400 tracking-tight">Monitoring pengajuan Memo, Berita Acara, dan Form Pengajuan serta tata kelola master data sistem.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- Date & Realtime Clock Pill -->
@@ -291,6 +305,7 @@ const statusChartData = computed(() => [
                             <a-badge color="#28b886" text="Ditolak" />
                             <a-tag color="blue">M · Memo</a-tag>
                             <a-tag color="cyan">BA · Berita Acara</a-tag>
+                            <a-tag color="green">FP · Form Pengajuan</a-tag>
                         </a-space>
                     </div>
                     <a-segmented v-model:value="chartPeriod" :options="chartPeriodOptions" aria-label="Periode grafik" />
@@ -327,7 +342,7 @@ const statusChartData = computed(() => [
                 <div class="flex items-start justify-between mb-4">
                     <div>
                         <h2 class="text-base font-bold text-white tracking-tight">Approval Status</h2>
-                        <p class="text-xs text-slate-400 mt-1">Ringkasan status Memo dan Berita Acara.</p>
+                        <p class="text-xs text-slate-400 mt-1">Ringkasan status Memo, Berita Acara, dan Form Pengajuan.</p>
                     </div>
                 </div>
 
@@ -370,7 +385,7 @@ const statusChartData = computed(() => [
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-white/5">
                         <div>
                             <h2 class="text-lg font-bold text-white tracking-tight">Pengajuan Terkini</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Monitoring Memo dan Berita Acara dari seluruh cabang.</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Monitoring Memo, Berita Acara, dan Form Pengajuan dari seluruh cabang.</p>
                         </div>
                         <div class="relative w-full md:w-64">
                             <input v-model="searchQuery" type="text" placeholder="Cari kode, judul, cabang, Memo/BA..." class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all" />
@@ -381,7 +396,7 @@ const statusChartData = computed(() => [
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 border-b border-white/5 text-xs">
                         <div class="flex items-center gap-1.5">
                             <span class="text-slate-500">Jenis</span>
-                            <a-button v-for="type in [{ value: 'all', label: 'Semua' }, { value: 'memo', label: 'Memo' }, { value: 'ba', label: 'BA' }]" :key="type.value" size="small" :type="documentTypeFilter === type.value ? 'primary' : 'default'" @click="documentTypeFilter = type.value">{{ type.label }}</a-button>
+                            <a-button v-for="type in [{ value: 'all', label: 'Semua' }, { value: 'memo', label: 'Memo' }, { value: 'ba', label: 'BA' }, { value: 'form_pengajuan', label: 'Form Pengajuan' }]" :key="type.value" size="small" :type="documentTypeFilter === type.value ? 'primary' : 'default'" @click="documentTypeFilter = type.value">{{ type.label }}</a-button>
                         </div>
                         <div class="flex flex-wrap items-center gap-1.5">
                             <a-button size="small" :type="statusFilter === 'all' ? 'primary' : 'default'" @click="statusFilter = 'all'">Semua ({{ documents.length }})</a-button>
@@ -412,11 +427,12 @@ const statusChartData = computed(() => [
                             <template v-else-if="column.key === 'subject'">
                                 <div class="flex min-w-36 flex-col">
                                     <span class="line-clamp-1 text-sm font-medium text-white">{{ record.title }}</span>
-                                    <span v-if="record.template" class="mt-0.5 line-clamp-1 text-[11px] text-slate-400">{{ record.template.name }}</span>
+                                    <span v-if="record.template?.name" class="mt-0.5 line-clamp-1 text-[11px] text-slate-400">{{ record.template.name }}</span>
+                                    <span v-else-if="isFormPengajuan(record)" class="mt-0.5 line-clamp-1 text-[11px] text-slate-400">{{ formPengajuanTemplateLabels[record.template] }}</span>
                                 </div>
                             </template>
                             <template v-else-if="column.key === 'type'">
-                                <a-tag :color="record._documentType === 'ba' ? 'cyan' : 'blue'">{{ record._documentType === 'ba' ? 'Berita Acara' : 'Memo' }}</a-tag>
+                                <a-tag :color="isFormPengajuan(record) ? 'green' : record._documentType === 'ba' ? 'cyan' : 'blue'">{{ isFormPengajuan(record) ? 'Form Pengajuan' : record._documentType === 'ba' ? 'Berita Acara' : 'Memo' }}</a-tag>
                             </template>
                             <template v-else-if="column.key === 'creator'">
                                 <div class="flex min-w-0 flex-col">
@@ -428,8 +444,8 @@ const statusChartData = computed(() => [
                                 <a-tag :color="{ draft: 'default', submitted: 'processing', approved: 'success', rejected: 'error' }[record.status] || 'default'">{{ statusConfig[record.status]?.label || record.status }}</a-tag>
                             </template>
                             <template v-else-if="column.key === 'action'">
-                                <Link :href="route(record._documentType === 'ba' ? 'approvals.ba.history' : 'memos.show', record.id)">
-                                    <a-button type="primary" ghost size="small">{{ record._documentType === 'ba' ? 'Lihat BA' : 'Lihat Memo' }}</a-button>
+                                <Link :href="route(isFormPengajuan(record) ? 'approvals.form-pengajuan.history' : record._documentType === 'ba' ? 'approvals.ba.history' : 'memos.show', record.id)">
+                                    <a-button type="primary" ghost size="small">{{ isFormPengajuan(record) ? 'Lihat Form' : record._documentType === 'ba' ? 'Lihat BA' : 'Lihat Memo' }}</a-button>
                                 </Link>
                             </template>
                         </template>
