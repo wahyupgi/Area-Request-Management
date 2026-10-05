@@ -19,6 +19,7 @@ Route::middleware(['auth'])->group(function () {
     require __DIR__ . '/features/approval.php';
     require __DIR__ . '/features/admin.php';
     require __DIR__ . '/features/berita-acara.php';
+    require __DIR__ . '/features/kc.php';
 });
 
 require __DIR__ . '/auth.php';

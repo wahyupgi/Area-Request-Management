@@ -25,4 +25,9 @@ class Area extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function kcUsers()
+    {
+        return $this->hasMany(User::class)->where('role', 'KC');
+    }
 }

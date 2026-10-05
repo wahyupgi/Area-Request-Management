@@ -76,6 +76,13 @@ const statusConfig = {
     rejected: { label: 'Ditolak' },
 };
 
+const baTemplateLabels = {
+    permohonan_biaya_kost: 'Permohonan Biaya Kost',
+    revisi_absensi: 'Permintaan Revisi Absensi',
+    penghapusan_barang_sitaan: 'Penghapusan Barang Sitaan',
+    lainnya: 'Lainnya',
+};
+
 const documentColumns = [
     { title: 'Kode Dokumen', dataIndex: 'code', key: 'code' },
     { title: 'Perihal & Template', key: 'subject' },
@@ -161,7 +168,7 @@ const focusDocuments = (status) => {
                     <span>{{ greeting.icon }} {{ greeting.text }}, <span class="dashboard-greeting-name">{{ userDisplayName }}</span>!</span>
                 </h1>
                 <p class="text-xs md:text-sm text-slate-400 mt-1">
-                    Kelola pembuatan dan pantau status persetujuan memo pengajuan unit <span class="text-slate-200 font-medium">{{ user?.branch?.name || 'kantor cabang' }}</span>.
+                    Kelola pembuatan dan pantau status persetujuan memo pengajuan wilayah <span class="text-slate-200 font-medium">{{ user?.area?.name || 'Anda' }}</span>.
                 </p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
@@ -229,9 +236,6 @@ const focusDocuments = (status) => {
                 <div>
                     <h2 class="kc-memo-list-title">Daftar Dokumen Kantor Cabang</h2>
                     <p class="kc-memo-list-description">Memo dan Berita Acara dari akun kantor cabang Anda.</p>
-                    <p class="mt-2 text-xs text-slate-400">
-                        BA: {{ baStats.draft ?? 0 }} draft · {{ baStats.submitted ?? 0 }} menunggu · {{ baStats.approved ?? 0 }} disetujui · {{ baStats.rejected ?? 0 }} revisi
-                    </p>
                 </div>
 
                 <a-input-search
@@ -249,35 +253,35 @@ const focusDocuments = (status) => {
                     :type="statusFilter === 'all' ? 'primary' : 'default'"
                     @click="statusFilter = 'all'"
                 >
-                    Semua ({{ documents.length }})
+                    Semua
                 </a-button>
                 <a-button
                     size="small"
                     :type="statusFilter === 'submitted' ? 'primary' : 'default'"
                     @click="statusFilter = 'submitted'"
                 >
-                    Menunggu AM ({{ documents.filter(m => m.status === 'submitted').length }})
+                    Menunggu AM
                 </a-button>
                 <a-button
                     size="small"
                     :type="statusFilter === 'approved' ? 'primary' : 'default'"
                     @click="statusFilter = 'approved'"
                 >
-                    Disetujui ({{ documents.filter(m => m.status === 'approved').length }})
+                    Disetujui
                 </a-button>
                 <a-button
                     size="small"
                     :type="statusFilter === 'draft' ? 'primary' : 'default'"
                     @click="statusFilter = 'draft'"
                 >
-                    Draft ({{ documents.filter(m => m.status === 'draft').length }})
+                    Draft
                 </a-button>
                 <a-button
                     size="small"
                     :type="statusFilter === 'rejected' ? 'primary' : 'default'"
                     @click="statusFilter = 'rejected'"
                 >
-                    Perlu Revisi ({{ documents.filter(m => m.status === 'rejected').length }})
+                    Perlu Revisi
                 </a-button>
             </a-space>
 
@@ -297,7 +301,12 @@ const focusDocuments = (status) => {
                     <template v-else-if="column.key === 'subject'">
                         <div class="kc-memo-subject">
                             <span>{{ record.title }}</span>
-                            <small v-if="record.template">{{ record.template.name }}</small>
+                            <small v-if="record._documentType === 'memo' && record.template">
+                                {{ record.template.name }}
+                            </small>
+                            <small v-else-if="record._documentType === 'ba'">
+                                {{ baTemplateLabels[record.meta?.template] || 'Berita Acara' }}
+                            </small>
                         </div>
                     </template>
                     <template v-else-if="column.key === 'type'">
@@ -329,7 +338,12 @@ const focusDocuments = (status) => {
                             />
                             <a-typography-text type="success">Sudah ditandatangani</a-typography-text>
                         </a-space>
-                        <a-typography-text v-else type="secondary">Belum ditandatangani</a-typography-text>
+                        <a-typography-text v-else type="secondary" class="kc-signature-pending">Belum ditandatangani</a-typography-text>
+                    </template>
+                    <template v-else-if="column.key === 'signature' && record._documentType === 'ba'">
+                        <a-typography-text :type="record.status === 'approved' ? 'success' : 'secondary'" :class="record.status === 'approved' ? '' : 'kc-signature-pending'">
+                            {{ record.status === 'approved' ? 'Sudah ditandatangani' : 'Belum ditandatangani' }}
+                        </a-typography-text>
                     </template>
                     <template v-else-if="column.key === 'signature'">-</template>
                     <template v-else-if="column.key === 'action'">
@@ -419,6 +433,12 @@ const focusDocuments = (status) => {
     background: transparent !important;
 }
 
+.kc-memo-table .ant-table-container {
+    border: 1px solid #475569;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
 .kc-memo-table .ant-table-thead > tr > th {
     color: #ffffff !important;
     background: #203c5b !important;
@@ -428,8 +448,8 @@ const focusDocuments = (status) => {
 .kc-memo-table .ant-table-tbody > tr > td {
     color: #e2e8f0 !important;
     background: transparent !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-bottom: 1px solid #475569 !important;
+    border-right: 1px solid #475569 !important;
 }
 
 .kc-memo-table .ant-table-tbody > tr > td:last-child {
@@ -530,6 +550,14 @@ const focusDocuments = (status) => {
     object-fit: contain;
 }
 
+html:not(.theme-light) .kc-memo-table .kc-signature-pending {
+    color: #cbd5e1 !important;
+}
+
+html.theme-light .kc-memo-table .kc-signature-pending {
+    color: #64748b !important;
+}
+
 .kc-memo-list-footer {
     display: flex;
     align-items: center;
@@ -576,6 +604,10 @@ html.theme-light .kc-memo-table .ant-table {
     background: #ffffff !important;
 }
 
+html.theme-light .kc-memo-table .ant-table-container {
+    border-color: #cbd5e1;
+}
+
 html.theme-light .kc-memo-table .ant-table-thead > tr > th {
     color: #ffffff !important;
     background: #315a84 !important;
@@ -586,7 +618,7 @@ html.theme-light .kc-memo-table .ant-table-tbody > tr > td {
     color: #1e293b !important;
     background: #ffffff !important;
     border-bottom: 1px solid #cbd5e1 !important;
-    border-right: 1px solid #e2e8f0 !important;
+    border-right: 1px solid #cbd5e1 !important;
 }
 
 html.theme-light .kc-memo-table .ant-table-tbody > tr > td:last-child {

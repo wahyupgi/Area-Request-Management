@@ -12,6 +12,7 @@ import {
 
 const props = defineProps({
     templates: Array,
+    branches: { type: Array, default: () => [] },
 });
 
 const blankTemplateValue = '__blank__';
@@ -19,6 +20,7 @@ const defaultClosing = 'Demikian Internal Memo ini dibuat agar dapat dipergunaka
 
 const form = useForm({
     code: null,
+    branch_id: null,
     template_id: undefined,
     title: '',
     field_values: {
@@ -184,6 +186,24 @@ const submitAndSign = () => {
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
+            <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
+                <h2 class="text-sm font-semibold mb-3">Cabang Pengajuan</h2>
+                <a-alert v-if="!branches.length" type="warning" show-icon message="Tambahkan cabang di menu Cabang Saya sebelum membuat Memo." />
+                <a-form-item
+                    v-else
+                    label="Cabang"
+                    :validateStatus="form.errors.branch_id ? 'error' : ''"
+                    :help="form.errors.branch_id"
+                    class="mb-0"
+                >
+                    <a-select v-model:value="form.branch_id" placeholder="Pilih cabang yang mengajukan" size="large">
+                        <a-select-option v-for="branch in branches" :key="branch.id" :value="branch.id">
+                            {{ branch.name }}
+                        </a-select-option>
+                    </a-select>
+                </a-form-item>
+            </a-card>
+
             <!-- Template Selection -->
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
                 <h2 class="text-lg font-semibold mb-2">Pilih Template Memo</h2>

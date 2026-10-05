@@ -1,6 +1,7 @@
 <?php
 
 use App\Features\Admin\MasterData\Controllers\MasterDataController;
+use App\Features\Admin\BranchAssignments\Controllers\BranchAssignmentController;
 use App\Features\Admin\Templates\Controllers\TemplateController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,9 @@ Route::middleware('role:ADMIN')->prefix('admin')->name('admin.')->group(function
     Route::post('/templates/{template}/toggle', [TemplateController::class, 'toggleActive'])->name('templates.toggle');
 
     // ─── Areas ─────────────────────────────────────────────────────
+    Route::get('/branch-assignments', [BranchAssignmentController::class, 'index'])->name('branch-assignments.index');
+    Route::put('/branch-assignments/{user}', [BranchAssignmentController::class, 'update'])->name('branch-assignments.update');
+
     Route::get('/areas', [MasterDataController::class, 'areas'])->name('areas.index');
     Route::post('/areas', [MasterDataController::class, 'storeArea'])->name('areas.store');
     Route::put('/areas/{area}', [MasterDataController::class, 'updateArea'])->name('areas.update');

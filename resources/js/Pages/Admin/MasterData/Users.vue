@@ -8,7 +8,6 @@ import { Modal } from 'ant-design-vue';
 const props = defineProps({
     users: Array,
     areas: Array,
-    branches: Array,
 });
 
 const showModal = ref(false);
@@ -19,7 +18,6 @@ const form = useForm({
     email: '',
     password: '',
     role: 'KC',
-    branch_id: null,
     area_id: null,
 });
 
@@ -48,7 +46,6 @@ const openEdit = (user) => {
     form.email = user.email;
     form.password = '';
     form.role = user.role;
-    form.branch_id = user.branch_id || null;
     form.area_id = user.area_id || null;
     form.clearErrors();
     showModal.value = true;
@@ -86,7 +83,7 @@ const columns = [
     { title: 'Username', dataIndex: 'username', key: 'username' },
     { title: 'Email', dataIndex: 'email', key: 'email' },
     { title: 'Role', dataIndex: 'role', key: 'role' },
-    { title: 'Cabang / Area', key: 'location' },
+    { title: 'Wilayah', key: 'location' },
     { title: 'Aksi', key: 'action', width: '150px' },
 ];
 </script>
@@ -128,7 +125,7 @@ const columns = [
                             {{ roleConfig[record.role]?.label || record.role }}
                         </template>
                         <template v-if="column.key === 'location'">
-                            {{ record.branch?.name || record.area?.name || '-' }}
+                            {{ record.area?.name || record.branch?.name || '-' }}
                         </template>
                         <template v-if="column.key === 'action'">
                             <a-space>
@@ -171,12 +168,6 @@ const columns = [
                             <a-select-option value="KC">Kepala Cabang</a-select-option>
                             <a-select-option value="AM">Area Manager</a-select-option>
                             <a-select-option value="ADMIN">Administrator</a-select-option>
-                        </a-select>
-                    </a-form-item>
-                    
-                    <a-form-item v-if="form.role === 'KC'" class="col-span-2" label="Cabang" :validateStatus="form.errors.branch_id ? 'error' : ''" :help="form.errors.branch_id">
-                        <a-select v-model:value="form.branch_id" placeholder="Pilih Cabang" allowClear>
-                            <a-select-option v-for="b in branches" :key="b.id" :value="b.id">{{ b.name }}</a-select-option>
                         </a-select>
                     </a-form-item>
                     

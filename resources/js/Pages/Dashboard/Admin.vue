@@ -398,7 +398,7 @@ const statusChartData = computed(() => [
                         :data-source="filteredDocuments"
                         :columns="documentColumns"
                         :row-key="document => `${document._documentType}-${document.id}`"
-                        :pagination="false"
+                        :pagination="{ pageSize: 10, showSizeChanger: false, hideOnSinglePage: true }"
                         :scroll="{ x: 1080 }"
                         size="small"
                     >

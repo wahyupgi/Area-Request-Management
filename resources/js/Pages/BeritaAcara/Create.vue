@@ -5,6 +5,10 @@ import { watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 
+const props = defineProps({
+    branches: { type: Array, default: () => [] },
+});
+
 const { success } = useSweetAlert();
 
 const templates = [
@@ -15,6 +19,7 @@ const templates = [
 ];
 
 const form = useForm({
+    branch_id: null,
     title: '',
     meta: {
         template: undefined,
@@ -164,6 +169,24 @@ const submitAndSign = () => {
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
+            <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
+                <h2 class="text-sm font-semibold mb-3">Cabang Pengajuan</h2>
+                <a-alert v-if="!branches.length" type="warning" show-icon message="Tambahkan cabang di menu Cabang Saya sebelum membuat Berita Acara." />
+                <a-form-item
+                    v-else
+                    label="Cabang"
+                    :validateStatus="form.errors.branch_id ? 'error' : ''"
+                    :help="form.errors.branch_id"
+                    class="mb-0"
+                >
+                    <a-select v-model:value="form.branch_id" placeholder="Pilih cabang yang mengajukan" size="large">
+                        <a-select-option v-for="branch in branches" :key="branch.id" :value="branch.id">
+                            {{ branch.name }}
+                        </a-select-option>
+                    </a-select>
+                </a-form-item>
+            </a-card>
+
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
                 <h2 class="text-lg font-semibold mb-2">Pilih Template Berita Acara</h2>
                 <a-form-item

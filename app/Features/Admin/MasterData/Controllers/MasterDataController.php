@@ -10,6 +10,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class MasterDataController extends Controller
@@ -18,23 +21,110 @@ class MasterDataController extends Controller
 
     public function areas()
     {
-        $areas = Area::withCount('branches')->get();
+        $areas = Area::with(['kcUsers' => fn ($query) => $query->orderBy('name')])
+            ->withCount('branches')
+            ->get()
+            ->map(function (Area $area) {
+                $area->setRelation('kcUsers', $area->kcUsers->map(function (User $kcUser) {
+                    $kcUser->setRelation(
+                        'assigned_branches',
+                        $kcUser->assignedBranches()->orderBy('name')->get(['branches.id', 'name'])
+                    );
+
+                    return $kcUser;
+                }));
+
+                return $area;
+            });
+        $kcUsers = User::where('role', 'KC')->orderBy('name')->get(['id', 'name', 'area_id']);
 
         return Inertia::render('Admin/MasterData/Areas', [
             'areas' => $areas,
+            'kcUsers' => $kcUsers,
         ]);
     }
 
     public function storeArea(StoreAreaRequest $request)
     {
-        Area::create(['name' => $request->name]);
-        return back()->with('success', 'Area berhasil ditambahkan.');
+        DB::transaction(function () use ($request) {
+            $area = Area::create(['name' => $request->name]);
+            if ($request->has('kc_user_ids')) {
+                $this->syncAreaKcUsers($area, $request->input('kc_user_ids') ?? []);
+            }
+            $this->createAreaBranches($area, $request->input('branch_names') ?? []);
+        });
+
+        return back()->with('success', 'Wilayah berhasil ditambahkan.');
     }
 
     public function updateArea(StoreAreaRequest $request, Area $area)
     {
-        $area->update(['name' => $request->name]);
-        return back()->with('success', 'Area berhasil diperbarui.');
+        DB::transaction(function () use ($request, $area) {
+            $area->update(['name' => $request->name]);
+            if ($request->has('kc_user_ids')) {
+                $this->syncAreaKcUsers($area, $request->input('kc_user_ids') ?? []);
+            }
+            $this->renameAreaBranches($area, $request->input('existing_branches') ?? []);
+            $this->createAreaBranches($area, $request->input('branch_names') ?? []);
+        });
+
+        return back()->with('success', 'Wilayah berhasil diperbarui.');
+    }
+
+    private function renameAreaBranches(Area $area, array $branchUpdates): void
+    {
+        $branches = $area->branches()->get()->keyBy('id');
+        $names = $branches->mapWithKeys(fn (Branch $branch) => [$branch->id => $branch->name])->all();
+
+        foreach ($branchUpdates as $index => $update) {
+            if (!$branches->has((int) $update['id'])) {
+                throw ValidationException::withMessages([
+                    "existing_branches.$index.id" => 'Cabang tidak termasuk dalam wilayah ini.',
+                ]);
+            }
+
+            $names[(int) $update['id']] = trim($update['name']);
+        }
+
+        $lowered = array_map('mb_strtolower', $names);
+        foreach ($branchUpdates as $index => $update) {
+            if (count(array_keys($lowered, $lowered[(int) $update['id']], true)) > 1) {
+                throw ValidationException::withMessages([
+                    "existing_branches.$index.name" => 'Nama cabang sudah digunakan di wilayah ini.',
+                ]);
+            }
+        }
+
+        foreach ($branchUpdates as $update) {
+            $branches[(int) $update['id']]->update(['name' => $names[(int) $update['id']]]);
+        }
+    }
+
+    private function createAreaBranches(Area $area, array $branchNames): void
+    {
+        $existing = $area->branches()->pluck('name')->map(fn ($name) => mb_strtolower($name))->all();
+
+        foreach ($branchNames as $name) {
+            $name = trim($name);
+            if ($name === '' || in_array(mb_strtolower($name), $existing, true)) {
+                continue;
+            }
+
+            $area->branches()->create(['name' => $name]);
+            $existing[] = mb_strtolower($name);
+        }
+    }
+
+    private function syncAreaKcUsers(Area $area, array $kcUserIds): void
+    {
+        User::where('role', 'KC')
+            ->where('area_id', $area->id)
+            ->whereNotIn('id', $kcUserIds)
+            ->update(['area_id' => null]);
+
+        User::where('role', 'KC')
+            ->whereIn('id', $kcUserIds)
+            ->update(['area_id' => $area->id]);
     }
 
     public function deleteArea(Area $area)
@@ -73,14 +163,12 @@ class MasterDataController extends Controller
 
     public function users()
     {
-        $users    = User::with(['branch', 'area'])->orderBy('name')->get();
-        $areas    = Area::all();
-        $branches = Branch::all();
+        $users = User::with(['branch', 'area'])->orderBy('name')->get();
+        $areas = Area::all();
 
         return Inertia::render('Admin/MasterData/Users', [
-            'users'    => $users,
-            'areas'    => $areas,
-            'branches' => $branches,
+            'users' => $users,
+            'areas' => $areas,
         ]);
     }
 
@@ -92,8 +180,8 @@ class MasterDataController extends Controller
             'email' => $request->email,
             'password' => $request->password,
             'role' => $request->role,
-            'branch_id' => $request->branch_id,
-            'area_id' => $request->area_id,
+            'branch_id' => null,
+            'area_id' => $request->role === 'AM' ? $request->area_id : null,
         ]);
 
         return back()->with('success', 'User berhasil ditambahkan.');
@@ -103,10 +191,8 @@ class MasterDataController extends Controller
     {
         $validated = $request->validated();
 
-        if ($validated['role'] !== 'KC') {
-            $validated['branch_id'] = null;
-        }
-        if ($validated['role'] !== 'AM') {
+        $validated['branch_id'] = null;
+        if (!in_array($validated['role'], ['AM', 'KC'], true)) {
             $validated['area_id'] = null;
         }
         if (empty($validated['password'])) {

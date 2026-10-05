@@ -26,10 +26,19 @@ class MemoService
     public function createDraft(Request $request): Memo
     {
         $user = auth()->user();
-        $branch = $user->branch;
+        $assignedBranches = $user->assignedBranches();
+        $branchId = $request->input('branch_id');
+
+        if (!$branchId && $assignedBranches->count() > 1) {
+            back()->withErrors(['branch_id' => 'Pilih cabang yang mengajukan memo.'])->throwResponse();
+        }
+
+        $branch = $branchId
+            ? $assignedBranches->whereKey($branchId)->first()
+            : $assignedBranches->first();
 
         if (!$branch) {
-            back()->withErrors(['branch' => 'Anda belum terdaftar di cabang manapun.'])->throwResponse();
+            back()->withErrors(['branch_id' => 'Pilih cabang yang terdaftar pada akun Anda.'])->throwResponse();
         }
 
         $areaManager = User::where('role', 'AM')

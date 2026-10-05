@@ -53,6 +53,24 @@ class User extends Authenticatable
         return $this->belongsTo(Branch::class);
     }
 
+    public function branches()
+    {
+        return $this->hasMany(Branch::class, 'kc_user_id');
+    }
+
+    public function assignedBranches()
+    {
+        return Branch::query()->where(function ($query) {
+            $query->where('kc_user_id', $this->id)
+                ->orWhere(function ($legacyQuery) {
+                    $legacyQuery->where('id', $this->branch_id)
+                        ->where(function ($kcQuery) {
+                            $kcQuery->whereNull('kc_user_id')->orWhere('kc_user_id', $this->id);
+                        });
+                });
+        });
+    }
+
     public function area()
     {
         return $this->belongsTo(Area::class);
