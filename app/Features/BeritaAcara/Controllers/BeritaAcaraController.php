@@ -5,7 +5,6 @@ namespace App\Features\BeritaAcara\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\BeritaAcara;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class BeritaAcaraController extends Controller
@@ -15,9 +14,7 @@ class BeritaAcaraController extends Controller
      */
     public function create()
     {
-        return Inertia::render('BeritaAcara/Create', [
-            'branches' => auth()->user()->assignedBranches()->orderBy('name')->get(['id', 'name']),
-        ]);
+        return Inertia::render('BeritaAcara/Create');
     }
 
     /**
@@ -26,19 +23,7 @@ class BeritaAcaraController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $assignedBranches = $user->assignedBranches();
         $validated = $request->validate([
-            'branch_id'             => [
-                'nullable',
-                'integer',
-                Rule::exists('branches', 'id')->where(function ($query) use ($user) {
-                    $query->where('kc_user_id', $user->id)
-                        ->orWhere(function ($legacyQuery) use ($user) {
-                            $legacyQuery->where('id', $user->branch_id)
-                                ->where(fn ($kcQuery) => $kcQuery->whereNull('kc_user_id')->orWhere('kc_user_id', $user->id));
-                        });
-                }),
-            ],
             'meta.template'         => 'required|in:permohonan_biaya_kost,revisi_absensi,penghapusan_barang_sitaan,lainnya',
             'meta.data'             => 'nullable|array',
             'meta.data.rows'        => 'nullable|array',
@@ -63,23 +48,6 @@ class BeritaAcaraController extends Controller
             'submit_after_save'     => 'boolean',
         ]);
 
-        $branchId = $validated['branch_id'] ?? null;
-
-        if (!$branchId && $assignedBranches->count() > 1) {
-            return back()->withErrors(['branch_id' => 'Pilih cabang yang mengajukan dokumen.']);
-        }
-
-        $branch = $branchId
-            ? $assignedBranches->whereKey($branchId)->first()
-            : $assignedBranches->first();
-
-        if (!$branch) {
-            return back()->withErrors(['branch_id' => 'Pilih cabang yang terdaftar pada akun Anda.']);
-        }
-
-        $branch->loadMissing('area.areaManager');
-        $areaManager = $branch->area?->areaManager;
-
         $attachmentPath = null;
         $attachmentName = null;
 
@@ -98,9 +66,9 @@ class BeritaAcaraController extends Controller
             'penutup'             => $validated['penutup'] ?? null,
             'attachment_path'     => $attachmentPath,
             'attachment_name'     => $attachmentName,
-            'branch_id'           => $branch->id,
+            'branch_id'           => null,
             'created_by'          => $user->id,
-            'area_manager_id'     => $areaManager?->id,
+            'area_manager_id'     => $user->areaManagerForApproval()?->id,
             'status'              => BeritaAcara::STATUS_DRAFT,
         ]);
 

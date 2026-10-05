@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Area;
 use App\Models\BeritaAcara;
-use App\Models\Branch;
 use App\Models\FormPengajuan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,11 +20,9 @@ class FormPengajuanTest extends TestCase
             'role' => 'AM',
             'area_id' => $area->id,
         ]);
-        $kc = User::factory()->create(['role' => 'KC']);
-        $branch = Branch::create([
-            'name' => 'Cabang Form Pengajuan',
+        $kc = User::factory()->create([
+            'role' => 'KC',
             'area_id' => $area->id,
-            'kc_user_id' => $kc->id,
         ]);
 
         $forms = [
@@ -58,7 +55,6 @@ class FormPengajuanTest extends TestCase
         foreach ($forms as $form) {
             $this->actingAs($kc)
                 ->post(route('form-pengajuan.store'), [
-                    'branch_id' => $branch->id,
                     'template' => $form['template'],
                     'meta' => ['request_data' => $form['request_data']],
                     'submit' => true,
@@ -70,6 +66,8 @@ class FormPengajuanTest extends TestCase
             $this->assertSame($form['template'], $document->template);
             $this->assertStringStartsWith('FP/RBO/BRL/PGI/', $document->code);
             $this->assertSame(FormPengajuan::STATUS_SUBMITTED, $document->status);
+            $this->assertNull($document->branch_id);
+            $this->assertSame($areaManager->id, $document->area_manager_id);
             $this->assertSame(0, BeritaAcara::query()->count());
 
             $this->actingAs($areaManager)
@@ -81,16 +79,17 @@ class FormPengajuanTest extends TestCase
     public function test_berita_acara_route_still_creates_only_a_berita_acara(): void
     {
         $area = Area::create(['name' => 'Area BA Terpisah']);
-        $kc = User::factory()->create(['role' => 'KC']);
-        $branch = Branch::create([
-            'name' => 'Cabang BA',
+        $areaManager = User::factory()->create([
+            'role' => 'AM',
             'area_id' => $area->id,
-            'kc_user_id' => $kc->id,
+        ]);
+        $kc = User::factory()->create([
+            'role' => 'KC',
+            'area_id' => $area->id,
         ]);
 
         $this->actingAs($kc)
             ->post(route('berita-acara.store'), [
-                'branch_id' => $branch->id,
                 'title' => 'Berita Acara Terpisah',
                 'meta' => [
                     'template' => 'lainnya',
@@ -102,6 +101,10 @@ class FormPengajuanTest extends TestCase
 
         $this->assertDatabaseCount('berita_acaras', 1);
         $this->assertDatabaseCount('form_pengajuans', 0);
-        $this->assertDatabaseHas('berita_acaras', ['title' => 'Berita Acara Terpisah']);
+        $this->assertDatabaseHas('berita_acaras', [
+            'title' => 'Berita Acara Terpisah',
+            'branch_id' => null,
+            'area_manager_id' => $areaManager->id,
+        ]);
     }
 }

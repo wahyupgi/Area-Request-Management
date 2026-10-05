@@ -45,39 +45,12 @@ class DatabaseSeeder extends Seeder
             'role' => 'KC',
         ]);
         $branch1 = Branch::create([
-            'name' => 'Cabang Surakarta',
+            'name' => 'SKT001',
             'area_id' => $area1->id,
             'kc_user_id' => $kc1->id,
         ]);
         $kc1->update(['branch_id' => $branch1->id]);
-
-        $kc2 = User::create([
-            'name' => 'Dewi Lestari',
-            'username' => 'dewi',
-            'email' => 'kc.klaten@arm.test',
-            'password' => bcrypt('dewi123'),
-            'role' => 'KC',
-        ]);
-        $branch2 = Branch::create([
-            'name' => 'Cabang Klaten',
-            'area_id' => $area1->id,
-            'kc_user_id' => $kc2->id,
-        ]);
-        $kc2->update(['branch_id' => $branch2->id]);
-
-        $kc3 = User::create([
-            'name' => 'Budi',
-            'username' => 'budi',
-            'email' => 'kc.sragen@arm.test',
-            'password' => bcrypt('budi123'),
-            'role' => 'KC',
-        ]);
-        $branch3 = Branch::create([
-            'name' => 'Cabang Sragen',
-            'area_id' => $area1->id,
-            'kc_user_id' => $kc3->id,
-        ]);
-        $kc3->update(['branch_id' => $branch3->id]);
+      
 
         // Create Digital Signature for AM
         DigitalSignature::create([

@@ -6,7 +6,6 @@ import { useSweetAlert } from '@/composables/useSweetAlert';
 import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
-    branches: { type: Array, default: () => [] },
     formPengajuanOnly: { type: Boolean, default: false },
 });
 
@@ -32,8 +31,21 @@ const availableTemplates = computed(() => props.formPengajuanOnly
     : beritaAcaraTemplates
 );
 
+const formatRupiahAmount = (value) => {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+const requestAmountModel = (field) => computed({
+    get: () => formatRupiahAmount(form.meta.request_data[field]),
+    set: (value) => {
+        form.meta.request_data[field] = formatRupiahAmount(value);
+    },
+});
+const loanAmount = requestAmountModel('loan_amount');
+const salaryAfterApproval = requestAmountModel('salary_after_approval');
+const minimumSalary = requestAmountModel('minimum_salary');
+
 const form = useForm({
-    branch_id: null,
     title: '',
     meta: {
         template: undefined,
@@ -72,7 +84,7 @@ watch(() => form.meta.template, (template) => {
         form.meta.request_data = {
             full_name: page.props.auth.user?.name || '',
             position: '',
-            work_location: props.branches.find((branch) => branch.id === form.branch_id)?.name || '',
+            work_location: '',
             employment_date: '',
             late_months: '',
             absence_months: '',
@@ -166,11 +178,6 @@ watch(() => form.meta.template, (template) => {
     }
 });
 
-watch(() => form.branch_id, (branchId) => {
-    if (form.meta.template !== 'form_permohonan_pinjaman') return;
-    form.meta.request_data.work_location = props.branches.find((branch) => branch.id === branchId)?.name || '';
-});
-
 const selectAttachment = (event) => {
     form.attachment = event.target.files[0] || null;
 };
@@ -212,7 +219,6 @@ const submit = () => {
     form.submit_after_save = false;
     form.transform(data => props.formPengajuanOnly
         ? ({
-            branch_id: data.branch_id,
             title: documentLabels[data.meta.template],
             template: data.meta.template,
             meta: { request_data: data.meta.request_data },
@@ -232,7 +238,6 @@ const submitAndSign = () => {
     if (props.formPengajuanOnly) {
         form.submit_after_save = true;
         form.transform(data => ({
-            branch_id: data.branch_id,
             title: documentLabels[data.meta.template],
             template: data.meta.template,
             meta: { request_data: data.meta.request_data },
@@ -257,24 +262,6 @@ const submitAndSign = () => {
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
-            <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
-                <h2 class="text-sm font-semibold mb-3">Cabang Pengajuan</h2>
-                <a-alert v-if="!branches.length" type="warning" show-icon message="Tambahkan cabang di menu Cabang Saya sebelum membuat dokumen." />
-                <a-form-item
-                    v-else
-                    label="Cabang"
-                    :validateStatus="form.errors.branch_id ? 'error' : ''"
-                    :help="form.errors.branch_id"
-                    class="mb-0"
-                >
-                    <a-select v-model:value="form.branch_id" placeholder="Pilih cabang yang mengajukan" size="large">
-                        <a-select-option v-for="branch in branches" :key="branch.id" :value="branch.id">
-                            {{ branch.name }}
-                        </a-select-option>
-                    </a-select>
-                </a-form-item>
-            </a-card>
-
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
                 <h2 class="text-lg font-semibold mb-2">{{ formPengajuanOnly ? 'Pilih Template Form Pengajuan' : 'Pilih Template Berita Acara' }}</h2>
                 <a-form-item
@@ -364,9 +351,9 @@ const submitAndSign = () => {
                                     <a-col :xs="24" :md="8"><a-form-item label="Terlambat (bulan)"><a-input-number v-model:value="form.meta.request_data.late_months" :min="0" class="w-full" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="8"><a-form-item label="Tidak Masuk (bulan)"><a-input-number v-model:value="form.meta.request_data.absence_months" :min="0" class="w-full" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="8"><a-form-item label="Permohonan ke-"><a-input v-model:value="form.meta.request_data.request_number" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Gaji setelah disetujui"><a-input v-model:value="form.meta.request_data.salary_after_approval" placeholder="Contoh: Rp 6.000.000" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Gaji minimal"><a-input v-model:value="form.meta.request_data.minimum_salary" placeholder="Contoh: Rp 4.500.000" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Jumlah pinjaman yang diajukan" :validateStatus="form.errors['meta.request_data.loan_amount'] ? 'error' : ''" :help="form.errors['meta.request_data.loan_amount']"><a-input v-model:value="form.meta.request_data.loan_amount" placeholder="Contoh: Rp 5.000.000" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Gaji setelah disetujui"><a-input v-model:value="salaryAfterApproval" placeholder="Contoh: 6.000.000" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Gaji minimal"><a-input v-model:value="minimumSalary" placeholder="Contoh: 4.500.000" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Jumlah pinjaman yang diajukan" :validateStatus="form.errors['meta.request_data.loan_amount'] ? 'error' : ''" :help="form.errors['meta.request_data.loan_amount']"><a-input v-model:value="loanAmount" placeholder="Contoh: 5.000.000" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Lama pengembalian (bulan)" :validateStatus="form.errors['meta.request_data.repayment_months'] ? 'error' : ''" :help="form.errors['meta.request_data.repayment_months']"><a-input-number v-model:value="form.meta.request_data.repayment_months" :min="1" class="w-full" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Bersedia potong gaji setiap bulan"><a-radio-group v-model:value="form.meta.request_data.salary_deduction"><a-radio value="Bersedia">Bersedia</a-radio><a-radio value="Tidak bersedia">Tidak bersedia</a-radio></a-radio-group></a-form-item></a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Jenis Pinjaman"><a-radio-group v-model:value="form.meta.request_data.loan_type"><a-radio value="pinjaman_uang">Pinjaman Uang</a-radio><a-radio value="pembelian_barang">Pembelian Barang</a-radio></a-radio-group></a-form-item></a-col>

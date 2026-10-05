@@ -71,6 +71,25 @@ class User extends Authenticatable
         });
     }
 
+    public function areaManagerForApproval(): ?self
+    {
+        $areaId = $this->area_id;
+
+        if (!$areaId) {
+            $areaIds = $this->assignedBranches()->distinct()->pluck('area_id');
+            if ($areaIds->count() !== 1) {
+                return null;
+            }
+
+            $areaId = $areaIds->first();
+        }
+
+        return self::query()
+            ->where('role', 'AM')
+            ->where('area_id', $areaId)
+            ->first();
+    }
+
     public function area()
     {
         return $this->belongsTo(Area::class);

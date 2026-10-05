@@ -13,7 +13,6 @@ class FormPengajuanController extends Controller
     public function create()
     {
         return Inertia::render('BeritaAcara/Create', [
-            'branches' => auth()->user()->assignedBranches()->orderBy('name')->get(['id', 'name']),
             'formPengajuanOnly' => true,
         ]);
     }
@@ -27,17 +26,6 @@ class FormPengajuanController extends Controller
         $requiredForLoan = Rule::requiredIf($isSubmit && $template === 'form_permohonan_pinjaman');
         $requiredForLeave = Rule::requiredIf($isSubmit && $template === 'form_ijin_tidak_masuk_kerja');
         $validated = $request->validate([
-            'branch_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('branches', 'id')->where(function ($query) use ($user): void {
-                    $query->where('kc_user_id', $user->id)
-                        ->orWhere(function ($legacyQuery) use ($user): void {
-                            $legacyQuery->where('id', $user->branch_id)
-                                ->where(fn ($kcQuery) => $kcQuery->whereNull('kc_user_id')->orWhere('kc_user_id', $user->id));
-                        });
-                }),
-            ],
             'template' => ['required', Rule::in(FormPengajuan::TEMPLATES)],
             'meta.request_data' => 'nullable|array:full_name,position,work_location,employment_date,late_months,absence_months,request_number,salary_after_approval,minimum_salary,loan_amount,repayment_months,salary_deduction,loan_type,leave_type,start_date,duration,reason,handover,substitute,phone',
             'meta.request_data.full_name' => [$required, 'nullable', 'string', 'max:255'],
@@ -64,18 +52,6 @@ class FormPengajuanController extends Controller
             'submit' => 'required|boolean',
         ]);
 
-        $assignedBranches = $user->assignedBranches();
-        if (!$validated['branch_id'] && $assignedBranches->count() > 1) {
-            return back()->withErrors(['branch_id' => 'Pilih cabang yang mengajukan dokumen.']);
-        }
-        $branch = $validated['branch_id']
-            ? $assignedBranches->whereKey($validated['branch_id'])->first()
-            : $assignedBranches->first();
-        if (!$branch) {
-            return back()->withErrors(['branch_id' => 'Pilih cabang yang terdaftar pada akun Anda.']);
-        }
-
-        $branch->loadMissing('area.areaManager');
         $attachmentPath = $request->file('attachment')?->store('form-pengajuan-attachments', 'public');
         $templateLabels = [
             'form_permohonan_pinjaman' => 'Form Permohonan Pinjaman (FPP)',
@@ -87,9 +63,9 @@ class FormPengajuanController extends Controller
             'data' => $validated['meta']['request_data'] ?? [],
             'attachment_path' => $attachmentPath,
             'attachment_name' => $request->file('attachment')?->getClientOriginalName(),
-            'branch_id' => $branch->id,
+            'branch_id' => null,
             'created_by' => $user->id,
-            'area_manager_id' => $branch->area?->areaManager?->id,
+            'area_manager_id' => $user->areaManagerForApproval()?->id,
             'status' => $validated['submit'] ? FormPengajuan::STATUS_SUBMITTED : FormPengajuan::STATUS_DRAFT,
             'submitted_at' => $validated['submit'] ? now() : null,
         ]);

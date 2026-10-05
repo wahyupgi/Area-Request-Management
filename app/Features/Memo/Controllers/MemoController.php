@@ -47,13 +47,10 @@ class MemoController extends Controller
     public function create()
     {
         MemoTemplate::ensureRequiredDefaults();
-        $branches = auth()->user()->assignedBranches()->orderBy('name')->get(['id', 'name']);
-
         $templates = MemoTemplate::where('is_active', true)->get();
 
         return Inertia::render('Memo/Create', [
             'templates' => $templates,
-            'branches' => $branches,
         ]);
     }
 

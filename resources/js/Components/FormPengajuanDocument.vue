@@ -22,6 +22,20 @@ const formatDate = (value) => {
     return parts ? `${parts[3]}/${parts[2]}/${parts[1]}` : value;
 };
 
+const formatRupiahAmount = (value) => {
+    if (value === null || value === undefined || value === '') return '-';
+    const text = String(value).trim();
+    const digits = text.replace(/^Rp\s*/i, '').replace(/[.\s,]/g, '');
+    if (!/^\d+$/.test(digits)) return value;
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const areaManagerName = computed(() => {
+    const name = (props.beritaAcara.areaManager?.name || props.beritaAcara.area_manager?.name || '').trim();
+    if (!name) return 'Bpk. Fathurrahman. M';
+    return /^(bpk\.?|pak)\s/i.test(name) ? name : `Bpk. ${name}`;
+});
+
 const creatorSignature = computed(() => props.beritaAcara.creator?.digital_signature?.signature_image);
 const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_signature?.signature_image
     || props.beritaAcara.area_manager?.digital_signature?.signature_image);
@@ -41,9 +55,9 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
                     <tr><th>Terlambat ({{ data.late_months ?? 0 }} bulan)</th><td>{{ data.late_months ?? '-' }}</td></tr>
                     <tr><th>Tidak Masuk ({{ data.absence_months ?? 0 }} bulan)</th><td>{{ data.absence_months ?? '-' }}</td></tr>
                     <tr><th>Permohonan keberapa</th><td>{{ data.request_number || '-' }}</td></tr>
-                    <tr><th>Gaji yang diterima setelah disetujui</th><td>{{ data.salary_after_approval || '-' }}</td></tr>
-                    <tr><th>Gaji minimal</th><td>{{ data.minimum_salary || '-' }}</td></tr>
-                    <tr><th>Jumlah Pinjaman yang diajukan</th><td>{{ data.loan_amount || '-' }}</td></tr>
+                    <tr><th>Gaji yang diterima setelah disetujui</th><td>{{ formatRupiahAmount(data.salary_after_approval) }}</td></tr>
+                    <tr><th>Gaji minimal</th><td>{{ formatRupiahAmount(data.minimum_salary) }}</td></tr>
+                    <tr><th>Jumlah Pinjaman yang diajukan</th><td>{{ formatRupiahAmount(data.loan_amount) }}</td></tr>
                     <tr><th>Lamanya pengembalian</th><td>{{ data.repayment_months ? `${data.repayment_months} Bulan` : '-' }}</td></tr>
                     <tr><th>Bersedia potong gaji setiap bulan</th><td>{{ data.salary_deduction || '-' }}</td></tr>
                     <tr>
@@ -71,7 +85,12 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
                         <td><img v-if="beritaAcara.status === 'approved' && managerSignature" :src="`/storage/${managerSignature}`" alt="Tanda tangan atasan" /></td>
                         <td></td><td></td>
                     </tr>
-                    <tr><td>{{ data.full_name || beritaAcara.creator?.name || '-' }}<br /><strong>{{ data.position || 'Kepala Cabang' }}</strong></td><td>{{ beritaAcara.areaManager?.name || beritaAcara.area_manager?.name || '-' }}<br />Area Manager</td><td>NAMA<br />JABATAN</td><td>Nama Penyetuju<br />Jabatan</td></tr>
+                    <tr class="request-signature-names">
+                        <td><span>{{ data.full_name || beritaAcara.creator?.name || '-' }}</span><strong>{{ data.position || 'Kepala Cabang' }}</strong></td>
+                        <td><span>{{ areaManagerName }}</span><strong>Manager</strong></td>
+                        <td><span>NAMA</span><strong>JABATAN</strong></td>
+                        <td><span>Nama Penyetuju</span><strong>Jabatan</strong></td>
+                    </tr>
                     <tr class="request-signature-dates"><td>Tanggal: {{ formatDate(beritaAcara.created_at) }}</td><td>Tanggal:</td><td>Tanggal:</td><td>Tanggal:</td></tr>
                 </tbody>
             </table>
@@ -150,6 +169,8 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
 .request-signatures th { height: 40px; }
 .request-signature-images td { height: 58px; vertical-align: bottom; }
 .request-signature-images img { display: block; max-width: 90%; max-height: 52px; margin: 0 auto; object-fit: contain; }
+.request-signature-names span { display: block; width: 80%; margin: 0 auto 2px; border-bottom: 1px solid #8bb2f5; font-weight: 700; }
+.request-signature-names strong { display: block; font-weight: 400; }
 .request-signature-dates td { padding-top: 20px; text-align: left; }
 .fitmk-header { table-layout: fixed; margin-top: 12mm; }
 .fitmk-header td { height: 19mm; text-align: center; }

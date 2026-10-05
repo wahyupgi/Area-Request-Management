@@ -26,33 +26,15 @@ class MemoService
     public function createDraft(Request $request): Memo
     {
         $user = auth()->user();
-        $assignedBranches = $user->assignedBranches();
-        $branchId = $request->input('branch_id');
-
-        if (!$branchId && $assignedBranches->count() > 1) {
-            back()->withErrors(['branch_id' => 'Pilih cabang yang mengajukan memo.'])->throwResponse();
-        }
-
-        $branch = $branchId
-            ? $assignedBranches->whereKey($branchId)->first()
-            : $assignedBranches->first();
-
-        if (!$branch) {
-            back()->withErrors(['branch_id' => 'Pilih cabang yang terdaftar pada akun Anda.'])->throwResponse();
-        }
-
-        $areaManager = User::where('role', 'AM')
-            ->where('area_id', $branch->area_id)
-            ->first();
 
         $memoData = [
             'code' => null,
             'template_id' => $request->template_id,
             'title' => $request->title,
             'field_values' => $request->field_values ?? [],
-            'branch_id' => $branch->id,
+            'branch_id' => null,
             'created_by' => $user->id,
-            'area_manager_id' => $areaManager?->id,
+            'area_manager_id' => $user->areaManagerForApproval()?->id,
             'status' => 'draft',
         ];
 
