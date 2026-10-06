@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { signatureColumnFractions } from '@/composables/signatureLayout';
 
 const props = defineProps({
     memo: { type: Object, required: true },
@@ -57,11 +58,17 @@ const signatures = computed(() => {
 });
 
 const signatureCount = computed(() => signatures.value.length);
-const signatureGridStyle = computed(() => ({
-    gridTemplateColumns: signatureCount.value >= 4
-        ? '17% 21% 21% 41%'
-        : `repeat(${Math.min(signatureCount.value, 4)}, minmax(0, 1fr))`,
-}));
+const signatureGridStyle = computed(() => {
+    const signatureSlots = signatures.value.slice(0, signatureCount.value);
+    const fractions = signatureColumnFractions(signatureSlots, (slot) => slot.displayName);
+    return {
+        gridTemplateColumns: fractions
+            ? fractions.map((fraction) => `${fraction}fr`).join(' ')
+            : signatureCount.value >= 4
+                ? '17% 21% 21% 41%'
+                : `repeat(${Math.min(signatureCount.value, 4)}, minmax(0, 1fr))`,
+    };
+});
 
 // Flatten items into table rows with rowspan support for area sub-rows
 const tableRows = computed(() => {

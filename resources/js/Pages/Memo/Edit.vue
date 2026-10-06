@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
+import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import {
     PlusOutlined,
     DeleteOutlined,
@@ -280,7 +281,7 @@ const deleteMemo = async () => {
                                         class="mb-0"
                                     >
                                         <a-input v-if="field.type === 'text'" v-model:value="item[field.key]" />
-                                        <a-input-number v-else-if="field.type === 'number'" v-model:value="item[field.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(field))" :parser="parseIntegerInput" class="w-full" />
+                                        <a-input-number v-else-if="field.type === 'number'" v-model:value="item[field.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(field))" :parser="parseIntegerInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" />
                                         <a-input v-else-if="field.type === 'date'" type="date" v-model:value="item[field.key]" />
                                         <a-textarea v-else-if="field.type === 'textarea'" v-model:value="item[field.key]" :rows="4" />
                                         
@@ -289,7 +290,7 @@ const deleteMemo = async () => {
                                                 <a-row :gutter="12" class="flex-1">
                                                     <a-col :span="24 / field.columns.length" v-for="col in field.columns" :key="col.key">
                                                         <div class="text-xs text-gray-500 mb-1">{{ col.label }}</div>
-                                                        <a-input-number v-if="col.type === 'number'" v-model:value="subRow[col.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(col))" :parser="parseIntegerInput" size="small" class="w-full" />
+                                                        <a-input-number v-if="col.type === 'number'" v-model:value="subRow[col.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(col))" :parser="parseIntegerInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" size="small" class="w-full" />
                                                         <a-input v-else-if="col.type === 'date'" v-model:value="subRow[col.key]" type="date" size="small" />
                                                         <a-input v-else v-model:value="subRow[col.key]" size="small" />
                                                     </a-col>

@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { signatureColumnFractions } from '@/composables/signatureLayout';
 
 const props = defineProps({
     beritaAcara: { type: Object, required: true },
@@ -43,9 +44,17 @@ const signatureSlots = computed(() => {
         role: overrides[index]?.role ?? slot.role,
     })).filter((_, index) => index < 2 || (overrides[index]?.enabled ?? index < defaultSlotCount));
 });
-const signatureWidths = computed(() => isSeizedGoods.value && signatureSlots.value.length === 4
-    ? ['19%', '19%', '19%', '43%']
-    : signatureSlots.value.map(() => `${100 / signatureSlots.value.length}%`));
+const signatureWidths = computed(() => {
+    const fractions = signatureColumnFractions(signatureSlots.value);
+    if (fractions) {
+        const total = fractions.reduce((sum, fraction) => sum + fraction, 0);
+        return fractions.map((fraction) => `${(fraction / total) * 100}%`);
+    }
+
+    return isSeizedGoods.value && signatureSlots.value.length === 4
+        ? ['19%', '19%', '19%', '43%']
+        : signatureSlots.value.map(() => `${100 / signatureSlots.value.length}%`);
+});
 const footerBoxCount = computed(() => {
     const defaultCount = isSeizedGoods.value ? 1 : 2;
     return Math.min(2, Math.max(1, Number(props.beritaAcara.meta?.footer_box_count) || defaultCount));

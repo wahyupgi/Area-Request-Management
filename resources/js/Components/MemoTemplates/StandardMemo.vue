@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { signatureColumnFractions } from '@/composables/signatureLayout';
 
 const props = defineProps({
     memo: { type: Object, required: true },
@@ -74,10 +75,16 @@ const roleLines = (role) => {
     return [value];
 };
 
-const signatureGridStyle = (count) => ({
-    gridTemplateColumns: count > 3
-    ? '17fr 21fr 21fr 41fr'
-        : `repeat(${Math.max(count, 1)}, minmax(0, 1fr))`,
+const signatureGridStyle = computed(() => {
+    const count = props.documentSignatures.length;
+    const fractions = signatureColumnFractions(props.documentSignatures);
+    return {
+        gridTemplateColumns: fractions
+            ? fractions.map((fraction) => `${fraction}fr`).join(' ')
+            : count > 3
+                ? '17fr 21fr 21fr 41fr'
+                : `repeat(${Math.max(count, 1)}, minmax(0, 1fr))`,
+    };
 });
 </script>
 
@@ -204,7 +211,7 @@ const signatureGridStyle = (count) => ({
         </template>
     </div>
 
-    <div v-if="documentSignatures.length" class="relative -left-1 mt-4 grid justify-start gap-6 items-start text-xs w-full max-w-none mx-0 px-0 mb-4 [break-inside:avoid]" :style="signatureGridStyle(documentSignatures.length)">
+    <div v-if="documentSignatures.length" class="relative -left-1 mt-4 grid justify-start gap-6 items-start text-xs w-full max-w-none mx-0 px-0 mb-4 [break-inside:avoid]" :style="signatureGridStyle">
         <div
             v-for="(slot, index) in documentSignatures"
             :key="slot.name + slot.role"
@@ -215,7 +222,7 @@ const signatureGridStyle = (count) => ({
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-2 w-full whitespace-nowrap text-[10px] mt-2 text-black leading-none">{{ slot.name || slot.user?.name || (['Area Manager', 'Manager'].includes(slot.role) ? memo.area_manager?.name || 'Bpk. Fathurrahman M' : '') }}</p>
+            <p class="relative top-2 w-full whitespace-normal break-words [overflow-wrap:anywhere] text-[10px] mt-2 text-black leading-none">{{ slot.name || slot.user?.name || (['Area Manager', 'Manager'].includes(slot.role) ? memo.area_manager?.name || 'Bpk. Fathurrahman M' : '') }}</p>
             <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
                 <span v-for="(line, roleIndex) in roleLines(slot.role === 'Area Manager' ? 'Manager' : slot.role)" :key="roleIndex" class="block whitespace-nowrap">{{ line }}</span>
             </p>

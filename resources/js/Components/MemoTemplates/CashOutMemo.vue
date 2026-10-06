@@ -1,4 +1,7 @@
 <script setup>
+import { computed } from 'vue';
+import { signatureColumnFractions } from '@/composables/signatureLayout';
+
 const props = defineProps({
     memo: { type: Object, required: true },
     values: { type: Object, required: true },
@@ -33,6 +36,14 @@ const signatureColumns = computed(() => {
             name: props.approverName || props.values.penyetuju_akhir || props.memo.template?.document_defaults?.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko',
             role: 'Senior Executive Vice President Bisnis dan Operasional',
             signature: '',
+        });
+        const signatureGridStyle = computed(() => {
+            const fractions = signatureColumnFractions(signatureColumns.value);
+            return {
+                gridTemplateColumns: fractions
+                    ? fractions.map((fraction) => `${fraction}fr`).join(' ')
+                    : `repeat(${signatureColumns.value.length}, minmax(0, 1fr))`,
+            };
         });
     }
 
@@ -82,7 +93,7 @@ const handleImgError = (event) => {
         </template>
     </div>
 
-    <div class="mt-4 grid gap-3 items-start text-xs w-full max-w-3xl mx-auto px-1 mb-4" :style="{ gridTemplateColumns: `repeat(${signatureColumns.length}, minmax(0, 1fr))` }">
+    <div class="mt-4 grid gap-3 items-start text-xs w-full max-w-3xl mx-auto px-1 mb-4" :style="signatureGridStyle">
         <div v-for="(slot, index) in signatureColumns" :key="`cash-out-signature-${index}`" class="flex min-w-0 flex-col items-center text-center">
             <p class="mb-1">{{ slot.label }}</p>
             <div class="h-16 w-full flex items-end justify-center relative">

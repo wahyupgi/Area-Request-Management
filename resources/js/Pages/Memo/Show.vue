@@ -118,9 +118,11 @@ const printMemo = () => {
         <template #header>
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
-                    <a-button type="text" shape="circle" onclick="history.back()">
-                        <template #icon><arrow-left-outlined /></template>
-                    </a-button>
+                    <Link :href="route('memos.index')">
+                        <a-button type="text" shape="circle">
+                            <template #icon><arrow-left-outlined /></template>
+                        </a-button>
+                    </Link>
                     <div>
                         <h1 class="text-base font-bold text-gray-800 mb-0">Detail Dokumen Memo</h1>
                         <div class="flex items-center gap-2 text-xs text-gray-500">
