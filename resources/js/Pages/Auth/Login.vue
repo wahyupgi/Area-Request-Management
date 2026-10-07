@@ -6,6 +6,13 @@ import { computed, ref } from 'vue';
 import { CheckCircleOutlined, LoadingOutlined, LoginOutlined } from '@ant-design/icons-vue';
 import axios from 'axios';
 
+const props = defineProps({
+    status: {
+        type: String,
+        default: null,
+    },
+});
+
 const watermarkPositions = [
     {
         class: '',
@@ -144,6 +151,9 @@ const submit = async () => {
                 <div class="mb-10 text-center md:text-left">
                     <h3 class="text-2xl font-bold text-white">Selamat Datang!</h3>
                     <p class="text-slate-400 mt-2 text-sm">Silakan masuk menggunakan kredensial akun Anda.</p>
+                    <p v-if="props.status" class="mt-4 rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-left text-sm text-amber-200" role="alert">
+                        {{ props.status }}
+                    </p>
                 </div>
 
                 <a-form

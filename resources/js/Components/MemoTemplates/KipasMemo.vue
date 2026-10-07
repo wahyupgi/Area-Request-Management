@@ -127,16 +127,16 @@ const roleLines = (role) => {
 <template>
     <table class="w-full text-xs border-collapse border border-black mb-5">
         <thead>
-            <tr class="bg-[#b4c7e7] text-black">
-                <th rowspan="2" class="border border-black px-2 py-1.5 text-center font-bold align-middle w-[13%]">Cabang</th>
-                <th rowspan="2" class="border border-black px-2 py-1.5 text-center font-bold align-middle w-[18%]">Permintaan</th>
-                <th rowspan="2" class="border border-black px-2 py-1.5 text-center font-bold align-middle w-[16%]">Tujuan</th>
-                <th colspan="2" class="border border-black px-2 py-1.5 text-center font-bold">QTY KIPAS YANG ADA DI CABANG</th>
-                <th rowspan="2" class="border border-black px-2 py-1.5 text-center font-bold align-middle w-[21%]">Keterangan</th>
+            <tr class="bg-[#1f497d] text-white">
+                <th rowspan="2" class="border border-black px-2 py-1.5 text-center font-bold align-middle w-[13%] !text-white">Cabang</th>
+                <th rowspan="2" class="border border-black px-2 py-1.5 text-center font-bold align-middle w-[18%] !text-white">Permintaan</th>
+                <th rowspan="2" class="border border-black px-2 py-1.5 text-center font-bold align-middle w-[16%] !text-white">Tujuan</th>
+                <th colspan="2" class="border border-black px-2 py-1.5 text-center font-bold !text-white">QTY KIPAS YANG ADA DI CABANG</th>
+                <th rowspan="2" class="border border-black px-2 py-1.5 text-center font-bold align-middle w-[21%] !text-white">Keterangan</th>
             </tr>
-            <tr class="bg-[#b4c7e7] text-black">
-                <th class="border border-black px-2 py-1.5 text-center font-bold w-[18%]">Area</th>
-                <th class="border border-black px-2 py-1.5 text-center font-bold w-[14%]">Qty<br />(yang ada)</th>
+            <tr class="bg-[#1f497d] text-white">
+                <th class="border border-black px-2 py-1.5 text-center font-bold w-[18%] !text-white">Area</th>
+                <th class="border border-black px-2 py-1.5 text-center font-bold w-[14%] !text-white">Qty<br />(yang ada)</th>
             </tr>
         </thead>
         <tbody>
@@ -165,7 +165,7 @@ const roleLines = (role) => {
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label || slot.displayName" @error="handleImgError" class="max-w-full h-14 object-contain absolute bottom-0" />
             </div>
-            <p v-if="slot.displayName" class="relative top-2 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-2 leading-none">{{ slot.displayName }}</p>
+            <p v-if="slot.displayName" class="relative top-2 w-full whitespace-nowrap mt-2 leading-none">{{ slot.displayName }}</p>
             <p v-if="slot.displayRole" class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
                 <span v-for="(line, roleIndex) in roleLines(slot.displayRole)" :key="roleIndex" class="block whitespace-nowrap">{{ line }}</span>
             </p>

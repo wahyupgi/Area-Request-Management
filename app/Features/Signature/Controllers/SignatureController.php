@@ -96,6 +96,6 @@ class SignatureController extends Controller
                 ])->values()->all(),
         ]);
 
-        return back()->with('success', 'Pengaturan tanda tangan template berhasil disimpan.');
+        return back();
     }
 }

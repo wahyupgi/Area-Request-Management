@@ -104,17 +104,19 @@ const printMemo = () => {
     waitForDocx.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
         printWindow.document.write(`<!doctype html><html><head><title>${originalTitle}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
             @page { size: A4 portrait; margin: 0; }
-            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; min-height: 0 !important; height: auto !important; }
             body * { visibility: visible !important; }
             .memo-print-page { width: 210mm !important; box-sizing: border-box !important; }
-            #printable-memo { position: relative !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; }
-            .memo-print-attachments { display: block !important; width: 210mm !important; }
+            #printable-memo { position: relative !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; page-break-after: avoid !important; break-after: avoid !important; }
+            .memo-print-attachments { display: block !important; width: 210mm !important; margin: 0 !important; page-break-before: auto !important; break-before: auto !important; }
             .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; }
             .memo-print-attachment:first-child { page-break-before: always !important; break-before: page !important; }
             .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
             .memo-pdf-page-list { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 0 !important; }
             .memo-pdf-page { width: auto !important; height: auto !important; max-width: 100% !important; max-height: 295mm !important; margin: 0 auto !important; object-fit: contain !important; break-inside: avoid !important; page-break-inside: avoid !important; }
             .memo-pdf-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
+            .memo-attachment-docx .docx-wrapper > section.docx:last-of-type { page-break-after: auto !important; break-after: auto !important; margin-bottom: 0 !important; }
+            .memo-print-attachment:last-child { page-break-after: avoid !important; break-after: avoid !important; }
         </style></head><body><div class="memo-print-page">${memo}</div>${attachments}</body></html>`);
         printWindow.onload = () => {
             printWindow.document.title = printFileName();

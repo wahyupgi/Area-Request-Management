@@ -135,7 +135,7 @@ const formatCurrency = (value) => {
             <colgroup><col style="width:8%;" /><col style="width:42%;" /><col style="width:50%;" /></colgroup>
             <thead>
                 <tr>
-                    <th v-for="heading in ['No.', 'Uraian', 'Keterangan']" :key="heading" style="border:1px solid #000;background:#f3f4f6;padding:6px;text-align:center;">{{ heading }}</th>
+                    <th v-for="heading in ['No.', 'Uraian', 'Keterangan']" :key="heading" style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">{{ heading }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -150,7 +150,7 @@ const formatCurrency = (value) => {
         <table v-else-if="isAttendanceRevision" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
             <thead>
                 <tr>
-                    <th v-for="heading in ['No', 'Nama', 'NIK', 'Tanggal', 'Absensi IN', 'Absensi Out', 'Ket']" :key="heading" style="border:1px solid #000;background:#9dc3e6;padding:4px;text-align:center;">{{ heading }}</th>
+                    <th v-for="heading in ['No', 'Nama', 'NIK', 'Tanggal', 'Absensi IN', 'Absensi Out', 'Ket']" :key="heading" style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:4px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">{{ heading }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -171,7 +171,7 @@ const formatCurrency = (value) => {
             </colgroup>
             <thead>
                 <tr>
-                    <th v-for="heading in ['No', 'Cabang', 'Nama Nasabah', 'No. Faktur', 'Barang', 'Nominal Pinjaman']" :key="heading" style="border:1px solid #000;padding:4px;text-align:center;">{{ heading }}</th>
+                    <th v-for="heading in ['No', 'Cabang', 'Nama Nasabah', 'No. Faktur', 'Barang', 'Nominal Pinjaman']" :key="heading" style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:4px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">{{ heading }}</th>
                 </tr>
             </thead>
             <tbody>

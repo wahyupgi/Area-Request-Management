@@ -92,9 +92,9 @@ const signatureGridStyle = computed(() => {
     <template v-if="isKeringananJasa">
         <table class="w-full text-xs border-collapse border border-black">
             <thead>
-                <tr class="bg-[#0284c7] text-white">
-                    <th class="border border-black px-3 py-1.5 text-left font-bold">Informasi Nasabah</th>
-                    <th class="border border-black px-3 py-1.5 text-left font-bold">Keterangan</th>
+                <tr class="bg-[#1f497d] text-white">
+                    <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Informasi Nasabah</th>
+                    <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Keterangan</th>
                 </tr>
             </thead>
             <tbody>
@@ -109,9 +109,9 @@ const signatureGridStyle = computed(() => {
 
         <table class="mt-3 w-full text-xs border-collapse border border-black mb-5">
             <thead>
-                <tr class="bg-[#0284c7] text-white">
+                <tr class="bg-[#1f497d] text-white">
                     <template v-for="field in memo.template?.field_schema?.filter((field) => field.type === 'table')" :key="field.key + '-columns'">
-                        <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold">
+                        <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold !text-white">
                             {{ column.label }}
                         </th>
                     </template>
@@ -133,13 +133,13 @@ const signatureGridStyle = computed(() => {
 
     <table v-else class="w-full text-xs border-collapse border border-black mb-5">
         <thead>
-            <tr class="bg-[#0284c7] text-white">
-                <th v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 w-10 text-center font-bold">No.</th>
-                <th class="border border-black px-3 py-1.5 text-left font-bold">
+            <tr class="bg-[#1f497d] text-white">
+                <th v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 w-10 text-center font-bold !text-white">No.</th>
+                <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">
                     {{ isKeringananJasa ? 'Informasi Nasabah' : (isItemBased ? (memo.field_values?.items?.[0]?.nama_barang || memo.field_values?.nama_barang ? 'Nama Barang' : 'Permintaan') : 'Permintaan') }}
                 </th>
-                <th v-if="isItemBased" class="border border-black px-2.5 py-1.5 text-center font-bold w-32 min-w-[8rem] whitespace-nowrap">Jumlah</th>
-                <th class="border border-black px-3 py-1.5 text-left font-bold">Keterangan</th>
+                <th v-if="isItemBased" class="border border-black px-2.5 py-1.5 text-center font-bold w-32 min-w-[8rem] whitespace-nowrap !text-white">Jumlah</th>
+                <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Keterangan</th>
             </tr>
         </thead>
         <tbody>
@@ -182,7 +182,7 @@ const signatureGridStyle = computed(() => {
                                 <table :class="['w-full border-collapse', isKeringananJasa ? 'mt-2' : '']">
                                     <thead>
                                         <tr class="bg-[#1f497d] text-white">
-                                            <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold">
+                                            <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold !text-white">
                                                 {{ column.label }}
                                             </th>
                                         </tr>
@@ -222,7 +222,7 @@ const signatureGridStyle = computed(() => {
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-2 w-full whitespace-normal break-words [overflow-wrap:anywhere] text-[10px] mt-2 text-black leading-none">{{ slot.name || slot.user?.name || (['Area Manager', 'Manager'].includes(slot.role) ? memo.area_manager?.name || 'Bpk. Fathurrahman M' : '') }}</p>
+            <p class="relative top-2 w-full whitespace-nowrap text-[10px] mt-2 text-black leading-none">{{ slot.name || slot.user?.name || (['Area Manager', 'Manager'].includes(slot.role) ? memo.area_manager?.name || 'Bpk. Fathurrahman M' : '') }}</p>
             <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
                 <span v-for="(line, roleIndex) in roleLines(slot.role === 'Area Manager' ? 'Manager' : slot.role)" :key="roleIndex" class="block whitespace-nowrap">{{ line }}</span>
             </p>
@@ -235,7 +235,7 @@ const signatureGridStyle = computed(() => {
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="memo.creator?.digital_signature?.signature_image" :src="'/storage/' + memo.creator.digital_signature.signature_image" alt="Tanda Tangan KC" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-2 w-full whitespace-normal break-words mt-2 text-black leading-none">{{ memo.creator?.name }}</p>
+            <p class="relative top-2 w-full whitespace-nowrap mt-2 text-black leading-none">{{ memo.creator?.name }}</p>
             <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Kepala Cabang</p>
         </div>
         <div class="flex min-w-0 flex-col items-center text-center">
@@ -246,7 +246,7 @@ const signatureGridStyle = computed(() => {
                     <img v-else-if="memo.area_manager?.digital_signature?.signature_image" :src="'/storage/' + memo.area_manager.digital_signature.signature_image" alt="Tanda Tangan AM" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
                 </template>
             </div>
-            <p class="relative top-2 w-full whitespace-normal break-words mt-2 text-black leading-none">{{ memo.area_manager?.name || 'Manager' }}</p>
+            <p class="relative top-2 w-full whitespace-nowrap mt-2 text-black leading-none">{{ memo.area_manager?.name || 'Manager' }}</p>
             <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Manager</p>
         </div>
     </div>

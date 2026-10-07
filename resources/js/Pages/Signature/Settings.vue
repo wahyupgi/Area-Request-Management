@@ -3,11 +3,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { reactive } from 'vue';
 import { DeleteOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons-vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 
 const props = defineProps({
     templates: Array,
 });
 
+const { success } = useSweetAlert();
 const forms = reactive({});
 const visibleAdditionalSlots = reactive({});
 
@@ -70,6 +72,7 @@ const save = (template) => {
 
     form.transform(() => ({ signature_schema: signatureSchema })).put(route('signature.settings.update', template.id), {
         preserveScroll: true,
+        onSuccess: () => success('Pengaturan tanda tangan template berhasil disimpan.'),
     });
 };
 </script>
@@ -152,7 +155,7 @@ const save = (template) => {
                     <div class="mt-4 flex justify-end">
                         <a-button type="primary" :loading="forms[template.id].processing" @click="save(template)">
                             <template #icon><SaveOutlined /></template>
-                            Simpan Pengaturan
+                            Simpan
                         </a-button>
                     </div>
                 </a-form>

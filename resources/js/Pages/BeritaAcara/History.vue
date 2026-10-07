@@ -47,7 +47,43 @@ const formatDate = (dateString) => {
 };
 
 const printBA = () => {
-        window.print();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const originalTitle = document.title;
+    const baHtml = document.querySelector('#printable-ba')?.outerHTML || '';
+    const stylesheetUrls = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.href);
+    const activeStyles = Array.from(document.querySelectorAll('style')).map((style) => style.textContent).join('\n');
+
+    const waitForAttachments = new Promise((resolve) => {
+        const startedAt = Date.now();
+        const check = () => {
+            if (!document.querySelector('[data-attachment-loading]') || Date.now() - startedAt > 30000) {
+                resolve();
+                return;
+            }
+            window.setTimeout(check, 100);
+        };
+        check();
+    });
+
+    waitForAttachments.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
+        const attachments = document.querySelector('.memo-print-attachments')?.outerHTML || '';
+        printWindow.document.write(`<!doctype html><html><head><title>${originalTitle}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
+            @page { size: A4 portrait; margin: 0; }
+            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; min-height: 0 !important; height: auto !important; }
+            body * { visibility: visible !important; }
+            #printable-ba { position: relative !important; inset: auto !important; width: 210mm !important; min-height: 295mm !important; page-break-after: avoid !important; break-after: avoid !important; box-sizing: border-box !important; }
+            .memo-print-attachments { display: block !important; width: 210mm !important; margin: 0 !important; page-break-before: auto !important; break-before: auto !important; }
+            .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 0 !important; page-break-before: always !important; break-before: page !important; page-break-after: avoid !important; break-after: avoid !important; box-sizing: border-box !important; }
+        </style></head><body>${baHtml}${attachments}</body></html>`);
+        printWindow.onload = () => {
+            printWindow.onafterprint = () => printWindow.close();
+            printWindow.focus();
+            printWindow.print();
+        };
+        printWindow.document.close();
+    });
 };
 </script>
 

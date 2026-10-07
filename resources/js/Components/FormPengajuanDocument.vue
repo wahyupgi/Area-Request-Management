@@ -167,6 +167,12 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
 .request-signatures { table-layout: fixed; text-align: center; }
 .request-signatures th, .request-signatures td { width: 25%; padding: 5px 3px; }
 .request-signatures th { height: 40px; }
+.request-signatures th, .fitmk-approval th {
+    background: #1f497d;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
 .request-signature-images td { height: 58px; vertical-align: bottom; }
 .request-signature-images img { display: block; max-width: 90%; max-height: 52px; margin: 0 auto; object-fit: contain; }
 .request-signature-names span { display: block; width: 80%; margin: 0 auto 2px; border-bottom: 1px solid #8bb2f5; font-weight: 700; }

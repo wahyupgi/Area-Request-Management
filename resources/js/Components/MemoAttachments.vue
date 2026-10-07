@@ -266,6 +266,7 @@ onBeforeUnmount(() => {
 
     .memo-pdf-page {
         box-shadow: none;
+        max-height: 295mm;
     }
 }
 
@@ -293,8 +294,23 @@ onBeforeUnmount(() => {
         margin: 0 auto;
         box-shadow: none;
         zoom: 1 !important;
+        min-height: 0 !important;
+        height: 295mm !important;
         break-after: page;
         page-break-after: always;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .memo-attachment-docx .docx-wrapper > section.docx:last-of-type {
+        break-after: auto;
+        page-break-after: auto;
+        margin-bottom: 0;
+    }
+
+    .memo-print-attachment:last-child {
+        break-after: avoid;
+        page-break-after: avoid;
     }
 }
 </style>

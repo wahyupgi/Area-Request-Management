@@ -72,9 +72,9 @@ const handleImgError = (event) => {
 <template>
     <table class="w-full table-fixed border-collapse border border-black text-xs mb-5">
         <thead>
-            <tr class="bg-[#b4c7e7] text-black">
-                <th class="border border-black px-3 py-2 text-left font-bold w-[55%]">Uraian</th>
-                <th class="border border-black px-3 py-2 text-left font-bold w-[45%] whitespace-nowrap">Nominal</th>
+            <tr class="bg-[#1f497d] text-white">
+                <th class="border border-black px-3 py-2 text-left font-bold w-[55%] !text-white">Uraian</th>
+                <th class="border border-black px-3 py-2 text-left font-bold w-[45%] whitespace-nowrap !text-white">Nominal</th>
             </tr>
         </thead>
         <tbody>
@@ -99,7 +99,7 @@ const handleImgError = (event) => {
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.signature" :src="'/storage/' + slot.signature" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] mt-0 text-black leading-none">{{ slot.name }}</p>
+            <p class="relative top-1 w-full whitespace-nowrap mt-0 text-black leading-none">{{ slot.name }}</p>
             <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">{{ slot.role }}</p>
         </div>
     </div>

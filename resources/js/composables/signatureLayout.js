@@ -1,10 +1,6 @@
-const longSignerName = 'nugroho samudra sujatmiko';
-
 export const signatureColumnFractions = (slots, getName = (slot) => slot?.name) => {
-    const hasLongSigner = slots.some((slot) => String(getName(slot) || '').toLowerCase().includes(longSignerName));
-    if (!hasLongSigner) return null;
+    const nameLengths = slots.map((slot) => String(getName(slot) || '').trim().length);
+    if (!nameLengths.some((length) => length > 12)) return null;
 
-    return slots.map((slot) => (
-        String(getName(slot) || '').toLowerCase().includes(longSignerName) ? 2.25 : 1
-    ));
+    return nameLengths.map((length) => Math.min(2.25, Math.max(1, length / 12)));
 };
