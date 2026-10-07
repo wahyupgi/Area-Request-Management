@@ -37,11 +37,9 @@ const memoMeta = computed(() => props.memo.field_values?.meta || {});
 
 const isAreaManagerRole = (role) => ['Area Manager', 'Manager'].includes(String(role || '').trim());
 
-const areaManagerName = () => {
-    const name = props.memo.area_manager?.name?.trim();
-    if (!name) return 'Bpk. Fathurrahman';
-    return /^(bpk\.?|pak)\s/i.test(name) ? name : `Bpk. ${name}`;
-};
+const areaManagerName = () => props.memo.area_manager?.name?.trim() || '';
+
+const fourColumnManagerName = 'Bpk. Fathurrahman M';
 
 const isPlaceholderSignerName = (name) => !name || name.trim().toLowerCase() === 'penandatangan';
 
@@ -150,8 +148,16 @@ const configuredSignatures = computed(() => {
     ];
 });
 
-const documentSignatures = computed(() => configuredSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
-const parafSignatures = computed(() => configuredSignatures.value.filter((slot) => slot.location === 'bottom_right'));
+const resolvedSignatures = computed(() => {
+    const slots = configuredSignatures.value;
+    const documentCount = slots.filter((slot) => (slot.location || 'document') === 'document').length;
+    if (documentCount < 4) return slots;
+
+    return slots.map((slot) => (isAreaManagerRole(slot.role) ? { ...slot, name: fourColumnManagerName } : slot));
+});
+
+const documentSignatures = computed(() => resolvedSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
+const parafSignatures = computed(() => resolvedSignatures.value.filter((slot) => slot.location === 'bottom_right'));
 const footerBoxCount = computed(() => Number(props.memo.field_values?.footer_box_count) === 1 ? 1 : 2);
 
 const handleImgError = (event) => {

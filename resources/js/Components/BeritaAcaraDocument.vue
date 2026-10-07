@@ -21,7 +21,7 @@ const signatureSlots = computed(() => {
     const finalApprover = beritaAcara.meta?.penyetuju_akhir;
     const slots = [
         { name: creator?.name, role: 'Kepala Cabang', user: creator },
-        { name: manager?.name || 'Bpk. Fathurrahman M', role: manager?.jabatan || 'Manager', user: manager },
+        { name: manager?.name || '', role: manager?.jabatan || 'Manager', user: manager },
     ];
 
     if (isSeizedGoods.value) {
@@ -38,11 +38,15 @@ const signatureSlots = computed(() => {
     const defaultSlotCount = slots.length;
     while (slots.length < 4) slots.push({ name: '', role: '', user: null });
 
-    return slots.map((slot, index) => ({
+    const resolved = slots.map((slot, index) => ({
         ...slot,
         name: overrides[index]?.name ?? slot.name,
         role: overrides[index]?.role ?? slot.role,
     })).filter((_, index) => index < 2 || (overrides[index]?.enabled ?? index < defaultSlotCount));
+
+    return resolved.length >= 4
+        ? resolved.map((slot, index) => (index === 1 ? { ...slot, name: 'Bpk. Fathurrahman M' } : slot))
+        : resolved;
 });
 const signatureWidths = computed(() => {
     const fractions = signatureColumnFractions(signatureSlots.value);

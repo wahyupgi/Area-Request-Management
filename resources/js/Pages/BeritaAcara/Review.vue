@@ -35,7 +35,7 @@ const defaultSigners = () => {
     };
     const signers = [
         { name: creator?.name || '', role: 'Kepala Cabang' },
-        { name: manager?.name || 'Bpk. Fathurrahman M', role: manager?.jabatan || 'Manager' },
+        { name: manager?.name || '', role: manager?.jabatan || 'Manager' },
     ];
 
     if (isSeizedGoods) {

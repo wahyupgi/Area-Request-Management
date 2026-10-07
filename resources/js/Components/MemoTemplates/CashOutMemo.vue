@@ -56,7 +56,7 @@ const signatureColumns = computed(() => {
         },
         {
             label: 'Disetujui oleh,',
-            name: props.memo.area_manager?.name || 'Bpk. Fathurrahman M',
+            name: props.memo.area_manager?.name || '',
             role: 'Manager',
             signature: props.memo.status === 'approved' ? props.memo.area_manager?.digital_signature?.signature_image || '' : '',
         },

@@ -30,11 +30,7 @@ const formatRupiahAmount = (value) => {
     return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
 
-const areaManagerName = computed(() => {
-    const name = (props.beritaAcara.areaManager?.name || props.beritaAcara.area_manager?.name || '').trim();
-    if (!name) return 'Bpk. Fathurrahman. M';
-    return /^(bpk\.?|pak)\s/i.test(name) ? name : `Bpk. ${name}`;
-});
+const areaManagerName = computed(() => (props.beritaAcara.areaManager?.name || props.beritaAcara.area_manager?.name || '').trim());
 
 const creatorSignature = computed(() => props.beritaAcara.creator?.digital_signature?.signature_image);
 const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_signature?.signature_image

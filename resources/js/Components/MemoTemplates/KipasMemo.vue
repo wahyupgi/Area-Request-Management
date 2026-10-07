@@ -31,7 +31,7 @@ const signatures = computed(() => {
     };
     const isApproved = props.memo.status === 'approved';
     const amSig = {
-        displayName: props.memo.area_manager?.name || 'Bpk. Fathurrahman M',
+        displayName: props.memo.area_manager?.name || '',
         displayRole: 'Manager',
         signature: isApproved
             ? (getApprovedSignature()?.signature_image || props.memo.area_manager?.digital_signature?.signature_image)
