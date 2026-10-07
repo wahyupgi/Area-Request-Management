@@ -14,8 +14,8 @@ const paginationLinks = computed(() => props.memos?.links ?? []);
 
 const columns = [
     { title: 'Kode', dataIndex: 'code', key: 'code' },
-    { title: 'Judul', dataIndex: 'title', key: 'title' },
-    { title: 'Template', dataIndex: ['template', 'name'], key: 'template' },
+    { title: 'Perihal', dataIndex: ['template', 'name'], key: 'template' },
+    { title: 'Cabang', dataIndex: ['branch', 'name'], key: 'branch' },
     { title: 'Status', dataIndex: 'status', key: 'status' },
     { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at' },
     { title: 'Aksi', key: 'action', align: 'center' }
@@ -83,6 +83,9 @@ const onFilterChange = (e) => {
                         <a-tag :color="getStatusColor(record.status)">
                             {{ getStatusLabel(record.status) }}
                         </a-tag>
+                    </template>
+                    <template v-else-if="column.key === 'branch'">
+                        {{ record.branch?.name || '-' }}
                     </template>
                     <template v-else-if="column.key === 'created_at'">
                         {{ new Date(record.created_at).toLocaleDateString('id-ID') }}

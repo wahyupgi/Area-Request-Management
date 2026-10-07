@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import { message } from 'ant-design-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import {
@@ -107,11 +108,20 @@ const selectSignature = (event) => {
 const confirmSubmit = () => {
     if (!props.signature && !signatureFile.value) return;
     submittingMemo.value = true;
-    const formData = new FormData();
-    if (signatureFile.value) formData.append('signature_image', signatureFile.value);
-    router.post(route('memos.submit', props.memo.id), formData, {
-        forceFormData: true,
-        onFinish: () => { submittingMemo.value = false; showSignatureDialog.value = false; },
+    form.put(route('memos.update', props.memo.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            const formData = new FormData();
+            if (signatureFile.value) formData.append('signature_image', signatureFile.value);
+            router.post(route('memos.submit', props.memo.id), formData, {
+                forceFormData: true,
+                onError: (errors) => {
+                    if (!errors.signature) message.error(Object.values(errors).join(' '));
+                },
+                onFinish: () => { submittingMemo.value = false; showSignatureDialog.value = false; },
+            });
+        },
+        onError: () => { submittingMemo.value = false; showSignatureDialog.value = false; },
     });
 };
 
@@ -322,7 +332,7 @@ const deleteMemo = async () => {
                                 </a-button>
                                 <a-button size="large" type="primary" @click="submitMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
                                     <template #icon><send-outlined /></template>
-                                    Tanda Tangani &amp; Kirim ke AM
+                                    Kirim ke AM
                                 </a-button>
                             </div>
                         </a-card>

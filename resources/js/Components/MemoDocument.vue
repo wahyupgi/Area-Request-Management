@@ -53,7 +53,7 @@ const configuredSignatures = computed(() => {
             
             return {
                 ...slot,
-                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (isAreaManagerRole(slot.role) ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
+                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : 'Disetujui Oleh,'),
                 name: slot.name || (slot.role === 'Kepala Cabang' ? props.memo.creator?.name || '' : (isAreaManagerRole(slot.role) ? areaManagerName() : '')),
                 role: slot.role || '',
                 location: slot.location || 'document',
@@ -91,7 +91,7 @@ const configuredSignatures = computed(() => {
             },
             {
                 ...customAm,
-                label: customAm.label || 'Diketahui Oleh,',
+                label: 'Disetujui Oleh,',
                 name: isPlaceholderSignerName(customAm.name) ? areaManagerName() : (customAm.name || areaManagerName()),
                 role: 'Manager',
                 location: 'document',
@@ -116,7 +116,7 @@ const configuredSignatures = computed(() => {
 
             return {
                 ...slot,
-                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : (isAreaManagerRole(slot.role) ? 'Diketahui Oleh,' : 'Disetujui Oleh,')),
+                label: slot.label || (slot.role === 'Kepala Cabang' ? 'Dibuat Oleh,' : 'Disetujui Oleh,'),
                 name: name,
                 user: user,
             };
@@ -138,7 +138,7 @@ const configuredSignatures = computed(() => {
         },
         {
             ...templateAm,
-            label: templateAm.label || 'Diketahui Oleh,',
+            label: 'Disetujui Oleh,',
             name: isPlaceholderSignerName(templateAm.name) ? areaManagerName() : (templateAm.name || areaManagerName()),
             role: 'Manager',
             location: 'document',

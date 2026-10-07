@@ -179,7 +179,7 @@ class MemoTemplate extends Model
                 ],
                 'signature_schema' => [
                     ['label' => 'Dibuat oleh,', 'role' => 'Kepala Cabang'],
-                    ['label' => 'Diketahui oleh,', 'role' => 'Area Manager'],
+                    ['label' => 'Disetujui oleh,', 'role' => 'Area Manager'],
                     ['label' => 'Diketahui oleh,', 'name' => 'Bpk. Nugroho Samudra Sujatmiko, Ko', 'role' => 'Senior Executive Vice President Bisnis dan Operasional'],
                 ],
             ],

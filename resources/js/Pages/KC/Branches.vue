@@ -219,8 +219,28 @@ const columns = [
     background: #315a84 !important;
 }
 
-.kc-branches-table .ant-table-tbody > tr > td {
+html:not(.theme-light) .kc-branches-table .ant-table,
+html:not(.theme-light) .kc-branches-table .ant-table-container,
+html:not(.theme-light) .kc-branches-table table {
+    background: #1e293b !important;
+}
+
+html:not(.theme-light) .kc-branches-table .ant-table-tbody > tr > td {
     color: #e2e8f0 !important;
+    background: #1e293b !important;
+}
+
+html:not(.theme-light) .kc-branches-table .ant-table-tbody > tr:nth-child(even) > td {
+    background: #243247 !important;
+}
+
+html:not(.theme-light) .kc-branches-table .ant-table-tbody > tr:hover > td {
+    background: #334155 !important;
+}
+
+html:not(.theme-light) .kc-branches-table .ant-table-tbody > tr > td > * {
+    color: inherit !important;
+    opacity: 1;
 }
 
 .kc-branches-summary {
@@ -278,6 +298,15 @@ html.theme-light .kc-branches-summary > div {
 
 html.theme-light .kc-branches-table .ant-table-tbody > tr > td {
     color: #1e293b !important;
+    background: #ffffff !important;
+}
+
+html.theme-light .kc-branches-table .ant-table-tbody > tr:nth-child(even) > td {
+    background: #f8fafc !important;
+}
+
+html.theme-light .kc-branches-table .ant-table-tbody > tr:hover > td {
+    background: #f1f5f9 !important;
 }
 
 html.theme-light .kc-branches-summary strong {

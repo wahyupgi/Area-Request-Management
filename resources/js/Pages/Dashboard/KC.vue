@@ -93,8 +93,8 @@ const formTemplateLabels = {
 const isFormPengajuan = (record) => record._documentType === 'form_pengajuan';
 
 const documentColumns = [
-    { title: 'Kode Dokumen', dataIndex: 'code', key: 'code' },
-    { title: 'Perihal & Template', key: 'subject' },
+    { title: 'Nomor Dokumen', dataIndex: 'code', key: 'code' },
+    { title: 'Perihal', key: 'subject' },
     { title: 'Jenis', key: 'type' },
     { title: 'Tanggal Dibuat', key: 'created_at' },
     { title: 'Status', key: 'status' },
@@ -355,6 +355,11 @@ const focusDocuments = (status) => {
                         <a-typography-text v-else type="secondary" class="kc-signature-pending">Belum ditandatangani</a-typography-text>
                     </template>
                     <template v-else-if="column.key === 'signature' && record._documentType === 'ba'">
+                        <a-typography-text :type="record.status === 'approved' ? 'success' : 'secondary'" :class="record.status === 'approved' ? '' : 'kc-signature-pending'">
+                            {{ record.status === 'approved' ? 'Sudah ditandatangani' : 'Belum ditandatangani' }}
+                        </a-typography-text>
+                    </template>
+                    <template v-else-if="column.key === 'signature' && isFormPengajuan(record)">
                         <a-typography-text :type="record.status === 'approved' ? 'success' : 'secondary'" :class="record.status === 'approved' ? '' : 'kc-signature-pending'">
                             {{ record.status === 'approved' ? 'Sudah ditandatangani' : 'Belum ditandatangani' }}
                         </a-typography-text>

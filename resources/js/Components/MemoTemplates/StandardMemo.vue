@@ -239,7 +239,7 @@ const signatureGridStyle = computed(() => {
             <p class="relative -top-1 w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold text-gray-800 leading-tight">Kepala Cabang</p>
         </div>
         <div class="flex min-w-0 flex-col items-center text-center">
-            <p class="mb-1">Diketahui Oleh,</p>
+            <p class="mb-1">Disetujui Oleh,</p>
             <div class="h-16 w-full flex items-end justify-center relative">
                 <template v-if="showAmSignature">
                     <img v-if="getApprovedSignature()" :src="'/storage/' + getApprovedSignature().signature_image" alt="Tanda Tangan AM" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />

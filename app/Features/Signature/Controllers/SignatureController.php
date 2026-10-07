@@ -87,7 +87,7 @@ class SignatureController extends Controller
         $template->update([
             'signature_schema' => collect([
                 ['label' => 'Dibuat oleh,', 'role' => 'Kepala Cabang', 'location' => 'document'],
-                ['label' => 'Diketahui oleh,', 'role' => 'Area Manager', 'location' => 'document'],
+                ['label' => 'Disetujui oleh,', 'role' => 'Area Manager', 'location' => 'document'],
             ])->concat($additionalSlots)
                 ->map(fn ($slot) => [
                     'name' => $slot['name'] ?? '',

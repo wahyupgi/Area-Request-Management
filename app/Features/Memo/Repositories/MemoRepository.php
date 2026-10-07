@@ -12,8 +12,8 @@ class MemoRepository
     public function listForUser(User $user, ?string $status = null, int $perPage = 15): LengthAwarePaginator
     {
         return Memo::query()
-            ->select(['id', 'code', 'template_id', 'title', 'status', 'created_at', 'updated_at'])
-            ->with(['template:id,name'])
+            ->select(['id', 'code', 'template_id', 'branch_id', 'title', 'status', 'created_at', 'updated_at'])
+            ->with(['template:id,name', 'branch:id,name'])
             ->forUser($user)
             ->filterByStatus($status)
             ->orderByDesc('updated_at')

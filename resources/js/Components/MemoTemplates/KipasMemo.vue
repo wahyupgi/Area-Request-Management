@@ -47,7 +47,7 @@ const signatures = computed(() => {
 
     return [
         normalizeSlot(configuredKc, creatorSig),
-        normalizeSlot(configuredAm, amSig),
+        { ...normalizeSlot(configuredAm, amSig), label: 'Disetujui Oleh,' },
         ...additionalSlots.map((slot) => normalizeSlot(slot, {
             displayName: '',
             displayRole: '',

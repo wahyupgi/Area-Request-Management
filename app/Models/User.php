@@ -90,10 +90,10 @@ class User extends Authenticatable
 
     public function areaManagerForBranch(Branch $branch): ?self
     {
-        return self::query()
-            ->where('role', 'AM')
-            ->where('area_id', $branch->area_id)
-            ->first();
+        $areaManagers = self::query()->where('role', 'AM');
+
+        return (clone $areaManagers)->where('area_id', $branch->area_id)->first()
+            ?? $areaManagers->orderBy('id')->first();
     }
 
     public function areaManagerForApproval(): ?self

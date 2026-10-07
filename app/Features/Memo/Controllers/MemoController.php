@@ -167,6 +167,10 @@ class MemoController extends Controller
             return back()->withErrors($errors);
         }
 
+        if (!$memo->area_manager_id && $memo->branch) {
+            $memo->update(['area_manager_id' => $user->areaManagerForBranch($memo->branch)?->id]);
+        }
+
         if (!$memo->area_manager_id) {
             return back()->withErrors(['area_manager' => 'Area Manager belum tersedia untuk area ini.']);
         }
@@ -179,7 +183,7 @@ class MemoController extends Controller
 
         $this->service->submitMemo($memo);
 
-        return redirect()->route('memos.show', $memo->id)
+        return redirect()->route('memos.index')
             ->with('success', 'Memo berhasil disubmit ke Area Manager.');
     }
 
