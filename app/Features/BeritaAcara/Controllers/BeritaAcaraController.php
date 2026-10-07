@@ -4,7 +4,9 @@ namespace App\Features\BeritaAcara\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\BeritaAcara;
+use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class BeritaAcaraController extends Controller
@@ -14,7 +16,13 @@ class BeritaAcaraController extends Controller
      */
     public function create()
     {
-        return Inertia::render('BeritaAcara/Create');
+        return Inertia::render('BeritaAcara/Create', [
+            'branches' => auth()->user()
+                ->availableBranchesForDocuments()
+                ->with('area:id,name')
+                ->orderBy('name')
+                ->get(['branches.id', 'branches.name', 'branches.area_id']),
+        ]);
     }
 
     /**
@@ -23,7 +31,9 @@ class BeritaAcaraController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
+        $branchIds = $user->availableBranchesForDocuments()->pluck('branches.id')->all();
         $validated = $request->validate([
+            'branch_id'             => ['required', 'integer', Rule::exists('branches', 'id')->whereIn('id', $branchIds)],
             'meta.template'         => 'required|in:permohonan_biaya_kost,revisi_absensi,penghapusan_barang_sitaan,lainnya',
             'meta.data'             => 'nullable|array',
             'meta.data.rows'        => 'nullable|array',
@@ -57,6 +67,7 @@ class BeritaAcaraController extends Controller
             $attachmentName = $file->getClientOriginalName();
         }
 
+        $branch = Branch::findOrFail($validated['branch_id']);
         $ba = BeritaAcara::create([
             'title'               => $validated['title'],
             'meta'                => $validated['meta'] ?? [],
@@ -66,9 +77,9 @@ class BeritaAcaraController extends Controller
             'penutup'             => $validated['penutup'] ?? null,
             'attachment_path'     => $attachmentPath,
             'attachment_name'     => $attachmentName,
-            'branch_id'           => null,
+            'branch_id'           => $branch->id,
             'created_by'          => $user->id,
-            'area_manager_id'     => $user->areaManagerForApproval()?->id,
+            'area_manager_id'     => $user->areaManagerForBranch($branch)?->id,
             'status'              => BeritaAcara::STATUS_DRAFT,
         ]);
 

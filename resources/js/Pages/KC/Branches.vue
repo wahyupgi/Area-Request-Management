@@ -89,7 +89,6 @@ const columns = [
                         <div class="kc-branches-toolbar">
                             <a-input-search v-model:value="searchQuery" placeholder="Cari nama cabang..." allow-clear />
                             <a-button type="primary" :loading="form.processing" :disabled="!area" @click="save">
-                                <template #icon><CheckCircleOutlined /></template>
                                 Simpan Perubahan
                             </a-button>
                         </div>

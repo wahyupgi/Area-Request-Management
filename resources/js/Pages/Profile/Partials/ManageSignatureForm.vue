@@ -117,10 +117,6 @@ const remove = () => {
                 </a-col>
             </a-row>
 
-            <a-form-item label="Nomor Sertifikat (opsional)" :validate-status="form.errors.certificate_no ? 'error' : ''" :help="form.errors.certificate_no">
-                <a-input v-model:value="form.certificate_no" placeholder="Contoh: CERT-JKT-001" />
-            </a-form-item>
-
             <a-button
                 type="primary"
                 html-type="button"
@@ -129,7 +125,6 @@ const remove = () => {
                 :disabled="!form.signature_image"
                 @click="save"
             >
-                <template #icon><SaveOutlined /></template>
                 Simpan Tanda Tangan
             </a-button>
         </a-form>

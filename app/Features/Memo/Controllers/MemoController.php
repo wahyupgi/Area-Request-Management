@@ -51,6 +51,11 @@ class MemoController extends Controller
 
         return Inertia::render('Memo/Create', [
             'templates' => $templates,
+            'branches' => auth()->user()
+                ->availableBranchesForDocuments()
+                ->with('area:id,name')
+                ->orderBy('name')
+                ->get(['branches.id', 'branches.name', 'branches.area_id']),
         ]);
     }
 

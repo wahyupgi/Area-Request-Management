@@ -8,6 +8,7 @@ import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-d
 
 const props = defineProps({
     formPengajuanOnly: { type: Boolean, default: false },
+    branches: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -48,6 +49,7 @@ const salaryAfterApproval = requestAmountModel('salary_after_approval');
 const minimumSalary = requestAmountModel('minimum_salary');
 
 const form = useForm({
+    branch_id: undefined,
     title: '',
     meta: {
         template: undefined,
@@ -244,6 +246,7 @@ const submit = () => {
     form.transform(data => props.formPengajuanOnly
         ? ({
             title: documentLabels[data.meta.template],
+            branch_id: data.branch_id,
             template: data.meta.template,
             meta: { request_data: data.meta.request_data },
             submit: false,
@@ -263,6 +266,7 @@ const submitAndSign = () => {
         form.submit_after_save = true;
         form.transform(data => ({
             title: documentLabels[data.meta.template],
+            branch_id: data.branch_id,
             template: data.meta.template,
             meta: { request_data: data.meta.request_data },
             submit: true,
@@ -287,8 +291,21 @@ const submitAndSign = () => {
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
-                <h2 class="text-lg font-semibold mb-2">{{ formPengajuanOnly ? 'Pilih Template Form Pengajuan' : 'Pilih Template Berita Acara' }}</h2>
+                <h2 class="text-lg font-semibold mb-2">{{ formPengajuanOnly ? 'Pilih Cabang dan Jenis Form Pengajuan' : 'Pilih Cabang dan Jenis Berita Acara' }}</h2>
                 <a-form-item
+                    label="Cabang"
+                    :validateStatus="form.errors.branch_id ? 'error' : ''"
+                    :help="form.errors.branch_id"
+                >
+                    <a-select
+                        v-model:value="form.branch_id"
+                        placeholder="Pilih cabang"
+                        :options="branches.map(branch => ({ value: branch.id, label: branch.area?.name ? `${branch.name} — ${branch.area.name}` : branch.name }))"
+                        size="large"
+                    />
+                </a-form-item>
+                <a-form-item
+                    :label="formPengajuanOnly ? 'Jenis Form Pengajuan' : 'Jenis Berita Acara'"
                     :validateStatus="form.errors['meta.template'] ? 'error' : ''"
                     :help="form.errors['meta.template']"
                     class="mb-0"

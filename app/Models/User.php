@@ -71,6 +71,31 @@ class User extends Authenticatable
         });
     }
 
+    public function availableBranchesForDocuments()
+    {
+        if ($this->isKC()) {
+            return $this->assignedBranches();
+        }
+
+        if ($this->isAM() && $this->area_id) {
+            return Branch::query()->where('area_id', $this->area_id);
+        }
+
+        if ($this->isAdmin()) {
+            return Branch::query();
+        }
+
+        return Branch::query()->whereRaw('1 = 0');
+    }
+
+    public function areaManagerForBranch(Branch $branch): ?self
+    {
+        return self::query()
+            ->where('role', 'AM')
+            ->where('area_id', $branch->area_id)
+            ->first();
+    }
+
     public function areaManagerForApproval(): ?self
     {
         $areaId = $this->area_id;

@@ -21,6 +21,7 @@ class BlankMemoTest extends TestCase
         $user = User::factory()->create(['role' => 'KC', 'branch_id' => $branch->id]);
 
         $response = $this->actingAs($user)->post(route('memos.store'), [
+            'branch_id' => $branch->id,
             'template_id' => null,
             'title' => 'Memo Bebas',
             'field_values' => [
@@ -35,6 +36,7 @@ class BlankMemoTest extends TestCase
         $memo = Memo::where('title', 'Memo Bebas')->firstOrFail();
 
         $this->assertNull($memo->template_id);
+        $this->assertSame($branch->id, $memo->branch_id);
         $this->assertSame([], app(MemoService::class)->validateRequiredFields($memo));
     }
 }

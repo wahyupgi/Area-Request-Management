@@ -154,7 +154,6 @@ const submit = () => {
 
                 <div class="flex justify-end">
                     <a-button type="primary" html-type="submit" :loading="form.processing" size="large">
-                        <template #icon><SaveOutlined /></template>
                         {{ isEdit ? 'Simpan Perubahan' : 'Buat Template' }}
                     </a-button>
                 </div>

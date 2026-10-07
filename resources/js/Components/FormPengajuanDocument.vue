@@ -31,6 +31,15 @@ const formatRupiahAmount = (value) => {
 };
 
 const areaManagerName = computed(() => (props.beritaAcara.areaManager?.name || props.beritaAcara.area_manager?.name || '').trim());
+const areaName = computed(() => props.beritaAcara.creator?.area?.name
+    || props.beritaAcara.branch?.area?.name
+    || props.beritaAcara.areaManager?.area?.name
+    || props.beritaAcara.area_manager?.area?.name
+    || '');
+const areaManagerSignatureName = computed(() => {
+    const name = areaManagerName.value.replace(/^Bpk\.\s*/i, '').split(/\s+/)[0];
+    return name ? `Bpk. ${name}` : '';
+});
 
 const creatorSignature = computed(() => props.beritaAcara.creator?.digital_signature?.signature_image);
 const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_signature?.signature_image
@@ -71,25 +80,40 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
             </table>
             <div class="request-band">Tanggapan MANAJEMEN</div>
             <div class="request-response"></div>
-            <div class="request-band">Kolom Persetujuan</div>
-            <div class="request-date">{{ formatDate(beritaAcara.created_at) }}</div>
-            <table class="request-signatures">
-                <thead><tr><th>PEMOHON</th><th>MENGETAHUI<br />ATASAN PEMOHON</th><th>DIPERIKSA<br />HRD</th><th>MENYETUJUI</th></tr></thead>
-                <tbody>
-                    <tr class="request-signature-images">
-                        <td><img v-if="creatorSignature" :src="`/storage/${creatorSignature}`" alt="Tanda tangan pemohon" /></td>
-                        <td><img v-if="beritaAcara.status === 'approved' && managerSignature" :src="`/storage/${managerSignature}`" alt="Tanda tangan atasan" /></td>
-                        <td></td><td></td>
-                    </tr>
-                    <tr class="request-signature-names">
-                        <td><span>{{ data.full_name || beritaAcara.creator?.name || '-' }}</span><strong>{{ data.position || 'Kepala Cabang' }}</strong></td>
-                        <td><span>{{ areaManagerName }}</span><strong>Manager</strong></td>
-                        <td><span>NAMA</span><strong>JABATAN</strong></td>
-                        <td><span>Nama Penyetuju</span><strong>Jabatan</strong></td>
-                    </tr>
-                    <tr class="request-signature-dates"><td>Tanggal: {{ formatDate(beritaAcara.created_at) }}</td><td>Tanggal:</td><td>Tanggal:</td><td>Tanggal:</td></tr>
-                </tbody>
-            </table>
+            <div class="request-approval">
+                <div class="request-band">Kolom Persetujuan</div>
+                <div class="request-date">{{ areaName }}{{ areaName ? ', ' : '' }}{{ formatDate(beritaAcara.created_at) }}</div>
+                <div class="request-signatures">
+                    <div class="request-signature">
+                        <div class="request-signature-label">PEMOHON</div>
+                        <div class="request-signature-image"><img v-if="creatorSignature" :src="`/storage/${creatorSignature}`" alt="Tanda tangan pemohon" /></div>
+                        <div class="request-signature-name">{{ data.full_name || beritaAcara.creator?.name || '-' }}</div>
+                        <div class="request-signature-role">{{ data.position || 'Kepala Cabang' }}</div>
+                        <div class="request-signature-date">Tanggal: {{ formatDate(beritaAcara.created_at) }}</div>
+                    </div>
+                    <div class="request-signature">
+                        <div class="request-signature-label">MENGETAHUI<br />ATASAN PEMOHON</div>
+                        <div class="request-signature-image"><img v-if="beritaAcara.status === 'approved' && managerSignature" :src="`/storage/${managerSignature}`" alt="Tanda tangan atasan" /></div>
+                        <div class="request-signature-name">{{ areaManagerSignatureName }}</div>
+                        <div class="request-signature-role">Manager</div>
+                        <div class="request-signature-date">Tanggal:</div>
+                    </div>
+                    <div class="request-signature">
+                        <div class="request-signature-label">DIPERIKSA<br />HRD</div>
+                        <div class="request-signature-image"></div>
+                        <div class="request-signature-name">NAMA</div>
+                        <div class="request-signature-role">JABATAN</div>
+                        <div class="request-signature-date">Tanggal:</div>
+                    </div>
+                    <div class="request-signature">
+                        <div class="request-signature-label">MENYETUJUI</div>
+                        <div class="request-signature-image"></div>
+                        <div class="request-signature-name">Nama Penyetuju</div>
+                        <div class="request-signature-role">Jabatan</div>
+                        <div class="request-signature-date">Tanggal:</div>
+                    </div>
+                </div>
+            </div>
         </template>
 
         <template v-else>
@@ -145,11 +169,20 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
     background: #fff;
     color: #111;
     border: 1px solid #d1d5db;
-    font: 11px Arial, sans-serif;
+    font: 11px Tahoma, sans-serif;
 }
 .request-title { padding: 18mm 0 8mm; text-align: center; font-size: 19px; font-weight: 700; }
-.request-band { padding: 4px; border: 1px solid #222; background: #c6d9f1; text-align: center; font-weight: 700; }
-.request-table, .request-signatures, .fitmk-header, .fitmk-details, .fitmk-contact, .fitmk-approval { width: 100%; border-collapse: collapse; }
+.request-band {
+    padding: 4px;
+    border: 1px solid #000;
+    background: #1f497d;
+    color: #fff;
+    text-align: center;
+    font-weight: 700;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.request-table, .fitmk-header, .fitmk-details, .fitmk-contact, .fitmk-approval { width: 100%; border-collapse: collapse; }
 .request-table th, .request-table td, .fitmk-header td, .fitmk-contact td, .fitmk-contact th { border: 1px solid #222; padding: 3px 5px; text-align: left; }
 .request-table th { width: 36%; }
 .request-table td { font-weight: 600; }
@@ -159,21 +192,23 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
 .request-large-row th, .request-large-row td { height: 85px; }
 .request-large-row td { vertical-align: middle; white-space: pre-wrap; }
 .request-response { height: 35mm; border: 1px solid #222; }
-.request-date { padding: 14px 0 8px; }
-.request-signatures { table-layout: fixed; text-align: center; }
-.request-signatures th, .request-signatures td { width: 25%; padding: 5px 3px; }
-.request-signatures th { height: 40px; }
-.request-signatures th, .fitmk-approval th {
+.request-approval { border: 1px solid #222; }
+.request-approval .request-band { margin: -1px -1px 0; }
+.request-date { padding: 14px 10px 8px; text-align: left; font-weight: 700; }
+.request-signatures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; }
+.request-signature { min-width: 0; padding: 5px 3px; }
+.request-signature-label { min-height: 38px; font-weight: 700; }
+.request-signature-image { height: 58px; display: flex; align-items: flex-end; justify-content: center; }
+.request-signature-image img { display: block; max-width: 90%; max-height: 52px; object-fit: contain; }
+.request-signature-name { display: flex; align-items: flex-end; justify-content: center; width: 80%; min-height: 19px; margin: 0 auto 2px; padding-bottom: 1px; border-bottom: 1px solid #8bb2f5; font-weight: 700; line-height: 1; }
+.request-signature-role { font-weight: 400; }
+.fitmk-approval th {
     background: #1f497d;
     color: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
-.request-signature-images td { height: 58px; vertical-align: bottom; }
-.request-signature-images img { display: block; max-width: 90%; max-height: 52px; margin: 0 auto; object-fit: contain; }
-.request-signature-names span { display: block; width: 80%; margin: 0 auto 2px; border-bottom: 1px solid #8bb2f5; font-weight: 700; }
-.request-signature-names strong { display: block; font-weight: 400; }
-.request-signature-dates td { padding-top: 20px; text-align: left; }
+.request-signature-date { padding-top: 20px; text-align: left; }
 .fitmk-header { table-layout: fixed; margin-top: 12mm; }
 .fitmk-header td { height: 19mm; text-align: center; }
 .fitmk-logo { width: 25%; }

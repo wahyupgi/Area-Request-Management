@@ -318,7 +318,6 @@ const deleteMemo = async () => {
 
                             <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
                                 <a-button size="large" type="default" class="memo-save-draft-button" @click="save" :loading="form.processing && !showSignatureDialog">
-                                    <template #icon><save-outlined /></template>
                                     Simpan Perubahan
                                 </a-button>
                                 <a-button size="large" type="primary" @click="submitMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
@@ -353,7 +352,6 @@ const deleteMemo = async () => {
 
                             <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
                                 <a-button size="large" type="default" class="memo-save-draft-button" @click="save" :loading="form.processing && !showSignatureDialog">
-                                    <template #icon><save-outlined /></template>
                                     Simpan Perubahan
                                 </a-button>
                                 <a-button size="large" type="primary" @click="submitMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">

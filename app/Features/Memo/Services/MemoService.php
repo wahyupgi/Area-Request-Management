@@ -7,6 +7,7 @@ use App\Models\Memo;
 use App\Models\MemoAttachment;
 use App\Models\Notification;
 use App\Models\User;
+use App\Models\Branch;
 use App\Mail\MemoSubmitted;
 use Illuminate\Mail\Mailable;
 use Illuminate\Http\Request;
@@ -26,15 +27,16 @@ class MemoService
     public function createDraft(Request $request): Memo
     {
         $user = auth()->user();
+        $branch = Branch::findOrFail($request->branch_id);
 
         $memoData = [
             'code' => null,
             'template_id' => $request->template_id,
             'title' => $request->title,
             'field_values' => $request->field_values ?? [],
-            'branch_id' => null,
+            'branch_id' => $branch->id,
             'created_by' => $user->id,
-            'area_manager_id' => $user->areaManagerForApproval()?->id,
+            'area_manager_id' => $user->areaManagerForBranch($branch)?->id,
             'status' => 'draft',
         ];
 

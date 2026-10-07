@@ -11,13 +11,14 @@ import {
     SendOutlined
 } from '@ant-design/icons-vue';
 
-const props = defineProps({ templates: Array });
+const props = defineProps({ templates: Array, branches: Array });
 
 const blankTemplateValue = '__blank__';
 const defaultClosing = 'Demikian Internal Memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
 
 const form = useForm({
     code: null,
+    branch_id: undefined,
     template_id: undefined,
     title: '',
     field_values: {
@@ -185,9 +186,22 @@ const submitAndSign = () => {
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
             <!-- Template Selection -->
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
-                <h2 class="text-lg font-semibold mb-2">Pilih Template Memo</h2>
+                <h2 class="text-lg font-semibold mb-2">Pilih Cabang dan Jenis Memo</h2>
                 <p class="text-gray-500 text-sm mb-4">Pilih kategori dan template memo sesuai kebutuhan pengajuan cabang.</p>
+                <a-form-item
+                    label="Cabang"
+                    :validateStatus="form.errors.branch_id ? 'error' : ''"
+                    :help="form.errors.branch_id"
+                >
+                    <a-select
+                        v-model:value="form.branch_id"
+                        placeholder="Pilih cabang"
+                        :options="(branches || []).map(branch => ({ value: branch.id, label: branch.area?.name ? `${branch.name} — ${branch.area.name}` : branch.name }))"
+                        size="large"
+                    />
+                </a-form-item>
                 <a-form-item 
+                    label="Jenis Memo"
                     :validateStatus="form.errors.template_id ? 'error' : ''" 
                     :help="form.errors.template_id"
                 >

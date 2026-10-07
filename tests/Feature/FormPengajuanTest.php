@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Area;
 use App\Models\BeritaAcara;
+use App\Models\Branch;
 use App\Models\FormPengajuan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,9 +21,14 @@ class FormPengajuanTest extends TestCase
             'role' => 'AM',
             'area_id' => $area->id,
         ]);
+        $branch = Branch::create([
+            'name' => 'Cabang Form Pengajuan',
+            'area_id' => $area->id,
+        ]);
         $kc = User::factory()->create([
             'role' => 'KC',
             'area_id' => $area->id,
+            'branch_id' => $branch->id,
         ]);
 
         $forms = [
@@ -55,6 +61,7 @@ class FormPengajuanTest extends TestCase
         foreach ($forms as $form) {
             $this->actingAs($kc)
                 ->post(route('form-pengajuan.store'), [
+                    'branch_id' => $branch->id,
                     'template' => $form['template'],
                     'meta' => ['request_data' => $form['request_data']],
                     'submit' => true,
@@ -64,6 +71,7 @@ class FormPengajuanTest extends TestCase
             $document = FormPengajuan::query()->latest('id')->firstOrFail();
 
             $this->assertSame($form['template'], $document->template);
+            $this->assertSame($branch->id, $document->branch_id);
             $this->assertStringStartsWith('FP/RBO/BRL/PGI/', $document->code);
             $this->assertSame(FormPengajuan::STATUS_SUBMITTED, $document->status);
             $this->assertNull($document->branch_id);
@@ -87,9 +95,15 @@ class FormPengajuanTest extends TestCase
             'role' => 'KC',
             'area_id' => $area->id,
         ]);
+        $branch = Branch::create([
+            'name' => 'Cabang BA Terpisah',
+            'area_id' => $area->id,
+            'kc_user_id' => $kc->id,
+        ]);
 
         $this->actingAs($kc)
             ->post(route('berita-acara.store'), [
+                'branch_id' => $branch->id,
                 'title' => 'Berita Acara Terpisah',
                 'meta' => [
                     'template' => 'lainnya',
@@ -103,7 +117,7 @@ class FormPengajuanTest extends TestCase
         $this->assertDatabaseCount('form_pengajuans', 0);
         $this->assertDatabaseHas('berita_acaras', [
             'title' => 'Berita Acara Terpisah',
-            'branch_id' => null,
+            'branch_id' => $branch->id,
             'area_manager_id' => $areaManager->id,
         ]);
     }

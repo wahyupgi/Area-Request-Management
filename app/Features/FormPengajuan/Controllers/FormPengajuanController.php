@@ -3,6 +3,7 @@
 namespace App\Features\FormPengajuan\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\FormPengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,18 +15,25 @@ class FormPengajuanController extends Controller
     {
         return Inertia::render('BeritaAcara/Create', [
             'formPengajuanOnly' => true,
+            'branches' => auth()->user()
+                ->availableBranchesForDocuments()
+                ->with('area:id,name')
+                ->orderBy('name')
+                ->get(['branches.id', 'branches.name', 'branches.area_id']),
         ]);
     }
 
     public function store(Request $request)
     {
         $user = auth()->user();
+        $branchIds = $user->availableBranchesForDocuments()->pluck('branches.id')->all();
         $template = $request->input('template');
         $isSubmit = $request->boolean('submit');
         $required = Rule::requiredIf($isSubmit);
         $requiredForLoan = Rule::requiredIf($isSubmit && $template === 'form_permohonan_pinjaman');
         $requiredForLeave = Rule::requiredIf($isSubmit && $template === 'form_ijin_tidak_masuk_kerja');
         $validated = $request->validate([
+            'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->whereIn('id', $branchIds)],
             'template' => ['required', Rule::in(FormPengajuan::TEMPLATES)],
             'meta.request_data' => 'nullable|array:full_name,position,work_location,employment_date,late_months,absence_months,request_number,salary_after_approval,minimum_salary,loan_amount,repayment_months,salary_deduction,loan_type,leave_type,start_date,duration,reason,handover,substitute,phone',
             'meta.request_data.full_name' => [$required, 'nullable', 'string', 'max:255'],
@@ -53,6 +61,7 @@ class FormPengajuanController extends Controller
         ]);
 
         $attachmentPath = $request->file('attachment')?->store('form-pengajuan-attachments', 'public');
+        $branch = Branch::findOrFail($validated['branch_id']);
         $templateLabels = [
             'form_permohonan_pinjaman' => 'Form Permohonan Pinjaman (FPP)',
             'form_ijin_tidak_masuk_kerja' => 'Form Ijin Tidak Masuk Kerja (FITMK)',
@@ -63,9 +72,9 @@ class FormPengajuanController extends Controller
             'data' => $validated['meta']['request_data'] ?? [],
             'attachment_path' => $attachmentPath,
             'attachment_name' => $request->file('attachment')?->getClientOriginalName(),
-            'branch_id' => null,
+            'branch_id' => $branch->id,
             'created_by' => $user->id,
-            'area_manager_id' => $user->areaManagerForApproval()?->id,
+            'area_manager_id' => $user->areaManagerForBranch($branch)?->id,
             'status' => $validated['submit'] ? FormPengajuan::STATUS_SUBMITTED : FormPengajuan::STATUS_DRAFT,
             'submitted_at' => $validated['submit'] ? now() : null,
         ]);
@@ -98,7 +107,7 @@ class FormPengajuanController extends Controller
             403
         );
 
-        $formPengajuan->load(['branch', 'creator.digitalSignature', 'areaManager.digitalSignature', 'approver.digitalSignature']);
+        $formPengajuan->load(['branch.area', 'creator.area', 'creator.digitalSignature', 'areaManager.area', 'areaManager.digitalSignature', 'approver.digitalSignature']);
 
         return Inertia::render('FormPengajuan/History', ['formPengajuan' => $formPengajuan]);
     }
@@ -106,7 +115,7 @@ class FormPengajuanController extends Controller
     public function review(FormPengajuan $formPengajuan)
     {
         abort_unless($formPengajuan->area_manager_id === auth()->id(), 403);
-        $formPengajuan->load(['branch', 'creator.digitalSignature', 'areaManager.digitalSignature']);
+        $formPengajuan->load(['branch.area', 'creator.area', 'creator.digitalSignature', 'areaManager.area', 'areaManager.digitalSignature']);
 
         return Inertia::render('FormPengajuan/Review', ['formPengajuan' => $formPengajuan]);
     }

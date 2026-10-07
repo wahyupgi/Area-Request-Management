@@ -146,7 +146,6 @@ const submit = () => {
 
                 <div class="flex justify-end">
                     <a-button type="primary" html-type="button" @click="submit" :loading="form.processing" size="large">
-                        <template #icon><SaveOutlined /></template>
                         Simpan Perubahan
                     </a-button>
                 </div>
