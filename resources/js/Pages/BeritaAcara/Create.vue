@@ -9,29 +9,14 @@ import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-d
 const props = defineProps({
     formPengajuanOnly: { type: Boolean, default: false },
     branches: { type: Array, default: () => [] },
+    templates: { type: Array, default: () => [] },
 });
 
 const page = usePage();
 const { success } = useSweetAlert();
-const documentLabels = {
-    form_permohonan_pinjaman: 'Form Permohonan Pinjaman (FPP)',
-    form_ijin_tidak_masuk_kerja: 'Form Ijin Tidak Masuk Kerja (FITMK)',
-};
-
-const beritaAcaraTemplates = [
-    { value: 'permohonan_biaya_kost', label: 'Permohonan Biaya Kost' },
-    { value: 'revisi_absensi', label: 'Permintaan Revisi Absensi' },
-    { value: 'penghapusan_barang_sitaan', label: 'Penghapusan Barang Sitaan' },
-    { value: 'lainnya', label: 'Lainnya' },
-];
-const formPengajuanTemplates = [
-    { value: 'form_permohonan_pinjaman', label: 'Form Permohonan Pinjaman (FPP)' },
-    { value: 'form_ijin_tidak_masuk_kerja', label: 'Form Ijin Tidak Masuk Kerja (FITMK)' },
-];
-const availableTemplates = computed(() => props.formPengajuanOnly
-    ? formPengajuanTemplates
-    : beritaAcaraTemplates
-);
+const availableTemplates = computed(() => {
+    return (props.templates || []).map(t => ({ value: t.name, label: t.name, templateData: t }));
+});
 
 const formatRupiahAmount = (value) => {
     const digits = String(value ?? '').replace(/\D/g, '');
@@ -76,31 +61,31 @@ const form = useForm({
     submit_after_save: false,
 });
 
-watch(() => form.meta.template, (template) => {
-    const selected = availableTemplates.value.find((item) => item.value === template);
+watch(() => form.meta.template, (templateName) => {
+    const selected = availableTemplates.value.find((item) => item.value === templateName);
     if (!selected) return;
 
-    form.title = selected.label;
-    form.meta.perihal = selected.label;
+    const t = selected.templateData;
+    form.title = t.name;
+    form.meta.perihal = t.document_defaults?.perihal || t.name;
     form.meta.data = { rows: [], kronologi: '' };
 
-    if (template === 'form_permohonan_pinjaman') {
-        form.meta.request_data = {
-            full_name: page.props.auth.user?.name || '',
-            position: '',
-            work_location: '',
-            employment_date: '',
-            late_months: '',
-            absence_months: '',
-            request_number: '',
-            salary_after_approval: '',
-            minimum_salary: '',
-            loan_amount: '',
-            repayment_months: '',
-            salary_deduction: 'Bersedia',
-            loan_type: 'pinjaman_uang',
-            reason: '',
-        };
+    if (t.type === 'form') {
+        const requestData = {};
+        (t.field_schema || []).forEach(field => {
+            if (field.key === 'full_name') requestData[field.key] = page.props.auth.user?.name || '';
+            else requestData[field.key] = '';
+        });
+        
+        if (t.name === 'Form Permohonan Pinjaman (FPP)') {
+            requestData.salary_deduction = 'Bersedia';
+            requestData.loan_type = 'pinjaman_uang';
+        } else if (t.name === 'Form Ijin Tidak Masuk Kerja (FITMK)') {
+            requestData.leave_type = 'cuti_tahunan';
+            requestData.substitute_position = '';
+        }
+        form.meta.request_data = requestData;
+        
         form.meta.direktorat = '';
         form.meta.divisi = '';
         form.meta.kepada_nama = '';
@@ -109,76 +94,31 @@ watch(() => form.meta.template, (template) => {
         form.rincian_data = [];
         form.keterangan_tambahan = '';
         form.penutup = '';
-    } else if (template === 'form_ijin_tidak_masuk_kerja') {
-        form.meta.request_data = {
-            full_name: page.props.auth.user?.name || '',
-            leave_type: 'cuti_tahunan',
-            start_date: '',
-            duration: '',
-            reason: '',
-            handover: '',
-            substitute: '',
-            phone: '',
-        };
-        form.meta.direktorat = '';
-        form.meta.divisi = '';
-        form.meta.kepada_nama = '';
-        form.meta.kepada_jabatan = '';
-        form.pengantar = '';
-        form.rincian_data = [];
-        form.keterangan_tambahan = '';
-        form.penutup = '';
-    } else if (template === 'permohonan_biaya_kost') {
-        form.meta.direktorat = 'Regional Branch Office';
-        form.meta.divisi = 'Branch Leader';
-        form.meta.kepada_nama = 'Bpk. Nugroho Samudra Sujatmiko, Ko';
-        form.meta.kepada_jabatan = 'Senior Executive Vice President Bisnis dan Operasional';
-        form.pengantar = 'Sehubungan dengan kondisi yang mengharuskan saya untuk tinggal di luar kota, maka dengan ini saya mengajukan permohonan biaya kost dengan data sebagai berikut:';
-        form.rincian_data = [
-            { label: 'Nama', value: '' },
-            { label: 'NIK', value: '' },
-            { label: 'Nama Pemilik', value: '' },
-            { label: 'Nama Kost', value: '' },
-            { label: 'No. Tlp', value: '' },
-            { label: 'Alamat Kost', value: '' },
-            { label: 'Biaya Kost', value: '' },
-        ];
-        form.keterangan_tambahan = 'Berdasarkan data tersebut, saya mengajukan permohonan agar biaya kost untuk bulan-bulan berikutnya dapat ditransfer sesuai ketentuan yang berlaku.';
-        form.penutup = 'Demikian internal memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Mohon dibantu pembayaran melalui rekening yang tertera. Terima kasih atas perhatian dan kerjasamanya.';
-    } else if (template === 'revisi_absensi') {
-        form.meta.direktorat = '';
-        form.meta.divisi = 'HRD';
-        form.meta.kepada_nama = 'Kepala Cabang';
-        form.meta.kepada_jabatan = 'HRD';
-        form.pengantar = 'Sehubungan dengan adanya kendala absensi, dengan ini kami mengajukan permohonan revisi absensi dengan data sebagai berikut:';
-        form.rincian_data = [];
-        form.meta.data.rows = [{ nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }];
-        form.keterangan_tambahan = '';
-        form.penutup = 'Demikian berita acara ini saya buat dengan sebenarnya. Terima kasih atas perhatian dan kerjasamanya, saya berharap dapat dibantu memakluminya.';
-    } else if (template === 'penghapusan_barang_sitaan') {
-        form.meta.direktorat = 'Regional Branch Office';
-        form.meta.divisi = 'Branch Leader';
-        form.meta.kepada_nama = 'Bpk. Nugroho Samudra Sujatmiko, Ko';
-        form.meta.kepada_jabatan = 'Senior Executive Vice President Bisnis dan Operasional';
-        form.pengantar = 'Sehubungan dengan adanya penyitaan barang gadai, bersama ini kami sampaikan data barang sebagai berikut:';
-        form.rincian_data = [];
-        form.meta.data.rows = [{ cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }];
-        form.keterangan_tambahan = '';
-        form.penutup = 'Demikian berita acara ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
     } else {
-        form.title = '';
-        form.meta.direktorat = '';
-        form.meta.divisi = '';
-        form.meta.perihal = '';
-        form.meta.lampiran = '';
-        form.meta.kepada_nama = '';
-        form.meta.kepada_jabatan = '';
-        form.meta.penyetuju_akhir = '';
-        form.meta.data.rows = [{ uraian: '', keterangan: '' }];
-        form.pengantar = '';
-        form.rincian_data = [];
-        form.keterangan_tambahan = '';
-        form.penutup = '';
+        form.meta.direktorat = t.document_defaults?.direktorat || '';
+        form.meta.divisi = t.document_defaults?.divisi || '';
+        form.meta.kepada_nama = t.document_defaults?.kepada || '';
+        form.meta.kepada_jabatan = t.document_defaults?.kepada_jabatan || '';
+        form.meta.lampiran = t.document_defaults?.lampiran || '';
+        form.pengantar = t.document_defaults?.pengantar || '';
+        form.meta.penyetuju_akhir = t.document_defaults?.penyetuju_akhir || '';
+        
+        if (t.name === 'Permintaan Revisi Absensi') {
+            form.rincian_data = [];
+            form.meta.data.rows = [{ nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }];
+        } else if (t.name === 'Penghapusan Barang Sitaan') {
+            form.rincian_data = [];
+            form.meta.data.rows = [{ cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }];
+        } else if (t.name === 'Berita Acara Lainnya') {
+            form.rincian_data = [];
+            form.meta.data.rows = [{ uraian: '', keterangan: '' }];
+        } else {
+            form.rincian_data = (t.field_schema || []).map(f => ({ label: f.label, value: '' }));
+            form.meta.data.rows = [];
+        }
+
+        form.keterangan_tambahan = t.document_defaults?.keterangan_tambahan || '';
+        form.penutup = t.document_defaults?.penutup || '';
     }
 });
 
@@ -195,9 +135,9 @@ const removeRincian = (index) => {
 };
 
 const addTemplateRow = () => {
-    const row = form.meta.template === 'revisi_absensi'
+    const row = form.meta.template === 'Permintaan Revisi Absensi'
         ? { nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }
-        : form.meta.template === 'penghapusan_barang_sitaan'
+        : form.meta.template === 'Penghapusan Barang Sitaan'
             ? { cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }
             : { uraian: '', keterangan: '' };
     form.meta.data.rows.push(row);
@@ -245,7 +185,7 @@ const submit = () => {
     form.submit_after_save = false;
     form.transform(data => props.formPengajuanOnly
         ? ({
-            title: documentLabels[data.meta.template],
+            title: data.title,
             branch_id: data.branch_id,
             template: data.meta.template,
             meta: { request_data: data.meta.request_data },
@@ -265,7 +205,7 @@ const submitAndSign = () => {
     if (props.formPengajuanOnly) {
         form.submit_after_save = true;
         form.transform(data => ({
-            title: documentLabels[data.meta.template],
+            title: data.title,
             branch_id: data.branch_id,
             template: data.meta.template,
             meta: { request_data: data.meta.request_data },
@@ -382,7 +322,7 @@ const submitAndSign = () => {
                     <div class="flex flex-col gap-6">
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <h2 class="text-sm font-semibold mb-4">{{ formPengajuanOnly ? 'Isi Form Pengajuan' : 'Isi Berita Acara' }}</h2>
-                            <template v-if="formPengajuanOnly && form.meta.template === 'form_permohonan_pinjaman'">
+                            <template v-if="formPengajuanOnly && form.meta.template === 'Form Permohonan Pinjaman (FPP)'">
                                 <a-alert class="mb-4" type="info" show-icon message="Form Permohonan Pinjaman (FPP)" description="Lengkapi data pemohon dan rincian pinjaman. Lampirkan bukti pendukung bila diperlukan." />
                                 <a-row :gutter="12">
                                     <a-col :xs="24" :md="12"><a-form-item label="Nama Lengkap" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']"><a-input v-model:value="form.meta.request_data.full_name" /></a-form-item></a-col>
@@ -401,7 +341,7 @@ const submitAndSign = () => {
                                     <a-col :span="24"><a-form-item label="Alasan Pinjaman" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']"><a-textarea v-model:value="form.meta.request_data.reason" :rows="4" /></a-form-item></a-col>
                                 </a-row>
                             </template>
-                            <template v-else-if="formPengajuanOnly && form.meta.template === 'form_ijin_tidak_masuk_kerja'">
+                            <template v-else-if="formPengajuanOnly && form.meta.template === 'Form Ijin Tidak Masuk Kerja (FITMK)'">
                                 <a-alert class="mb-4" type="info" show-icon message="Form Ijin Tidak Masuk Kerja (FITMK)" description="Isi detail ketidakhadiran dan serah terima pekerjaan." />
                                 <a-row :gutter="12">
                                     <a-col :xs="24" :md="12"><a-form-item label="Nama" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']"><a-input v-model:value="form.meta.request_data.full_name" /></a-form-item></a-col>
@@ -411,6 +351,7 @@ const submitAndSign = () => {
                                     <a-col :span="24"><a-form-item label="Alasan ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']"><a-textarea v-model:value="form.meta.request_data.reason" :rows="3" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Pekerjaan selama tidak masuk dilimpahkan ke"><a-input v-model:value="form.meta.request_data.handover" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Nama pengganti"><a-input v-model:value="form.meta.request_data.substitute" /></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12"><a-form-item label="Jabatan pengganti"><a-input v-model:value="form.meta.request_data.substitute_position" placeholder="Contoh: Kepala Unit" /></a-form-item></a-col>
                                     <a-col :span="24"><a-form-item label="Kontak selama tidak masuk kerja (Telepon / HP)"><a-input v-model:value="form.meta.request_data.phone" @keydown="restrictToDigits" @paste="preventNonDigitPaste" /></a-form-item></a-col>
                                 </a-row>
                             </template>
@@ -419,25 +360,41 @@ const submitAndSign = () => {
                                 <a-textarea v-model:value="form.pengantar" :rows="3" />
                             </a-form-item>
 
-                            <div v-if="form.meta.template === 'permohonan_biaya_kost'" class="border border-gray-200 rounded p-4 mb-4">
+                            <div v-if="!['Permintaan Revisi Absensi', 'Penghapusan Barang Sitaan', 'Berita Acara Lainnya'].includes(form.meta.template)" class="border border-gray-200 rounded p-4 mb-4">
                                 <h3 class="font-semibold text-sm mb-3">Data Rincian</h3>
-                                <div v-for="(item, index) in form.rincian_data" :key="index" class="flex gap-3 mb-2 items-center">
-                                    <a-input v-model:value="item.label" placeholder="Label (Misal: NIK)" style="width: 35%;" />
-                                    <span class="text-gray-400">:</span>
-                                    <a-input :value="formattedDetailValue(item)" placeholder="Isi Data" class="flex-1" @update:value="value => updateDetailValue(item, value)" @keydown="event => restrictDetailDigits(event, item.label)" @paste="event => preventNonDigitDetailPaste(event, item.label)" />
-                                    <a-button type="text" danger @click="removeRincian(index)" class="flex-shrink-0">
-                                        <template #icon><delete-outlined /></template>
+                                <template v-if="form.meta.template === 'template_1'">
+                                    <div v-for="(label, index) in ['Cabang', 'Faktur', 'Tujuan', 'Nominal']" :key="label" class="flex gap-3 mb-2 items-center">
+                                        <span class="w-[35%] flex-shrink-0">{{ label }}</span>
+                                        <span class="text-gray-400">:</span>
+                                        <a-input
+                                            :value="formattedDetailValue(form.rincian_data[index])"
+                                            placeholder="Isi Data"
+                                            class="flex-1"
+                                            @update:value="value => updateDetailValue(form.rincian_data[index], value)"
+                                            @keydown="event => restrictDetailDigits(event, label)"
+                                            @paste="event => preventNonDigitDetailPaste(event, label)"
+                                        />
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <div v-for="(item, index) in form.rincian_data" :key="index" class="flex gap-3 mb-2 items-center">
+                                        <a-input v-model:value="item.label" placeholder="Label (Misal: NIK)" style="width: 35%;" />
+                                        <span class="text-gray-400">:</span>
+                                        <a-input :value="formattedDetailValue(item)" placeholder="Isi Data" class="flex-1" @update:value="value => updateDetailValue(item, value)" @keydown="event => restrictDetailDigits(event, item.label)" @paste="event => preventNonDigitDetailPaste(event, item.label)" />
+                                        <a-button type="text" danger @click="removeRincian(index)" class="flex-shrink-0">
+                                            <template #icon><delete-outlined /></template>
+                                        </a-button>
+                                    </div>
+                                    <a-button type="dashed" block class="mt-2" @click="addRincian">
+                                        <template #icon><plus-outlined /></template>
+                                        Tambah Baris Data
                                     </a-button>
-                                </div>
-                                <a-button type="dashed" block class="mt-2" @click="addRincian">
-                                    <template #icon><plus-outlined /></template>
-                                    Tambah Baris Data
-                                </a-button>
+                                </template>
                             </div>
 
                             <div v-else class="border border-gray-200 rounded p-4 mb-4 overflow-x-auto">
-                                <h3 class="font-semibold text-sm mb-3">{{ form.meta.template === 'revisi_absensi' ? 'Data Absensi' : form.meta.template === 'penghapusan_barang_sitaan' ? 'Data Barang Sitaan' : 'Daftar Item' }}</h3>
-                                <template v-if="form.meta.template === 'lainnya'">
+                                <h3 class="font-semibold text-sm mb-3">{{ form.meta.template === 'Permintaan Revisi Absensi' ? 'Data Absensi' : form.meta.template === 'Penghapusan Barang Sitaan' ? 'Data Barang Sitaan' : 'Daftar Item' }}</h3>
+                                <template v-if="form.meta.template === 'Berita Acara Lainnya'">
                                     <table class="w-full min-w-[520px] border-collapse text-sm">
                                         <thead>
                                             <tr class="bg-gray-50">
@@ -473,7 +430,7 @@ const submitAndSign = () => {
                                             <template #icon><delete-outlined /></template>
                                         </a-button>
                                     </div>
-                                    <template v-if="form.meta.template === 'revisi_absensi'">
+                                    <template v-if="form.meta.template === 'Permintaan Revisi Absensi'">
                                         <a-row :gutter="8">
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nama" placeholder="Nama" class="mb-2" /></a-col>
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nik" placeholder="NIK" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="mb-2" /></a-col>
@@ -483,13 +440,40 @@ const submitAndSign = () => {
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.ket" placeholder="Keterangan" class="mb-2" /></a-col>
                                         </a-row>
                                     </template>
+                                    <template v-else-if="form.meta.template === 'Penghapusan Barang Sitaan'">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <span class="w-[35%] flex-shrink-0">Cabang</span>
+                                            <span class="text-gray-400">:</span>
+                                            <a-input v-model:value="row.cabang" placeholder="Isi Data" class="flex-1" />
+                                        </div>
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <span class="w-[35%] flex-shrink-0">Nama Nasabah</span>
+                                            <span class="text-gray-400">:</span>
+                                            <a-input v-model:value="row.nama_nasabah" placeholder="Isi Data" class="flex-1" />
+                                        </div>
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <span class="w-[35%] flex-shrink-0">No. Faktur</span>
+                                            <span class="text-gray-400">:</span>
+                                            <a-input v-model:value="row.no_faktur" placeholder="Isi Data" class="flex-1" />
+                                        </div>
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <span class="w-[35%] flex-shrink-0">Barang</span>
+                                            <span class="text-gray-400">:</span>
+                                            <a-input v-model:value="row.barang" placeholder="Isi Data" class="flex-1" />
+                                        </div>
+                                        <div class="flex items-center gap-3">
+                                            <span class="w-[35%] flex-shrink-0">Nominal Pinjaman</span>
+                                            <span class="text-gray-400">:</span>
+                                            <a-input-number v-model:value="row.nominal_pinjaman" :precision="0" :formatter="formatNominalInput" :parser="parseNominalInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" placeholder="Isi Data" class="flex-1 w-full" />
+                                        </div>
+                                    </template>
                                     <template v-else>
                                         <a-row :gutter="8">
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.cabang" placeholder="Cabang" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nama_nasabah" placeholder="Nama Nasabah" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.no_faktur" placeholder="No. Faktur" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="12"><a-input v-model:value="row.barang" placeholder="Barang" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="12"><a-input-number v-model:value="row.nominal_pinjaman" :precision="0" :formatter="formatNominalInput" :parser="parseNominalInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" placeholder="Nominal Pinjaman" class="mb-2 w-full" /></a-col>
+                                            <a-col :span="24"><a-input v-model:value="row.cabang" placeholder="Cabang" class="mb-2" /></a-col>
+                                            <a-col :span="24"><a-input v-model:value="row.nama_nasabah" placeholder="Nama Nasabah" class="mb-2" /></a-col>
+                                            <a-col :span="24"><a-input v-model:value="row.no_faktur" placeholder="No. Faktur" class="mb-2" /></a-col>
+                                            <a-col :span="24"><a-input v-model:value="row.barang" placeholder="Barang" class="mb-2" /></a-col>
+                                            <a-col :span="24"><a-input-number v-model:value="row.nominal_pinjaman" :precision="0" :formatter="formatNominalInput" :parser="parseNominalInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" placeholder="Nominal Pinjaman" class="mb-2 w-full" /></a-col>
                                         </a-row>
                                     </template>
                                 </div>
@@ -497,13 +481,13 @@ const submitAndSign = () => {
                                     <template #icon><plus-outlined /></template>
                                     Tambah Baris
                                 </a-button>
-                                <a-form-item v-if="form.meta.template === 'penghapusan_barang_sitaan'" label="Kronologi" class="mt-4 mb-0">
+                                <a-form-item v-if="form.meta.template === 'Penghapusan Barang Sitaan'" label="Kronologi" class="mt-4 mb-0">
                                     <a-textarea v-model:value="form.meta.data.kronologi" :rows="5" />
                                 </a-form-item>
                                 </template>
                             </div>
 
-                            <a-form-item v-if="form.meta.template !== 'penghapusan_barang_sitaan'" label="Keterangan Tambahan / Alasan" class="mb-4">
+                            <a-form-item v-if="form.meta.template !== 'Penghapusan Barang Sitaan'" label="Keterangan Tambahan / Alasan" class="mb-4">
                                 <a-textarea v-model:value="form.keterangan_tambahan" :rows="4" placeholder="Misal: Rincian pinalty, atau penjelasan lebih lanjut..." />
                             </a-form-item>
                             

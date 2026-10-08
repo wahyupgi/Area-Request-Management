@@ -20,6 +20,9 @@ class FormPengajuanController extends Controller
                 ->with('area:id,name')
                 ->orderBy('name')
                 ->get(['branches.id', 'branches.name', 'branches.area_id']),
+            'templates' => \App\Models\MemoTemplate::where('is_active', true)
+                ->where('type', 'form')
+                ->get(),
         ]);
     }
 
@@ -34,8 +37,8 @@ class FormPengajuanController extends Controller
         $requiredForLeave = Rule::requiredIf($isSubmit && $template === 'form_ijin_tidak_masuk_kerja');
         $validated = $request->validate([
             'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->whereIn('id', $branchIds)],
-            'template' => ['required', Rule::in(FormPengajuan::TEMPLATES)],
-            'meta.request_data' => 'nullable|array:full_name,position,work_location,employment_date,late_months,absence_months,request_number,salary_after_approval,minimum_salary,loan_amount,repayment_months,salary_deduction,loan_type,leave_type,start_date,duration,reason,handover,substitute,phone',
+            'template' => ['required', 'string'],
+            'meta.request_data' => 'nullable|array:full_name,position,work_location,employment_date,late_months,absence_months,request_number,salary_after_approval,minimum_salary,loan_amount,repayment_months,salary_deduction,loan_type,leave_type,start_date,duration,reason,handover,substitute,substitute_position,phone',
             'meta.request_data.full_name' => [$required, 'nullable', 'string', 'max:255'],
             'meta.request_data.position' => 'nullable|string|max:255',
             'meta.request_data.work_location' => 'nullable|string|max:255',
@@ -55,20 +58,18 @@ class FormPengajuanController extends Controller
             'meta.request_data.reason' => [$required, 'nullable', 'string', 'max:5000'],
             'meta.request_data.handover' => 'nullable|string|max:255',
             'meta.request_data.substitute' => 'nullable|string|max:255',
+            'meta.request_data.substitute_position' => 'nullable|string|max:255',
             'meta.request_data.phone' => 'nullable|string|max:100',
             'attachment' => 'nullable|file|mimes:doc,docx,pdf,jpg,jpeg,png|max:10240',
             'submit' => 'required|boolean',
+            'title' => 'required|string|max:500',
         ]);
 
         $attachmentPath = $request->file('attachment')?->store('form-pengajuan-attachments', 'public');
         $branch = Branch::findOrFail($validated['branch_id']);
-        $templateLabels = [
-            'form_permohonan_pinjaman' => 'Form Permohonan Pinjaman (FPP)',
-            'form_ijin_tidak_masuk_kerja' => 'Form Ijin Tidak Masuk Kerja (FITMK)',
-        ];
         $form = FormPengajuan::create([
             'template' => $validated['template'],
-            'title' => $templateLabels[$validated['template']],
+            'title' => $validated['title'],
             'data' => $validated['meta']['request_data'] ?? [],
             'attachment_path' => $attachmentPath,
             'attachment_name' => $request->file('attachment')?->getClientOriginalName(),

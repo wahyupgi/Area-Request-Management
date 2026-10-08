@@ -67,9 +67,9 @@ const userDisplayName = computed(() => {
     const chartPeriod = ref('year');
 
     const chartPeriodOptions = [
-        { label: 'Week', value: 'week' },
-        { label: 'Month', value: 'month' },
-        { label: 'Year', value: 'year' },
+        { label: 'Minggu', value: 'week' },
+        { label: 'Bulan', value: 'month' },
+        { label: 'Tahun', value: 'year' },
     ];
 
     const statusConfig = {
@@ -234,7 +234,7 @@ const chartBars = computed(() => chartPoints.value.map((point) => ({
     documents: [
         createDocumentBar(point.memo, 'Memo', 'M'),
         createDocumentBar(point.ba, 'Berita Acara', 'BA'),
-        createDocumentBar(point.formPengajuan, 'Form Pengajuan', 'FP'),
+        createDocumentBar(point.formPengajuan, 'Form', 'FP'),
     ],
 })));
 
@@ -303,9 +303,9 @@ const statusChartData = computed(() => [
                             <a-badge color="#4f6ee8" text="Disetujui" />
                             <a-badge color="#f2ac3d" text="Menunggu" />
                             <a-badge color="#28b886" text="Ditolak" />
-                            <a-tag color="blue">M · Memo</a-tag>
-                            <a-tag color="cyan">BA · Berita Acara</a-tag>
-                            <a-tag color="green">FP · Form Pengajuan</a-tag>
+                            <a-tag color="blue">Memo</a-tag>
+                            <a-tag color="cyan">BA</a-tag>
+                            <a-tag color="green">Form</a-tag>
                         </a-space>
                     </div>
                     <a-segmented v-model:value="chartPeriod" :options="chartPeriodOptions" aria-label="Periode grafik" />
@@ -376,7 +376,7 @@ const statusChartData = computed(() => [
                     </div>
                 </div>
 
-                <div class="dashboard-approval-footer">{{ pendingCount }} require your action</div>
+                <div class="dashboard-approval-footer">{{ pendingCount }} perlu tindakan</div>
             </a-card>
         </div>
 
@@ -396,7 +396,7 @@ const statusChartData = computed(() => [
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 border-b border-white/5 text-xs">
                         <div class="flex items-center gap-1.5">
                             <span class="text-slate-500">Jenis</span>
-                            <a-button v-for="type in [{ value: 'all', label: 'Semua' }, { value: 'memo', label: 'Memo' }, { value: 'ba', label: 'BA' }, { value: 'form_pengajuan', label: 'Form Pengajuan' }]" :key="type.value" size="small" :type="documentTypeFilter === type.value ? 'primary' : 'default'" @click="documentTypeFilter = type.value">{{ type.label }}</a-button>
+                            <a-button v-for="type in [{ value: 'all', label: 'Semua' }, { value: 'memo', label: 'Memo' }, { value: 'ba', label: 'BA' }, { value: 'form_pengajuan', label: 'Form' }]" :key="type.value" size="small" :type="documentTypeFilter === type.value ? 'primary' : 'default'" @click="documentTypeFilter = type.value">{{ type.label }}</a-button>
                         </div>
                         <div class="flex flex-wrap items-center gap-1.5">
                             <a-button size="small" :type="statusFilter === 'all' ? 'primary' : 'default'" @click="statusFilter = 'all'">Semua ({{ documents.length }})</a-button>

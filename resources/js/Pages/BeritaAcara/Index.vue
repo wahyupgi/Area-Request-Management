@@ -17,6 +17,7 @@ const filteredItems = computed(() => {
 const statusColors = { draft: 'default', submitted: 'processing', approved: 'success', rejected: 'error' };
 const statusLabels = { draft: 'Draft', submitted: 'Submitted', approved: 'Approved', rejected: 'Rejected' };
 const templateLabels = {
+    pengembalian_dana: 'Pengembalian Dana',
     permohonan_biaya_kost: 'Permohonan Biaya Kost',
     revisi_absensi: 'Permintaan Revisi Absensi',
     penghapusan_barang_sitaan: 'Penghapusan Barang Sitaan',
@@ -69,7 +70,7 @@ const columns = [
                         {{ record.branch?.name || '-' }}
                     </template>
                     <template v-else-if="column.key === 'template'">
-                        {{ templateLabels[record.meta?.template] || '-' }}
+                        {{ record.meta?.perihal || record.title || templateLabels[record.meta?.template] || '-' }}
                     </template>
                     <template v-else-if="column.key === 'status'">
                         <a-tag :color="statusColors[record.status]">{{ statusLabels[record.status] || record.status }}</a-tag>

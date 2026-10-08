@@ -43,14 +43,13 @@ class DatabaseSeeder extends Seeder
             'email' => 'devopss077@gmail.com',
             'password' => bcrypt('gibran123'),
             'role' => 'KC',
+            'area_id' => $area1->id,
         ]);
-        $branch1 = Branch::create([
+        Branch::create([
             'name' => 'SKT001',
             'area_id' => $area1->id,
             'kc_user_id' => $kc1->id,
         ]);
-        $kc1->update(['branch_id' => $branch1->id]);
-      
 
         // Create Digital Signature for AM
         DigitalSignature::create([
@@ -147,5 +146,7 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
             'created_by' => $admin->id,
         ]);
+
+        $this->call(DocumentTemplateSeeder::class);
     }
 }

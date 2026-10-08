@@ -1,9 +1,16 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import { PlusOutlined, EditOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({ templates: Array });
+
+const activeTab = ref('memo');
+
+const templatesMemo = computed(() => props.templates.filter(t => t.type === 'memo' || !t.type));
+const templatesBA = computed(() => props.templates.filter(t => t.type === 'ba'));
+const templatesForm = computed(() => props.templates.filter(t => t.type === 'form'));
 
 const toggleActive = (template) => {
     router.post(route('admin.templates.toggle', template.id));
@@ -31,49 +38,145 @@ const toggleActive = (template) => {
                     </Link>
                 </template>
 
-                <a-list :data-source="templates" item-layout="vertical" class="custom-dark-list">
-                    <template #renderItem="{ item }">
-                        <a-list-item class="border-b border-white/5 last:border-0 py-4">
-                            <template #actions>
-                                <a-button type="link" class="admin-action-button" :class="item.is_active ? 'admin-action-delete' : 'admin-action-success'" @click="toggleActive(item)">
-                                    <template #icon>
-                                        <CloseCircleOutlined v-if="item.is_active" />
-                                        <CheckCircleOutlined v-else />
+                <a-tabs v-model:activeKey="activeTab" class="custom-dark-tabs px-6">
+                    <a-tab-pane key="memo" :tab="`Memo (${templatesMemo.length})`">
+                        <a-list :data-source="templatesMemo" item-layout="vertical" class="custom-dark-list">
+                            <template #renderItem="{ item }">
+                                <a-list-item class="border-b border-white/5 last:border-0 py-4">
+                                    <template #actions>
+                                        <a-button type="link" class="admin-action-button" :class="item.is_active ? 'admin-action-delete' : 'admin-action-success'" @click="toggleActive(item)">
+                                            <template #icon>
+                                                <CloseCircleOutlined v-if="item.is_active" />
+                                                <CheckCircleOutlined v-else />
+                                            </template>
+                                            {{ item.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                        </a-button>
+                                        <Link :href="route('admin.templates.edit', item.id)">
+                                            <a-button type="link" class="admin-action-button admin-action-edit">
+                                                <template #icon><EditOutlined /></template>
+                                                Edit
+                                            </a-button>
+                                        </Link>
                                     </template>
-                                    {{ item.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                </a-button>
-                                <Link :href="route('admin.templates.edit', item.id)">
-                                    <a-button type="link" class="admin-action-button admin-action-edit">
-                                        <template #icon><EditOutlined /></template>
-                                        Edit
-                                    </a-button>
-                                </Link>
-                            </template>
 
-                            <a-list-item-meta>
-                                <template #title>
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-white font-semibold text-base">{{ item.name }}</span>
-                                        <a-tag v-if="item.category" color="blue">{{ item.category }}</a-tag>
-                                        <a-tag :color="item.is_active ? 'success' : 'error'">
-                                            {{ item.is_active ? 'Aktif' : 'Nonaktif' }}
+                                    <a-list-item-meta>
+                                        <template #title>
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-white font-semibold text-base">{{ item.name }}</span>
+                                                <a-tag v-if="item.category" color="blue">{{ item.category }}</a-tag>
+                                                <a-tag :color="item.is_active ? 'success' : 'error'">
+                                                    {{ item.is_active ? 'Aktif' : 'Nonaktif' }}
+                                                </a-tag>
+                                            </div>
+                                        </template>
+                                        <template #description>
+                                            <span class="text-slate-400">{{ item.field_schema?.length || 0 }} field · Dibuat oleh {{ item.creator?.name }}</span>
+                                        </template>
+                                    </a-list-item-meta>
+                                    
+                                    <div class="flex flex-wrap gap-2 mt-2">
+                                        <a-tag v-for="f in item.field_schema" :key="f.key" color="default" class="bg-slate-700/50 border-slate-600 text-slate-300">
+                                            {{ f.label }} <span class="text-slate-500">({{ f.type }})</span>
+                                            <span v-if="f.required" class="text-red-400 ml-1">*</span>
                                         </a-tag>
                                     </div>
-                                </template>
-                                <template #description>
-                                    <span class="text-slate-400">{{ item.field_schema?.length || 0 }} field · Dibuat oleh {{ item.creator?.name }}</span>
-                                </template>
-                            </a-list-item-meta>
-                            
-                            <div class="flex flex-wrap gap-2 mt-2">
-                                <a-tag v-for="f in item.field_schema" :key="f.key" color="default" class="bg-slate-700/50 border-slate-600 text-slate-300">
-                                    {{ f.label }} <span class="text-slate-500">({{ f.type }})</span>
-                                    <span v-if="f.required" class="text-red-400 ml-1">*</span>
-                                </a-tag>
-                            </div>
-                        </a-list-item>
-                    </template>
-                </a-list>
+                                </a-list-item>
+                            </template>
+                        </a-list>
+                    </a-tab-pane>
+
+                    <a-tab-pane key="ba" :tab="`Berita Acara (${templatesBA.length})`">
+                        <a-list :data-source="templatesBA" item-layout="vertical" class="custom-dark-list">
+                            <template #renderItem="{ item }">
+                                <a-list-item class="border-b border-white/5 last:border-0 py-4">
+                                    <template #actions>
+                                        <a-button type="link" class="admin-action-button" :class="item.is_active ? 'admin-action-delete' : 'admin-action-success'" @click="toggleActive(item)">
+                                            <template #icon>
+                                                <CloseCircleOutlined v-if="item.is_active" />
+                                                <CheckCircleOutlined v-else />
+                                            </template>
+                                            {{ item.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                        </a-button>
+                                        <Link :href="route('admin.templates.edit', item.id)">
+                                            <a-button type="link" class="admin-action-button admin-action-edit">
+                                                <template #icon><EditOutlined /></template>
+                                                Edit
+                                            </a-button>
+                                        </Link>
+                                    </template>
+
+                                    <a-list-item-meta>
+                                        <template #title>
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-white font-semibold text-base">{{ item.name }}</span>
+                                                <a-tag v-if="item.category" color="blue">{{ item.category }}</a-tag>
+                                                <a-tag :color="item.is_active ? 'success' : 'error'">
+                                                    {{ item.is_active ? 'Aktif' : 'Nonaktif' }}
+                                                </a-tag>
+                                            </div>
+                                        </template>
+                                        <template #description>
+                                            <span class="text-slate-400">{{ item.field_schema?.length || 0 }} field · Dibuat oleh {{ item.creator?.name }}</span>
+                                        </template>
+                                    </a-list-item-meta>
+                                    
+                                    <div class="flex flex-wrap gap-2 mt-2">
+                                        <a-tag v-for="f in item.field_schema" :key="f.key" color="default" class="bg-slate-700/50 border-slate-600 text-slate-300">
+                                            {{ f.label }} <span class="text-slate-500">({{ f.type }})</span>
+                                            <span v-if="f.required" class="text-red-400 ml-1">*</span>
+                                        </a-tag>
+                                    </div>
+                                </a-list-item>
+                            </template>
+                        </a-list>
+                    </a-tab-pane>
+
+                    <a-tab-pane key="form" :tab="`Form Pengajuan (${templatesForm.length})`">
+                        <a-list :data-source="templatesForm" item-layout="vertical" class="custom-dark-list">
+                            <template #renderItem="{ item }">
+                                <a-list-item class="border-b border-white/5 last:border-0 py-4">
+                                    <template #actions>
+                                        <a-button type="link" class="admin-action-button" :class="item.is_active ? 'admin-action-delete' : 'admin-action-success'" @click="toggleActive(item)">
+                                            <template #icon>
+                                                <CloseCircleOutlined v-if="item.is_active" />
+                                                <CheckCircleOutlined v-else />
+                                            </template>
+                                            {{ item.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                        </a-button>
+                                        <Link :href="route('admin.templates.edit', item.id)">
+                                            <a-button type="link" class="admin-action-button admin-action-edit">
+                                                <template #icon><EditOutlined /></template>
+                                                Edit
+                                            </a-button>
+                                        </Link>
+                                    </template>
+
+                                    <a-list-item-meta>
+                                        <template #title>
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-white font-semibold text-base">{{ item.name }}</span>
+                                                <a-tag v-if="item.category" color="blue">{{ item.category }}</a-tag>
+                                                <a-tag :color="item.is_active ? 'success' : 'error'">
+                                                    {{ item.is_active ? 'Aktif' : 'Nonaktif' }}
+                                                </a-tag>
+                                            </div>
+                                        </template>
+                                        <template #description>
+                                            <span class="text-slate-400">{{ item.field_schema?.length || 0 }} field · Dibuat oleh {{ item.creator?.name }}</span>
+                                        </template>
+                                    </a-list-item-meta>
+                                    
+                                    <div class="flex flex-wrap gap-2 mt-2">
+                                        <a-tag v-for="f in item.field_schema" :key="f.key" color="default" class="bg-slate-700/50 border-slate-600 text-slate-300">
+                                            {{ f.label }} <span class="text-slate-500">({{ f.type }})</span>
+                                            <span v-if="f.required" class="text-red-400 ml-1">*</span>
+                                        </a-tag>
+                                    </div>
+                                </a-list-item>
+                            </template>
+                        </a-list>
+                    </a-tab-pane>
+                </a-tabs>
             </a-card>
         </div>
     </AuthenticatedLayout>

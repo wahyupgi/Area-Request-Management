@@ -7,6 +7,7 @@ const props = defineProps({
 });
 
 const template = computed(() => props.beritaAcara.meta?.template || 'standard');
+const isTemplateOne = computed(() => ['template_1', 'pengembalian_dana', 'Pengembalian Dana'].includes(template.value));
 const isCostRequest = computed(() => template.value === 'permohonan_biaya_kost');
 const isAttendanceRevision = computed(() => template.value === 'revisi_absensi');
 const isSeizedGoods = computed(() => template.value === 'penghapusan_barang_sitaan');
@@ -27,7 +28,7 @@ const signatureSlots = computed(() => {
     if (isSeizedGoods.value) {
         slots.push({ name: 'Bpk. Yudha', role: 'Legal', user: null });
         slots.push({ name: executive?.name || finalApprover || 'Bpk. Nugroho Samudra Sujatmiko, Ko', role: 'Senior Executive Vice President Bisnis dan Operasional', user: executive });
-    } else if (isCostRequest.value) {
+    } else if (isCostRequest.value || isTemplateOne.value) {
         slots.push({ name: executive?.name || finalApprover || 'Bpk. Nugroho Samudra Sujatmiko, Ko', role: 'Senior Executive Vice President Bisnis dan Operasional', user: executive });
     } else {
         slots.push({ name: executive?.name || finalApprover || 'Bpk. Nugroho Samudra Sujatmiko, Ko', role: 'Senior Executive Vice President Bisnis dan Operasional', user: executive });
@@ -94,7 +95,7 @@ const formatCurrency = (value) => {
             <div class="flex items-center gap-3">
                 <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-14 h-14 object-contain" @error="handleImgError" />
             </div>
-            <div class="border border-black px-3 py-1 text-xs font-bold tracking-tight bg-white">
+            <div :class="isTemplateOne ? 'border border-gray-300 px-3 py-1 text-xs font-normal text-gray-300 bg-white' : 'border border-black px-3 py-1 text-xs font-bold tracking-tight bg-white'">
                 {{ beritaAcara.creator?.name }}
             </div>
         </div>
@@ -132,7 +133,7 @@ const formatCurrency = (value) => {
 
         <div class="text-xs mb-3 leading-normal text-justify">
             <p>{{ beritaAcara.pengantar }}</p>
-            <p v-if="!isSeizedGoods" class="mt-2">Dengan data sebagai berikut :</p>
+            <p v-if="!isSeizedGoods && !isTemplateOne" class="mt-2">Dengan data sebagai berikut :</p>
         </div>
 
         <table v-if="isOtherTemplate" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
@@ -190,7 +191,7 @@ const formatCurrency = (value) => {
             <p class="m-0 whitespace-pre-line">{{ beritaAcara.meta?.data?.kronologi }}</p>
         </div>
 
-        <div v-else-if="!isAttendanceRevision && !isOtherTemplate" class="grid grid-cols-[200px_20px_1fr] text-xs gap-y-0.5 mb-4">
+        <div v-else-if="!isAttendanceRevision && !isOtherTemplate" :class="isTemplateOne ? 'grid grid-cols-[75px_12px_1fr] text-xs gap-y-0.5 mb-4' : 'grid grid-cols-[200px_20px_1fr] text-xs gap-y-0.5 mb-4'">
             <template v-for="(item, idx) in beritaAcara.rincian_data" :key="idx">
                 <div>{{ item.label }}</div>
                 <div class="text-center">:</div>
@@ -248,7 +249,7 @@ const formatCurrency = (value) => {
             ></div>
         </div>
         <div class="flex justify-between text-[10px] font-medium pt-1 text-gray-800">
-            <span>{{ isSeizedGoods ? 'No. ' + beritaAcara.code : beritaAcara.code }}</span>
+            <span>{{ isTemplateOne || isSeizedGoods ? 'No. ' + beritaAcara.code : beritaAcara.code }}</span>
             <span>PT. PUSAT GADAI INDONESIA</span>
         </div>
     </div>

@@ -11,9 +11,17 @@ const leaveTypeLabels = {
     cuti_tahunan: 'Cuti Tahunan',
     ijin: 'Ijin (Belum Ada Hak Cuti)',
     cuti_melahirkan: 'Cuti Melahirkan',
-    cuti_khusus: 'Cuti Khusus (Menikah/Kematian/Hari Raya)',
     sakit: 'Sakit (Melampirkan Surat Dokter)',
+    cuti_khusus: 'Cuti Khusus (Menikah/Kematian/Hari Raya)',
     lainnya: 'Lainnya',
+};
+const formatLongDate = (value) => {
+    if (!value) return '-';
+    const parts = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!parts) return value;
+
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return `${Number(parts[3])} ${months[Number(parts[2]) - 1]} ${parts[1]}`;
 };
 
 const formatDate = (value) => {
@@ -40,6 +48,14 @@ const areaManagerSignatureName = computed(() => {
     const name = areaManagerName.value.replace(/^Bpk\.\s*/i, '').split(/\s+/)[0];
     return name ? `Bpk. ${name}` : '';
 });
+const fitmkAreaManagerName = computed(() => {
+    const name = areaManagerName.value.replace(/^Bpk\.?\s*/i, '').trim();
+    if (!name) return '';
+
+    const parts = name.split(/\s+/);
+    const abbreviatedName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}` : parts[0];
+    return `Bpk. ${abbreviatedName}`;
+});
 
 const creatorSignature = computed(() => props.beritaAcara.creator?.digital_signature?.signature_image);
 const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_signature?.signature_image
@@ -47,7 +63,7 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
 </script>
 
 <template>
-    <div id="printable-ba" class="request-form-document">
+    <div id="printable-ba" class="request-form-document" :class="{ 'fitmk-page': !isLoan }">
         <template v-if="isLoan">
             <header class="request-title">FORM PERMOHONAN PINJAMAN (FPP)</header>
             <div class="request-band">Kolom Pemohon (diisi oleh pemohon)</div>
@@ -117,45 +133,58 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
         </template>
 
         <template v-else>
-            <table class="fitmk-header">
-                <tbody><tr>
-                    <td class="fitmk-logo"><img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" /></td>
-                    <td class="fitmk-company">PT PUSAT GADAI INDONESIA</td>
-                    <td class="fitmk-code">FORM 03-HRD-LEAVE/UNPAID<br />2019/2020</td>
-                </tr></tbody>
-            </table>
-            <div class="request-band fitmk-title">FORM IJIN TIDAK MASUK KERJA<br />(FITMK)</div>
-            <table class="fitmk-details">
-                <tbody>
-                    <tr><th>1.</th><td>Nama</td><td>:</td><td>{{ data.full_name || beritaAcara.creator?.name || '-' }}</td></tr>
-                    <tr><th>2.</th><td>Detail ijin tidak masuk kerja</td><td>:</td><td>{{ leaveTypeLabels[data.leave_type] || '-' }}</td></tr>
-                    <tr><th></th><td colspan="3" class="fitmk-options">
-                        <span v-for="(label, value) in leaveTypeLabels" :key="value">
-                            {{ data.leave_type === value ? '☑' : '☐' }} {{ label }}
-                        </span>
-                    </td></tr>
-                    <tr><th></th><td>Tanggal ijin tidak masuk kerja</td><td>:</td><td>{{ formatDate(data.start_date) }} / {{ data.duration || '-' }} Hari</td></tr>
-                    <tr><th></th><td>Alasan ijin tidak masuk kerja</td><td>:</td><td>{{ data.reason || '-' }}</td></tr>
-                    <tr><th></th><td>Pekerjaan selama tidak masuk dilimpahkan ke</td><td>:</td><td>{{ data.handover || '-' }}</td></tr>
-                </tbody>
-            </table>
-            <table class="fitmk-contact">
-                <tbody><tr><th>3.</th><td>Kontak selama tidak masuk kerja :<br />Tlp / Hp</td><td>{{ data.phone || '-' }}</td></tr></tbody>
-            </table>
-            <table class="fitmk-approval">
-                <tbody>
-                    <tr><td colspan="4">4. &nbsp; Pengesahan</td></tr>
-                    <tr><th>PEMOHON</th><th>PENGGANTI</th><th>MENYETUJUI<br />ATASAN PEMOHON</th><th>MENGETAHUI<br />HRD</th></tr>
-                    <tr class="request-signature-images">
-                        <td><img v-if="creatorSignature" :src="`/storage/${creatorSignature}`" alt="Tanda tangan pemohon" /></td>
-                        <td></td>
-                        <td><img v-if="beritaAcara.status === 'approved' && managerSignature" :src="`/storage/${managerSignature}`" alt="Tanda tangan atasan" /></td>
-                        <td></td>
-                    </tr>
-                    <tr><td>{{ data.full_name || beritaAcara.creator?.name || '-' }}<br />Kepala Cabang</td><td>{{ data.substitute || '-' }}<br />Pengganti</td><td>{{ beritaAcara.areaManager?.name || beritaAcara.area_manager?.name || '-' }}<br />Manager</td><td>HRD</td></tr>
-                    <tr class="fitmk-date-row"><td>Tanggal: {{ formatDate(beritaAcara.created_at) }}</td><td>Tanggal:</td><td>Tanggal:</td><td>Tanggal:</td></tr>
-                </tbody>
-            </table>
+            <div class="fitmk-form">
+                <table class="fitmk-header">
+                    <tbody><tr>
+                        <td class="fitmk-logo"><img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" /></td>
+                        <td class="fitmk-company">PT PUSAT GADAI INDONESIA</td>
+                        <td class="fitmk-code">FORM 03-HRD-LEAVE/UNPAID<br />2019/2020</td>
+                    </tr></tbody>
+                </table>
+                <div class="request-band fitmk-title">FORM IJIN TIDAK MASUK KERJA<br />(FITMK)</div>
+                <section class="fitmk-details-section">
+                    <table class="fitmk-details">
+                        <tbody>
+                            <tr><th>1.</th><td>Nama</td><td>:</td><td class="fitmk-applicant">{{ data.full_name || beritaAcara.creator?.name || '-' }}</td></tr>
+                            <tr><th>2.</th><td>Detail ijin tidak masuk kerja</td><td>:</td><td>{{ leaveTypeLabels[data.leave_type] || '-' }}</td></tr>
+                            <tr><th></th><td colspan="3" class="fitmk-options">
+                                <span v-for="(label, value) in leaveTypeLabels" :key="value" class="fitmk-option">
+                                    <span class="fitmk-option-mark">{{ data.leave_type === value ? '✓' : '◯' }}</span>{{ label }}
+                                </span>
+                            </td></tr>
+                            <tr><th></th><td>Tanggal ijin tidak masuk kerja</td><td>:</td><td>{{ formatLongDate(data.start_date) }} / {{ data.duration || '-' }} Hari</td></tr>
+                            <tr><th></th><td>Alasan ijin tidak masuk kerja</td><td>:</td><td>{{ data.reason || '-' }}</td></tr>
+                            <tr><th></th><td>Pekerjaan selama tidak masuk dilimpahkan ke</td><td>:</td><td>{{ data.handover || '-' }}</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+                <section class="fitmk-numbered-section">
+                    <div class="fitmk-section-title"><span>3.</span><span>Kontak selama tidak masuk kerja :</span></div>
+                    <div class="fitmk-contact-detail"><span>Tlp / Hp</span><span>{{ data.phone || '-' }}</span></div>
+                </section>
+                <section class="fitmk-numbered-section fitmk-approval-section">
+                    <div class="fitmk-section-title"><span>4.</span><span>Pengesahan</span></div>
+                    <table class="fitmk-approval">
+                    <tbody>
+                        <tr class="fitmk-approval-head"><th>PEMOHON</th><th>PENGGANTI</th><th>MENYETUJUI<br />ATASAN PEMOHON</th><th>MENGETAHUI<br />HRD</th></tr>
+                        <tr class="fitmk-signature-row">
+                            <td><div class="fitmk-signature-line"><img v-if="creatorSignature" :src="`/storage/${creatorSignature}`" alt="Tanda tangan pemohon" /></div></td>
+                            <td><div class="fitmk-signature-line"></div></td>
+                            <td><div class="fitmk-signature-line"><img v-if="beritaAcara.status === 'approved' && managerSignature" :src="`/storage/${managerSignature}`" alt="Tanda tangan atasan" /></div></td>
+                            <td><div class="fitmk-signature-line"></div></td>
+                        </tr>
+                        <tr class="fitmk-signature-names">
+                            <td><strong>{{ data.full_name || beritaAcara.creator?.name || '-' }}</strong><br />Kepala Cabang</td>
+                            <td><strong>{{ data.substitute || '-' }}</strong><br />{{ data.substitute_position || 'Pengganti' }}</td>
+                            <td><strong>{{ fitmkAreaManagerName || '-' }}</strong><br />Manager</td>
+                            <td><strong>HRD</strong></td>
+                        </tr>
+                        <tr class="fitmk-date-row"><td>Tanggal: {{ formatDate(beritaAcara.created_at) }}</td><td>Tanggal:</td><td>Tanggal:</td><td>Tanggal:</td></tr>
+                    </tbody>
+                    </table>
+                </section>
+                <div class="fitmk-bottom-space"></div>
+            </div>
         </template>
     </div>
 </template>
@@ -164,6 +193,8 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
 .request-form-document {
     box-sizing: border-box;
     width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
     min-height: 297mm;
     padding: 12mm;
     background: #fff;
@@ -202,35 +233,54 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
 .request-signature-image img { display: block; max-width: 90%; max-height: 52px; object-fit: contain; }
 .request-signature-name { display: flex; align-items: flex-end; justify-content: center; width: 80%; min-height: 19px; margin: 0 auto 2px; padding-bottom: 1px; border-bottom: 1px solid #8bb2f5; font-weight: 700; line-height: 1; }
 .request-signature-role { font-weight: 400; }
-.fitmk-approval th {
-    background: #1f497d;
-    color: #fff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-}
 .request-signature-date { padding-top: 20px; text-align: left; }
 .fitmk-header { table-layout: fixed; margin-top: 12mm; }
 .fitmk-header td { height: 19mm; text-align: center; }
+.fitmk-page { padding: 6mm; }
+.fitmk-form { margin-top: 20mm; border: 1px solid #222; }
+.fitmk-header { margin-top: 0; }
+.fitmk-header td { border: 0; }
+.fitmk-header td + td { border-left: 1px solid #222; }
 .fitmk-logo { width: 25%; }
 .fitmk-logo img { width: 75px; height: 55px; object-fit: contain; }
 .fitmk-company { width: 48%; font-size: 19px; font-weight: 700; }
 .fitmk-code { width: 27%; font-size: 10px; }
-.fitmk-title { font-size: 14px; }
-.fitmk-details { margin: 8px 0 0; }
-.fitmk-details th { width: 7%; font-weight: 400; vertical-align: top; }
+.fitmk-title {
+    border-right: 0;
+    border-left: 0;
+    background: #c6d9f1;
+    color: #111;
+    font-size: 14px;
+}
+.fitmk-details-section { padding: 5mm 7mm; border-bottom: 1px solid #222; }
+.fitmk-details { margin: 0; table-layout: fixed; }
+.fitmk-details th { width: 5%; font-weight: 400; vertical-align: top; }
 .fitmk-details td { padding: 2px; vertical-align: top; }
-.fitmk-details td:nth-child(2) { width: 38%; }
-.fitmk-details td:nth-child(3) { width: 3%; }
-.fitmk-options { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; padding: 6px 0 10px 14px !important; }
-.fitmk-contact { margin-top: 12px; }
-.fitmk-contact th { width: 7%; font-weight: 400; vertical-align: top; }
-.fitmk-approval { margin-top: 12px; table-layout: fixed; text-align: center; }
-.fitmk-approval th, .fitmk-approval td { width: 25%; padding: 5px; }
-.fitmk-approval th { height: 45px; }
-.fitmk-approval .fitmk-date-row td { padding-top: 20px; text-align: left; }
+.fitmk-details td:nth-child(2) { width: 32%; }
+.fitmk-details td:nth-child(3) { width: 2%; }
+.fitmk-details .fitmk-applicant { font-weight: 700; }
+.fitmk-options { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; padding: 2px 0 7px 14px !important; }
+.fitmk-option { white-space: nowrap; }
+.fitmk-option-mark { display: inline-block; width: 14px; font-size: 13px; line-height: 1; }
+.fitmk-numbered-section { padding: 2mm 7mm; border-bottom: 1px solid #222; }
+.fitmk-section-title { display: grid; grid-template-columns: 5% 1fr; }
+.fitmk-contact-detail { display: grid; grid-template-columns: 37% 1fr; padding-left: 5%; }
+.fitmk-approval-section { padding-top: 2mm; padding-bottom: 12mm; border-bottom: 0; }
+.fitmk-approval { margin: 0; table-layout: fixed; text-align: center; }
+.fitmk-approval th, .fitmk-approval td { width: 25%; padding: 4px 5px; }
+.fitmk-approval .fitmk-approval-head th { height: 34px; }
+.fitmk-approval .fitmk-signature-row td { padding: 0 5px; }
+.fitmk-signature-line { display: flex; width: 84%; height: 54px; margin: 0 auto; align-items: flex-end; justify-content: center; }
+.fitmk-signature-line img { display: block; max-width: 90%; max-height: 52px; object-fit: contain; }
+.fitmk-approval .fitmk-signature-names td { padding: 3px 5px; }
+.fitmk-signature-names strong { display: inline-block; max-width: 100%; padding-bottom: 2px; border-bottom: 1px solid #8bb2f5; overflow-wrap: anywhere; }
+.fitmk-approval .fitmk-date-row td { padding-top: 16px; text-align: left; }
+.fitmk-bottom-space { height: 17mm; border-top: 1px solid #222; }
 @media print {
+    @page { size: A4 portrait; margin: 0; }
     :global(body *) { visibility: hidden !important; }
     :global(#printable-ba), :global(#printable-ba *) { visibility: visible !important; }
     :global(#printable-ba) { position: fixed !important; inset: 0 auto auto 0 !important; width: 210mm !important; min-height: 297mm !important; padding: 12mm !important; border: 0 !important; }
+    :global(#printable-ba.fitmk-page) { padding: 6mm !important; }
 }
 </style>

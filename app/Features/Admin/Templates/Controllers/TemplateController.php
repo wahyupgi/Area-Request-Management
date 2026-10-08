@@ -31,6 +31,7 @@ class TemplateController extends Controller
     {
         MemoTemplate::create([
             'name' => $request->name,
+            'type' => $request->type ?? 'memo',
             'category' => $request->category,
             'field_schema' => $request->field_schema,
             'document_defaults' => $request->document_defaults,
@@ -54,6 +55,7 @@ class TemplateController extends Controller
     {
         $template->update([
             'name' => $request->name,
+            'type' => $request->type ?? 'memo',
             'category' => $request->category,
             'field_schema' => $request->field_schema,
             'document_defaults' => $request->document_defaults,

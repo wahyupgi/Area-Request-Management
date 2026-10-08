@@ -28,7 +28,7 @@ const defaultSigners = () => {
     const manager = props.beritaAcara.area_manager || props.beritaAcara.areaManager;
     const template = props.beritaAcara.meta?.template;
     const isSeizedGoods = template === 'penghapusan_barang_sitaan';
-    const isCostRequest = template === 'permohonan_biaya_kost';
+    const isCostRequest = template === 'permohonan_biaya_kost' || template === 'template_1';
     const executive = {
         name: props.beritaAcara.meta?.penyetuju_akhir || 'Bpk. Nugroho Samudra Sujatmiko, Ko',
         role: 'Senior Executive Vice President Bisnis dan Operasional',

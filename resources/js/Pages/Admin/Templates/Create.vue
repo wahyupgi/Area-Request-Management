@@ -11,6 +11,7 @@ const { success } = useSweetAlert();
 
 const form = useForm({
     name: props.template?.name || '',
+    type: props.template?.type || 'memo',
     category: props.template?.category || '',
     document_defaults: {
         direktorat: props.template?.document_defaults?.direktorat || '',
@@ -20,6 +21,8 @@ const form = useForm({
         kepada_jabatan: props.template?.document_defaults?.kepada_jabatan || '',
         penyetuju_akhir: props.template?.document_defaults?.penyetuju_akhir || '',
         lampiran: props.template?.document_defaults?.lampiran || '',
+        pengantar: props.template?.document_defaults?.pengantar || '',
+        penutup: props.template?.document_defaults?.penutup || '',
     },
     field_schema: props.template?.field_schema || [{ key: '', label: '', type: 'text', required: false }],
 });
@@ -71,9 +74,16 @@ const submit = () => {
                     <template #title>
                         <span class="text-white font-medium">Informasi Template</span>
                     </template>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <a-form-item label="Nama Template" :validateStatus="form.errors.name ? 'error' : ''" :help="form.errors.name">
                             <a-input v-model:value="form.name" placeholder="Contoh: Permohonan Penambahan Karyawan" />
+                        </a-form-item>
+                        <a-form-item label="Jenis Dokumen" :validateStatus="form.errors.type ? 'error' : ''" :help="form.errors.type">
+                            <a-select v-model:value="form.type">
+                                <a-select-option value="memo">Memo</a-select-option>
+                                <a-select-option value="ba">Berita Acara</a-select-option>
+                                <a-select-option value="form">Form Pengajuan</a-select-option>
+                            </a-select>
                         </a-form-item>
                         <a-form-item label="Kategori" :validateStatus="form.errors.category ? 'error' : ''" :help="form.errors.category">
                             <a-input v-model:value="form.category" placeholder="Contoh: SDM, Keuangan, Fasilitas" />
@@ -97,6 +107,14 @@ const submit = () => {
                             { key: 'lampiran', label: 'Lampiran' },
                         ]" :key="field.key" :label="field.label" class="mb-0">
                             <a-input v-model:value="form.document_defaults[field.key]" />
+                        </a-form-item>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <a-form-item label="Kalimat Pengantar" class="mb-0">
+                            <a-textarea v-model:value="form.document_defaults.pengantar" :rows="3" placeholder="Sehubungan dengan..." />
+                        </a-form-item>
+                        <a-form-item label="Kalimat Penutup" class="mb-0">
+                            <a-textarea v-model:value="form.document_defaults.penutup" :rows="3" placeholder="Demikian disampaikan..." />
                         </a-form-item>
                     </div>
                 </a-card>

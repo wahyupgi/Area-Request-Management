@@ -22,6 +22,9 @@ class BeritaAcaraController extends Controller
                 ->with('area:id,name')
                 ->orderBy('name')
                 ->get(['branches.id', 'branches.name', 'branches.area_id']),
+            'templates' => \App\Models\MemoTemplate::where('is_active', true)
+                ->where('type', 'ba')
+                ->get(),
         ]);
     }
 
@@ -34,7 +37,7 @@ class BeritaAcaraController extends Controller
         $branchIds = $user->availableBranchesForDocuments()->pluck('branches.id')->all();
         $validated = $request->validate([
             'branch_id'             => ['required', 'integer', Rule::exists('branches', 'id')->whereIn('id', $branchIds)],
-            'meta.template'         => 'required|in:permohonan_biaya_kost,revisi_absensi,penghapusan_barang_sitaan,lainnya',
+            'meta.template'         => 'required|string',
             'meta.data'             => 'nullable|array',
             'meta.data.rows'        => 'nullable|array',
             'meta.data.rows.*'      => 'array',

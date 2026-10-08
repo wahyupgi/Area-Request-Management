@@ -15,6 +15,7 @@ class UpdateTemplateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:memo,ba,form'],
             'category' => ['nullable', 'string', 'max:100'],
             'document_defaults' => ['nullable', 'array'],
             'document_defaults.*' => ['nullable', 'string', 'max:255'],

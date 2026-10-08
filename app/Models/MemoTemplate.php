@@ -10,7 +10,7 @@ class MemoTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'category', 'field_schema', 'document_defaults', 'signature_schema', 'is_active', 'created_by'];
+    protected $fillable = ['name', 'type', 'category', 'field_schema', 'document_defaults', 'signature_schema', 'is_active', 'created_by'];
 
     protected $casts = [
         'field_schema' => 'array',
@@ -134,7 +134,7 @@ class MemoTemplate extends Model
                     'direktorat' => 'Regional Branch Office',
                     'divisi' => 'Branch Leader',
                     'perihal' => 'Pengajuan Keringanan Pelunasan Nasabah Handphone yang Meninggal Dunia',
-                    'lampiran' => 'Akte Kematian, KK, KTP Nasabah, KTP Ahli Waris',
+                    'lampiran' => '-',
                     'pengantar' => 'Sehubungan dengan adanya berita acara dari cabang perihal pengajuan keringanan pelunasan nasabah handphone yang meninggal dunia, bersama ini kami mengajukan permohonan berdasarkan data berikut:',
                     'penutup' => $keringananClosing,
                 ],
@@ -173,7 +173,7 @@ class MemoTemplate extends Model
                     'direktorat' => 'Operasional',
                     'divisi' => 'Support',
                     'perihal' => 'Keringanan denda reclaim',
-                    'lampiran' => '1. Berita Acara Cabang',
+                    'lampiran' => '-',
                     'pengantar' => 'Sehubungan dengan adanya reclaim yang menyebabkan perubahan jumlah pembayaran, bersama ini kami mengajukan permohonan keringanan atau penghapusan denda jasa reclaim berdasarkan data berikut:',
                     'penutup' => $keringananClosing,
                 ],
@@ -183,13 +183,148 @@ class MemoTemplate extends Model
                     ['label' => 'Diketahui oleh,', 'name' => 'Bpk. Nugroho Samudra Sujatmiko, Ko', 'role' => 'Senior Executive Vice President Bisnis dan Operasional'],
                 ],
             ],
+            // ─── Berita Acara Templates ───────────────────────────────
+            [
+                'name' => 'Pengembalian Dana',
+                'type' => 'ba',
+                'category' => 'Keuangan',
+                'field_schema' => [
+                    ['key' => 'cabang', 'label' => 'Cabang', 'type' => 'text', 'required' => true],
+                    ['key' => 'faktur', 'label' => 'Faktur', 'type' => 'text', 'required' => true],
+                    ['key' => 'tujuan', 'label' => 'Tujuan', 'type' => 'text', 'required' => true],
+                    ['key' => 'nominal', 'label' => 'Nominal', 'type' => 'number', 'required' => true],
+                ],
+                'document_defaults' => [
+                    'direktorat' => 'Operasional',
+                    'divisi' => 'Support',
+                    'perihal' => 'Pemberitahuan Pengembalian Dana',
+                    'lampiran' => '-',
+                    'pengantar' => 'Sehubungan dengan adanya Transaksi disbursement T +1 dana berhasil cair maka saya selaku kepala cabang ingin menginformasikan nasabah melakukan pengembalian dana dengan data sebagai berikut :',
+                    'penutup' => $keringananClosing,
+                ],
+            ],
+            [
+                'name' => 'Permohonan Biaya Kost',
+                'type' => 'ba',
+                'category' => 'GA',
+                'field_schema' => [
+                    ['key' => 'nama', 'label' => 'Nama', 'type' => 'text', 'required' => true],
+                    ['key' => 'nik', 'label' => 'NIK', 'type' => 'text', 'required' => true],
+                    ['key' => 'nama_pemilik', 'label' => 'Nama Pemilik', 'type' => 'text', 'required' => true],
+                    ['key' => 'nama_kost', 'label' => 'Nama Kost', 'type' => 'text', 'required' => true],
+                    ['key' => 'no_tlp', 'label' => 'No. Tlp', 'type' => 'text', 'required' => false],
+                    ['key' => 'alamat_kost', 'label' => 'Alamat Kost', 'type' => 'text', 'required' => true],
+                    ['key' => 'biaya_kost', 'label' => 'Biaya Kost', 'type' => 'number', 'required' => true],
+                ],
+                'document_defaults' => [
+                    'direktorat' => 'Regional Branch Office',
+                    'divisi' => 'Branch Leader',
+                    'perihal' => 'Permohonan Biaya Kost',
+                    'kepada' => 'Bpk. Nugroho Samudra Sujatmiko, Ko',
+                    'kepada_jabatan' => 'Senior Executive Vice President Bisnis dan Operasional',
+                    'pengantar' => 'Sehubungan dengan kondisi yang mengharuskan saya untuk tinggal di luar kota, maka dengan ini saya mengajukan permohonan biaya kost dengan data sebagai berikut:',
+                    'penutup' => 'Demikian internal memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Mohon dibantu pembayaran melalui rekening yang tertera. Terima kasih atas perhatian dan kerjasamanya.',
+                ],
+            ],
+            [
+                'name' => 'Permintaan Revisi Absensi',
+                'type' => 'ba',
+                'category' => 'HRD',
+                'field_schema' => [
+                    ['key' => 'nama', 'label' => 'Nama', 'type' => 'text', 'required' => true],
+                    ['key' => 'nik', 'label' => 'NIK', 'type' => 'text', 'required' => true],
+                    ['key' => 'tanggal', 'label' => 'Tanggal', 'type' => 'date', 'required' => true],
+                    ['key' => 'absensi_in', 'label' => 'Absensi IN', 'type' => 'text', 'required' => true],
+                    ['key' => 'absensi_out', 'label' => 'Absensi Out', 'type' => 'text', 'required' => true],
+                    ['key' => 'ket', 'label' => 'Keterangan', 'type' => 'text', 'required' => false],
+                ],
+                'document_defaults' => [
+                    'divisi' => 'HRD',
+                    'kepada' => 'Kepala Cabang',
+                    'kepada_jabatan' => 'HRD',
+                    'pengantar' => 'Sehubungan dengan adanya kendala absensi, dengan ini kami mengajukan permohonan revisi absensi dengan data sebagai berikut:',
+                    'penutup' => 'Demikian berita acara ini saya buat dengan sebenarnya. Terima kasih atas perhatian dan kerjasamanya, saya berharap dapat dibantu memakluminya.',
+                ],
+            ],
+            [
+                'name' => 'Penghapusan Barang Sitaan',
+                'type' => 'ba',
+                'category' => 'Operasional',
+                'field_schema' => [
+                    ['key' => 'cabang', 'label' => 'Cabang', 'type' => 'text', 'required' => true],
+                    ['key' => 'nama_nasabah', 'label' => 'Nama Nasabah', 'type' => 'text', 'required' => true],
+                    ['key' => 'no_faktur', 'label' => 'No. Faktur', 'type' => 'text', 'required' => true],
+                    ['key' => 'barang', 'label' => 'Barang', 'type' => 'text', 'required' => true],
+                    ['key' => 'nominal_pinjaman', 'label' => 'Nominal Pinjaman', 'type' => 'number', 'required' => true],
+                ],
+                'document_defaults' => [
+                    'direktorat' => 'Regional Branch Office',
+                    'divisi' => 'Branch Leader',
+                    'kepada' => 'Bpk. Nugroho Samudra Sujatmiko, Ko',
+                    'kepada_jabatan' => 'Senior Executive Vice President Bisnis dan Operasional',
+                    'pengantar' => 'Sehubungan dengan adanya penyitaan barang gadai, bersama ini kami sampaikan data barang sebagai berikut:',
+                    'penutup' => 'Demikian berita acara ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.',
+                ],
+            ],
+            [
+                'name' => 'Berita Acara Lainnya',
+                'type' => 'ba',
+                'category' => 'Umum',
+                'field_schema' => [
+                    ['key' => 'uraian', 'label' => 'Uraian', 'type' => 'text', 'required' => true],
+                    ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'textarea', 'required' => false],
+                ],
+            ],
+
+            // ─── Form Pengajuan Templates ─────────────────────────────
+            [
+                'name' => 'Form Permohonan Pinjaman (FPP)',
+                'type' => 'form',
+                'category' => 'HRD',
+                'field_schema' => [
+                    ['key' => 'full_name', 'label' => 'Nama Lengkap', 'type' => 'text', 'required' => true],
+                    ['key' => 'position', 'label' => 'Jabatan', 'type' => 'text', 'required' => true],
+                    ['key' => 'work_location', 'label' => 'Cabang / Lokasi Kerja', 'type' => 'text', 'required' => true],
+                    ['key' => 'employment_date', 'label' => 'Tanggal Masuk Kerja', 'type' => 'date', 'required' => true],
+                    ['key' => 'late_months', 'label' => 'Terlambat (bulan)', 'type' => 'number', 'required' => false],
+                    ['key' => 'absence_months', 'label' => 'Tidak Masuk (bulan)', 'type' => 'number', 'required' => false],
+                    ['key' => 'request_number', 'label' => 'Permohonan ke-', 'type' => 'number', 'required' => false],
+                    ['key' => 'salary_after_approval', 'label' => 'Gaji setelah disetujui', 'type' => 'number', 'required' => false],
+                    ['key' => 'minimum_salary', 'label' => 'Gaji minimal', 'type' => 'number', 'required' => false],
+                    ['key' => 'loan_amount', 'label' => 'Jumlah pinjaman yang diajukan', 'type' => 'number', 'required' => true],
+                    ['key' => 'repayment_months', 'label' => 'Lama pengembalian (bulan)', 'type' => 'number', 'required' => true],
+                    ['key' => 'reason', 'label' => 'Alasan Pinjaman', 'type' => 'textarea', 'required' => true],
+                ],
+            ],
+            [
+                'name' => 'Form Ijin Tidak Masuk Kerja (FITMK)',
+                'type' => 'form',
+                'category' => 'HRD',
+                'field_schema' => [
+                    ['key' => 'full_name', 'label' => 'Nama', 'type' => 'text', 'required' => true],
+                    ['key' => 'leave_type', 'label' => 'Detail ijin tidak masuk kerja', 'type' => 'select', 'required' => true],
+                    ['key' => 'start_date', 'label' => 'Tanggal ijin tidak masuk kerja', 'type' => 'date', 'required' => true],
+                    ['key' => 'duration', 'label' => 'Durasi (hari)', 'type' => 'number', 'required' => true],
+                    ['key' => 'reason', 'label' => 'Alasan ijin tidak masuk kerja', 'type' => 'textarea', 'required' => true],
+                    ['key' => 'handover', 'label' => 'Pekerjaan selama tidak masuk dilimpahkan ke', 'type' => 'text', 'required' => false],
+                    ['key' => 'substitute', 'label' => 'Nama pengganti', 'type' => 'text', 'required' => false],
+                    ['key' => 'phone', 'label' => 'Kontak selama tidak masuk kerja (Telepon / HP)', 'type' => 'text', 'required' => false],
+                ],
+            ],
         ];
 
         foreach ($templates as $template) {
+            if (!isset($template['document_defaults'])) {
+                $template['document_defaults'] = [];
+            }
+            $template['document_defaults']['kepada'] = 'Bpk Nugroho Samudra Sujatmiko,Ko';
+            $template['document_defaults']['kepada_jabatan'] = 'Senior Executive Vice President Bisnis dan Operasional';
+
             $existing = static::query()->where('name', $template['name'])->first();
 
             if ($existing) {
                 $updates = [
+                    'type' => $template['type'] ?? 'memo',
                     'category' => $template['category'],
                     'field_schema' => $template['field_schema'],
                     'is_active' => true,
@@ -206,6 +341,7 @@ class MemoTemplate extends Model
 
             static::query()->create(array_merge([
                 'name' => $template['name'],
+                'type' => $template['type'] ?? 'memo',
                 'category' => $template['category'],
                 'field_schema' => $template['field_schema'],
                 'is_active' => true,

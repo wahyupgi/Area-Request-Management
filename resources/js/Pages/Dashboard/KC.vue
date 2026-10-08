@@ -79,6 +79,7 @@ const statusConfig = {
 };
 
 const baTemplateLabels = {
+    pengembalian_dana: 'Pengembalian Dana',
     permohonan_biaya_kost: 'Permohonan Biaya Kost',
     revisi_absensi: 'Permintaan Revisi Absensi',
     penghapusan_barang_sitaan: 'Penghapusan Barang Sitaan',
