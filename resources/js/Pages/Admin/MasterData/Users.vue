@@ -18,6 +18,22 @@ const sortedUsers = computed(() =>
         return (a.name ?? '').localeCompare(b.name ?? '', 'id', { sensitivity: 'base' });
     })
 );
+const searchQuery = ref('');
+const filteredUsers = computed(() => {
+    const query = searchQuery.value.trim().toLowerCase();
+    if (!query) return sortedUsers.value;
+
+    return sortedUsers.value.filter((user) => [
+        user.name,
+        user.username,
+        user.email,
+        roleConfig[user.role]?.label,
+        user.role,
+        user.area?.name,
+        user.area?.parent?.name,
+        user.branch?.name,
+    ].some((value) => value?.toLowerCase().includes(query)));
+});
 const availableAreas = computed(() => (props.areas || []).filter((area) =>
     form.role === 'AM' ? !area.parent_id : form.role === 'KC' ? Boolean(area.parent_id) : false
 ));
@@ -122,14 +138,22 @@ const columns = [
                     <span class="text-white font-medium">Daftar User ({{ users.length }})</span>
                 </template>
                 <template #extra>
-                    <a-button type="primary" @click="openCreate">
-                        <template #icon><PlusOutlined /></template>
-                        Tambah User
-                    </a-button>
+                    <div class="flex flex-wrap items-center justify-end gap-2">
+                        <a-input-search
+                            v-model:value="searchQuery"
+                            placeholder="Cari nama, username, email, role, atau wilayah"
+                            allow-clear
+                            class="w-full sm:w-72"
+                        />
+                        <a-button type="primary" @click="openCreate">
+                            <template #icon><PlusOutlined /></template>
+                            Tambah User
+                        </a-button>
+                    </div>
                 </template>
 
                 <a-table 
-                    :dataSource="sortedUsers"
+                    :dataSource="filteredUsers"
                     :columns="columns" 
                     :rowKey="(record) => record.id"
                     :pagination="{ pageSize: 10 }"

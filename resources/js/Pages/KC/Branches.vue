@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import { BankOutlined, CheckCircleOutlined, PlusOutlined } from '@ant-design/icons-vue';
+import { BankOutlined, CheckCircleOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     area: Object,
@@ -14,7 +14,6 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 const searchQuery = ref('');
 const form = useForm({ branch_ids: [...props.selectedBranchIds] });
-const newBranchForm = useForm({ name: '' });
 
 watch(() => props.selectedBranchIds, (ids) => {
     form.branch_ids = [...ids];
@@ -42,12 +41,6 @@ const toggleBranch = (branch, checked) => {
 const usePageUserId = computed(() => user.value?.id);
 
 const save = () => form.put(route('kc.branches.update'));
-
-const addBranch = () => {
-    newBranchForm.post(route('kc.branches.store'), {
-        onSuccess: () => newBranchForm.reset(),
-    });
-};
 
 const columns = [
     { title: '', key: 'selection', width: 48, align: 'center' },
@@ -128,21 +121,6 @@ const columns = [
                             </template>
                         </a-table>
 
-                        <a-form layout="inline" class="kc-branches-add-form" @finish="addBranch">
-                            <a-form-item
-                                label="Tambah cabang"
-                                :validate-status="newBranchForm.errors.name || newBranchForm.errors.area ? 'error' : ''"
-                                :help="newBranchForm.errors.name || newBranchForm.errors.area"
-                            >
-                                <a-input v-model:value="newBranchForm.name" placeholder="Nama cabang" :disabled="!area" />
-                            </a-form-item>
-                            <a-form-item>
-                                <a-button type="default" :loading="newBranchForm.processing" :disabled="!area" @click="addBranch">
-                                    <template #icon><PlusOutlined /></template>
-                                    Tambah
-                                </a-button>
-                            </a-form-item>
-                        </a-form>
                     </section>
 
                     <aside class="kc-branches-summary">
@@ -274,10 +252,6 @@ html:not(.theme-light) .kc-branches-table .ant-table-tbody > tr > td > * {
 
 .kc-branches-summary .ant-alert {
     margin-top: 14px;
-}
-
-.kc-branches-add-form {
-    margin-top: 20px;
 }
 
 html.theme-light .kc-branches-card {

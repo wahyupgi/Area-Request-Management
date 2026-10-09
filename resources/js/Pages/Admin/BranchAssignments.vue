@@ -128,6 +128,7 @@ const saveArea = () => {
 
 const deleteArea = (area) => {
     Modal.confirm({
+        centered: true,
         title: `Hapus wilayah ${area.name}?`,
         content: 'Wilayah yang dihapus tidak dapat dipulihkan.',
         okText: 'Hapus',
@@ -337,14 +338,16 @@ const columns = [
                     <a-input v-model:value="areaForm.name" placeholder="Contoh: Surakarta" />
                 </a-form-item>
                 <a-form-item v-if="editingAreaId" label="Cabang Saat Ini">
-                    <div v-for="(branch, index) in areaForm.existing_branches" :key="branch.id" class="admin-branch-field">
-                        <a-input
-                            v-model:value="branch.name"
-                            :status="existingBranchError(index) ? 'error' : ''"
-                        />
-                        <small v-if="existingBranchError(index)" class="admin-branch-field-error">{{ existingBranchError(index) }}</small>
+                    <div v-if="areaForm.existing_branches.length" class="admin-area-branch-list">
+                        <div v-for="(branch, index) in areaForm.existing_branches" :key="branch.id" class="admin-branch-field">
+                            <a-input
+                                v-model:value="branch.name"
+                                :status="existingBranchError(index) ? 'error' : ''"
+                            />
+                            <small v-if="existingBranchError(index)" class="admin-branch-field-error">{{ existingBranchError(index) }}</small>
+                        </div>
                     </div>
-                    <span v-if="!areaForm.existing_branches.length" class="text-slate-400">Belum ada cabang di wilayah ini</span>
+                    <span v-else class="text-slate-400">Belum ada cabang di wilayah ini</span>
                 </a-form-item>
                 <a-form-item :label="editingAreaId ? 'Tambah Cabang Baru' : 'Cabang'">
                     <div v-for="(_, index) in areaForm.branch_names" :key="index" class="admin-branch-field">
@@ -503,6 +506,12 @@ const columns = [
     align-items: center;
     gap: 4px;
     margin-bottom: 8px;
+}
+
+.admin-area-branch-list {
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .admin-branch-field .ant-input {

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Area;
-use App\Models\Branch;
 use App\Models\DigitalSignature;
 use App\Models\MemoTemplate;
 use App\Models\User;
@@ -23,36 +22,9 @@ class DatabaseSeeder extends Seeder
                     'parent_id' => null,
                 ]);
             }
-
-            foreach (['Karanganyar', 'Sragen', 'Surakarta'] as $cityName) {
-                $city = Area::query()
-                    ->where('name', $cityName)
-                    ->whereNull('parent_id')
-                    ->first();
-
-                if (!$city) {
-                    Area::query()->firstOrCreate([
-                        'name' => $cityName,
-                        'parent_id' => $provinces['Jawa Tengah']->id,
-                    ]);
-                    continue;
-                }
-
-                User::query()
-                    ->where('role', 'AM')
-                    ->where('area_id', $city->id)
-                    ->update(['area_id' => $provinces['Jawa Tengah']->id]);
-
-                $city->update(['parent_id' => $provinces['Jawa Tengah']->id]);
-            }
         });
 
         $area1 = Area::query()->where('name', 'Jawa Tengah')->whereNull('parent_id')->firstOrFail();
-        $city1 = Area::query()->firstOrCreate([
-            'name' => 'Surakarta',
-            'parent_id' => $area1->id,
-        ]);
-
 
         $admin = User::create([
             'name' => 'SysAdmin',
@@ -69,20 +41,6 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('amfathur'),
             'role' => 'AM',
             'area_id' => $area1->id,
-        ]);
-
-        $kc1 = User::create([
-            'name' => 'Gibran',
-            'username' => 'gibran',
-            'email' => 'devopss077@gmail.com',
-            'password' => bcrypt('gibran123'),
-            'role' => 'KC',
-            'area_id' => $city1->id,
-        ]);
-        Branch::create([
-            'name' => 'SKT001',
-            'area_id' => $city1->id,
-            'kc_user_id' => $kc1->id,
         ]);
 
         // Create Digital Signature for AM
