@@ -16,7 +16,10 @@ class StoreMemoRequest extends FormRequest
     {
         return [
             'code' => ['nullable', 'string', 'max:255'],
-            'template_id' => ['nullable', 'exists:memo_templates,id'],
+            'template_id' => [
+                'nullable',
+                Rule::exists('memo_templates', 'id')->where('type', 'memo'),
+            ],
             'title' => ['required', 'string', 'max:255'],
             'field_values' => ['nullable', 'array'],
             'branch_id' => [

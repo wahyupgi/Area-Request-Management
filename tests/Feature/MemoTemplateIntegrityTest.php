@@ -25,7 +25,7 @@ class MemoTemplateIntegrityTest extends TestCase
             'Pengajuan Inventaris Cabang',
             'Pengajuan Inventori/Kipas',
             'FIN - Pemberitahuan Kas Keluar',
-            'HRD - Permohonan Penambahan Karyawan',
+            'HRD - Permohonan Permintaan SDM',
         ];
 
         foreach ($requiredTemplates as $name) {

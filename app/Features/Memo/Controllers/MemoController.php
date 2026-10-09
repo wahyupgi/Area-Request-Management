@@ -47,7 +47,9 @@ class MemoController extends Controller
     public function create()
     {
         MemoTemplate::ensureRequiredDefaults();
-        $templates = MemoTemplate::where('is_active', true)->get();
+        $templates = MemoTemplate::where('is_active', true)
+            ->where('type', 'memo')
+            ->get();
 
         return Inertia::render('Memo/Create', [
             'templates' => $templates,
@@ -111,7 +113,9 @@ class MemoController extends Controller
         MemoTemplate::ensureRequiredDefaults();
 
         $memo->load(['template', 'attachments', 'approvals.approver', 'creator.digitalSignature']);
-        $templates = MemoTemplate::where('is_active', true)->get();
+        $templates = MemoTemplate::where('is_active', true)
+            ->where('type', 'memo')
+            ->get();
 
         return Inertia::render('Memo/Edit', [
             'memo' => $memo,

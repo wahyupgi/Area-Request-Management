@@ -39,8 +39,6 @@ const isAreaManagerRole = (role) => ['Area Manager', 'Manager'].includes(String(
 
 const areaManagerName = () => props.memo.area_manager?.name?.trim() || '';
 
-const fourColumnManagerName = 'Bpk. Fathurrahman M';
-
 const isPlaceholderSignerName = (name) => !name || name.trim().toLowerCase() === 'penandatangan';
 
 const configuredSignatures = computed(() => {
@@ -92,7 +90,7 @@ const configuredSignatures = computed(() => {
             {
                 ...customAm,
                 label: 'Disetujui Oleh,',
-                name: isPlaceholderSignerName(customAm.name) ? areaManagerName() : (customAm.name || areaManagerName()),
+                name: areaManagerName() || (isPlaceholderSignerName(customAm.name) ? '' : customAm.name),
                 role: 'Manager',
                 location: 'document',
                 user: props.showAmSignature ? props.memo.area_manager : null,
@@ -139,7 +137,7 @@ const configuredSignatures = computed(() => {
         {
             ...templateAm,
             label: 'Disetujui Oleh,',
-            name: isPlaceholderSignerName(templateAm.name) ? areaManagerName() : (templateAm.name || areaManagerName()),
+            name: areaManagerName() || (isPlaceholderSignerName(templateAm.name) ? '' : templateAm.name),
             role: 'Manager',
             location: 'document',
             user: props.showAmSignature ? props.memo.area_manager : null,
@@ -148,16 +146,8 @@ const configuredSignatures = computed(() => {
     ];
 });
 
-const resolvedSignatures = computed(() => {
-    const slots = configuredSignatures.value;
-    const documentCount = slots.filter((slot) => (slot.location || 'document') === 'document').length;
-    if (documentCount < 4) return slots;
-
-    return slots.map((slot) => (isAreaManagerRole(slot.role) ? { ...slot, name: fourColumnManagerName } : slot));
-});
-
-const documentSignatures = computed(() => resolvedSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
-const parafSignatures = computed(() => resolvedSignatures.value.filter((slot) => slot.location === 'bottom_right'));
+const documentSignatures = computed(() => configuredSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
+const parafSignatures = computed(() => configuredSignatures.value.filter((slot) => slot.location === 'bottom_right'));
 const footerBoxCount = computed(() => Number(props.memo.field_values?.footer_box_count) === 1 ? 1 : 2);
 
 const handleImgError = (event) => {

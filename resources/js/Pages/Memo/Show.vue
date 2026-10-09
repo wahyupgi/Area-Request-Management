@@ -120,7 +120,7 @@ const printMemo = () => {
         <template #header>
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
-                    <Link :href="route('memos.index')">
+                    <Link :href="user.role === 'AM' ? route('approvals.pending') : route('memos.index')">
                         <a-button type="text" shape="circle">
                             <template #icon><arrow-left-outlined /></template>
                         </a-button>
@@ -136,15 +136,6 @@ const printMemo = () => {
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <a-tag :color="statusConfig[memo.status]?.color" class="font-semibold">
-                        {{ statusConfig[memo.status]?.label }}
-                    </a-tag>
-
-                    <a-button class="hidden sm:inline-flex print:hidden" @click="printMemo">
-                        <template #icon><printer-outlined /></template>
-                        Cetak
-                    </a-button>
-
                     <div v-if="user.role === 'KC' && ['draft','rejected'].includes(memo.status)">
                         <Link :href="route('memos.edit', memo.id)">
                             <a-button type="primary">
@@ -186,7 +177,7 @@ const printMemo = () => {
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-gray-500">Status</span>
-                                <span class="font-semibold">{{ statusConfig[memo.status]?.label }}</span>
+                                <a-tag :color="statusConfig[memo.status]?.color" class="font-semibold m-0">{{ statusConfig[memo.status]?.label }}</a-tag>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-gray-500">Pembuat</span>

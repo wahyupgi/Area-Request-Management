@@ -69,7 +69,7 @@ const submit = () => {
                     </template>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <a-form-item label="Nama Template" :validateStatus="form.errors.name ? 'error' : ''" :help="form.errors.name">
-                            <a-input v-model:value="form.name" placeholder="Contoh: Permohonan Penambahan Karyawan" />
+                            <a-input v-model:value="form.name" placeholder="Contoh: Permohonan Permintaan SDM" />
                         </a-form-item>
                         <a-form-item label="Jenis Dokumen" :validateStatus="form.errors.type ? 'error' : ''" :help="form.errors.type">
                             <a-select v-model:value="form.type">

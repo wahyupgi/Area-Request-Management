@@ -380,10 +380,6 @@ const focusDocuments = (status) => {
 
                 <template #emptyText>
                     <a-empty description="Belum ada dokumen yang sesuai">
-                        <a-space>
-                            <Link :href="route('berita-acara.create')"><a-button type="primary">Buat BA</a-button></Link>
-                            <Link :href="route('form-pengajuan.create')"><a-button>Buat Form Pengajuan</a-button></Link>
-                        </a-space>
                     </a-empty>
                 </template>
             </a-table>

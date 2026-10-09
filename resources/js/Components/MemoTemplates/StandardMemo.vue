@@ -12,6 +12,8 @@ const props = defineProps({
 
 const isKeringananJasa = computed(() => props.memo.template?.category === 'Keringanan Jasa');
 const isPhoneDeathReliefMemo = computed(() => props.memo.template?.name === 'Pengajuan Keringanan Pelunasan Nasabah Handphone Meninggal Dunia');
+const isSdmRequest = computed(() => props.memo.template?.name === 'HRD - Permohonan Permintaan SDM');
+const sdmField = computed(() => props.memo.template?.field_schema?.find((field) => field.type === 'table'));
 
 const formatFieldValue = (field, value) => {
     if (value === undefined || value === null || value === '') return '-';
@@ -65,8 +67,9 @@ const handleImgError = (event) => {
 
 const roleLines = (role) => {
     const value = String(role || '').trim();
-    const suffix = 'Bisnis dan Operasional';
-    const suffixIndex = value.toLowerCase().indexOf(suffix.toLowerCase());
+    const suffix = /bisnis\s*(?:dan|&)\s*operasional/i;
+    const match = value.match(suffix);
+    const suffixIndex = match ? match.index : -1;
 
     if (suffixIndex > 0) {
         return [value.slice(0, suffixIndex).trim(), value.slice(suffixIndex).trim()];
@@ -89,7 +92,26 @@ const signatureGridStyle = computed(() => {
 </script>
 
 <template>
-    <template v-if="isKeringananJasa">
+    <table v-if="isSdmRequest && sdmField" class="w-full text-xs border-collapse border border-black mb-5">
+        <thead>
+            <tr class="bg-[#1f497d] text-white">
+                <th v-for="column in sdmField.columns" :key="column.key" class="border border-black px-2 py-3 text-center font-bold !text-white">{{ column.label }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <template v-for="(item, itemIndex) in items" :key="'sdm-' + itemIndex">
+                <tr v-for="(row, rowIndex) in item?.[sdmField.key] || []" :key="'sdm-' + itemIndex + '-' + rowIndex" class="h-12">
+                    <td
+                        v-for="column in sdmField.columns"
+                        :key="column.key"
+                        :class="['border border-black px-2 py-1.5 whitespace-pre-wrap', column.key === 'alasan' ? 'text-left italic' : 'text-center']"
+                    >{{ row?.[column.key] ?? '' }}</td>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+
+    <template v-else-if="isKeringananJasa">
         <table class="w-full text-xs border-collapse border border-black">
             <thead>
                 <tr class="bg-[#1f497d] text-white">

@@ -70,7 +70,7 @@ class SignatureController extends Controller
             'templates' => MemoTemplate::where('is_active', true)
                 ->orderBy('category')
                 ->orderBy('name')
-                ->get(['id', 'name', 'category', 'signature_schema']),
+                ->get(['id', 'name', 'type', 'category', 'signature_schema']),
         ]);
     }
 

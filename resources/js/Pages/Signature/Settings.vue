@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { DeleteOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 
@@ -12,6 +12,17 @@ const props = defineProps({
 const { success } = useSweetAlert();
 const forms = reactive({});
 const visibleAdditionalSlots = reactive({});
+
+const documentTypes = [
+    { key: 'memo', label: 'Memo' },
+    { key: 'ba', label: 'Berita Acara' },
+    { key: 'form', label: 'Form' },
+];
+const activeType = ref('memo');
+const templateType = (template) => template.type || 'memo';
+const templatesByType = computed(() => Object.fromEntries(
+    documentTypes.map((type) => [type.key, (props.templates || []).filter((template) => templateType(template) === type.key)])
+));
 
 const automaticSlots = [
     { name: '', role: 'Kepala Cabang', location: 'document' },
@@ -93,8 +104,15 @@ const save = (template) => {
                 class="bg-sky-500/10 border-sky-500/20 text-sky-100 custom-dark-alert"
             />
 
+            <a-tabs v-model:activeKey="activeType">
+                <a-tab-pane
+                    v-for="type in documentTypes"
+                    :key="type.key"
+                    :tab="`${type.label} (${templatesByType[type.key].length})`"
+                >
+                    <a-empty v-if="!templatesByType[type.key].length" description="Belum ada template" />
             <a-card 
-                v-for="template in templates" 
+                v-for="template in templatesByType[type.key]" 
                 :key="template.id" 
                 :bordered="false" 
                 class="bg-slate-800/50 border border-white/5 mb-6"
@@ -160,6 +178,8 @@ const save = (template) => {
                     </div>
                 </a-form>
             </a-card>
+                </a-tab-pane>
+            </a-tabs>
         </div>
     </AuthenticatedLayout>
 </template>

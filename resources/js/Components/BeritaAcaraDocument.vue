@@ -9,9 +9,9 @@ const props = defineProps({
 const template = computed(() => props.beritaAcara.meta?.template || 'standard');
 const isTemplateOne = computed(() => ['template_1', 'pengembalian_dana', 'Pengembalian Dana'].includes(template.value));
 const isCostRequest = computed(() => template.value === 'permohonan_biaya_kost');
-const isAttendanceRevision = computed(() => template.value === 'revisi_absensi');
-const isSeizedGoods = computed(() => template.value === 'penghapusan_barang_sitaan');
-const isOtherTemplate = computed(() => template.value === 'lainnya');
+const isAttendanceRevision = computed(() => ['revisi_absensi', 'Permintaan Revisi Absensi'].includes(template.value));
+const isSeizedGoods = computed(() => ['penghapusan_barang_sitaan', 'Penghapusan Barang Sitaan'].includes(template.value));
+const isOtherTemplate = computed(() => ['lainnya', 'Berita Acara Lainnya'].includes(template.value));
 const templateRows = computed(() => props.beritaAcara.meta?.data?.rows || []);
 const signatureSlots = computed(() => {
     const beritaAcara = props.beritaAcara;
@@ -45,9 +45,7 @@ const signatureSlots = computed(() => {
         role: overrides[index]?.role ?? slot.role,
     })).filter((_, index) => index < 2 || (overrides[index]?.enabled ?? index < defaultSlotCount));
 
-    return resolved.length >= 4
-        ? resolved.map((slot, index) => (index === 1 ? { ...slot, name: 'Bpk. Fathurrahman M' } : slot))
-        : resolved;
+    return resolved;
 });
 const signatureWidths = computed(() => {
     const fractions = signatureColumnFractions(signatureSlots.value);
@@ -75,6 +73,13 @@ const formatDate = (dateString) => {
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     return `${days[date.getDay()]}, ${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+const formatRowDate = (value) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return value;
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const [year, month, day] = value.split('-');
+    return `${day} ${months[Number(month) - 1]} ${year}`;
 };
 
 const formatCurrency = (value) => {
@@ -153,14 +158,23 @@ const formatCurrency = (value) => {
         </table>
 
         <table v-else-if="isAttendanceRevision" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
-            <thead>
-                <tr>
-                    <th v-for="heading in ['No', 'Nama', 'NIK', 'Tanggal', 'Absensi IN', 'Absensi Out', 'Ket']" :key="heading" style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:4px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">{{ heading }}</th>
+                    <colgroup>
+                        <col style="width:5%;" />
+                        <col style="width:19%;" />
+                        <col style="width:14%;" />
+                        <col style="width:18%;" />
+                        <col style="width:13%;" />
+                        <col style="width:13%;" />
+                        <col style="width:18%;" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th v-for="heading in ['No', 'Nama', 'NIK', 'Tanggal', 'Absensi IN', 'Absensi Out', 'Ket']" :key="heading" style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:4px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">{{ heading }}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(row, index) in templateRows" :key="index">
-                    <td v-for="(value, columnIndex) in [index + 1, row.nama, row.nik, row.tanggal, row.absensi_in, row.absensi_out, row.ket]" :key="columnIndex" style="border:1px solid #000;padding:4px;text-align:center;">{{ value }}</td>
+                    <td v-for="(value, columnIndex) in [index + 1, row.nama, row.nik, formatRowDate(row.tanggal), row.absensi_in, row.absensi_out, row.ket]" :key="columnIndex" style="border:1px solid #000;padding:4px;text-align:center;">{{ value }}</td>
                 </tr>
             </tbody>
         </table>
@@ -278,8 +292,9 @@ const formatCurrency = (value) => {
 
 .ba-signatory-name span {
     display: block;
-    width: 100%;
-    overflow-wrap: anywhere;
+    width: max-content;
+    max-width: none;
+    white-space: nowrap;
 }
 
 .ba-signatory-role {

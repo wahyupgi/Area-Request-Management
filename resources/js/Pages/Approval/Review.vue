@@ -239,24 +239,7 @@ const formatDate = (dateString) => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <a-tag v-if="memo.status === 'approved'" color="success" class="font-semibold">
-                        <template #icon><check-circle-outlined /></template> Disetujui Resmi
-                    </a-tag>
-                    <a-tag v-else-if="memo.status === 'rejected'" color="error" class="font-semibold">
-                        <template #icon><close-circle-outlined /></template> Ditolak
-                    </a-tag>
-                    <a-tag v-else color="warning" class="font-semibold">
-                        Menunggu Persetujuan
-                    </a-tag>
-
-                    <a-button v-if="memo.status === 'approved'" class="hidden sm:inline-flex print:hidden" @click="printMemo">
-                        <template #icon><printer-outlined /></template> Cetak Dokumen
-                    </a-button>
-                    <a-button v-if="memo.status === 'approved'" class="hidden sm:inline-flex print:hidden" @click="printMemo">
-                        <template #icon><download-outlined /></template> Download / Simpan PDF
-                    </a-button>
-                </div>
+                <div class="flex items-center gap-3"></div>
             </div>
         </template>
 
@@ -376,6 +359,24 @@ const formatDate = (dateString) => {
                         </template>
 
                         <div class="space-y-2 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-500">Status</span>
+                                <a-tag v-if="memo.status === 'approved'" color="success" class="font-semibold m-0">
+                                    <template #icon><check-circle-outlined /></template> Disetujui Resmi
+                                </a-tag>
+                                <a-tag v-else-if="memo.status === 'rejected'" color="error" class="font-semibold m-0">
+                                    <template #icon><close-circle-outlined /></template> Ditolak
+                                </a-tag>
+                                <a-tag v-else color="warning" class="font-semibold m-0">Menunggu Persetujuan</a-tag>
+                            </div>
+                            <div v-if="memo.status === 'approved'" class="flex gap-2 pb-1">
+                                <a-button size="small" class="flex-1" @click="printMemo">
+                                    <template #icon><printer-outlined /></template> Cetak
+                                </a-button>
+                                <a-button size="small" class="flex-1" @click="printMemo">
+                                    <template #icon><download-outlined /></template> Simpan PDF
+                                </a-button>
+                            </div>
                             <div class="flex justify-between"><span class="text-gray-500">Direktorat</span><span class="font-medium truncate max-w-[150px]">{{ metaForm.direktorat || '(default)' }}</span></div>
                             <div class="flex justify-between"><span class="text-gray-500">Divisi</span><span class="font-medium truncate max-w-[150px]">{{ metaForm.divisi || '(default)' }}</span></div>
                             <div class="flex justify-between"><span class="text-gray-500">Perihal</span><span class="font-medium truncate max-w-[150px]">{{ metaForm.perihal || memo.title }}</span></div>

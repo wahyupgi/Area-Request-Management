@@ -69,13 +69,23 @@ class MemoTemplate extends Model
                 ],
             ],
             [
-                'name' => 'HRD - Permohonan Penambahan Karyawan',
+                'name' => 'HRD - Permohonan Permintaan SDM',
                 'category' => 'Ma-Link',
                 'field_schema' => [
-                    ['key' => 'posisi', 'label' => 'Posisi yang Dibutuhkan', 'type' => 'text', 'required' => true],
-                    ['key' => 'jumlah', 'label' => 'Jumlah Karyawan', 'type' => 'number', 'required' => true],
-                    ['key' => 'justifikasi', 'label' => 'Justifikasi / Alasan', 'type' => 'textarea', 'required' => true],
-                    ['key' => 'tanggal_kebutuhan', 'label' => 'Target Tanggal Bergabung', 'type' => 'date', 'required' => false],
+                    [
+                        'key' => 'rincian_sdm',
+                        'label' => 'Data Permintaan SDM',
+                        'type' => 'table',
+                        'required' => true,
+                        'columns' => [
+                            ['key' => 'cabang', 'label' => 'Cabang', 'type' => 'text'],
+                            ['key' => 'sdm', 'label' => 'SDM', 'type' => 'number'],
+                            ['key' => 'proposional', 'label' => 'Proposional', 'type' => 'number'],
+                            ['key' => 'kebutuhan', 'label' => 'Kebutuhan', 'type' => 'number'],
+                            ['key' => 'alasan', 'label' => 'Alasan', 'type' => 'text'],
+                            ['key' => 'kualifikasi', 'label' => 'Kualifikasi', 'type' => 'text'],
+                        ],
+                    ],
                 ],
             ],
             [

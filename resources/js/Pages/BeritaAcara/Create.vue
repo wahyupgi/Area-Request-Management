@@ -293,10 +293,6 @@ const submitAndSign = () => {
                                 <a-input v-model:value="form.meta.kepada_jabatan" placeholder="Contoh: Area Manager / SPV HC Payroll" />
                             </a-form-item>
 
-                            <a-form-item label="Penyetuju Akhir" extra="Nama penyetuju akhir pada dokumen." class="mb-3">
-                                <a-input v-model:value="form.meta.penyetuju_akhir" placeholder="Nama penyetuju akhir" />
-                            </a-form-item>
-
                             <a-form-item label="Lampiran" extra="Keterangan lampiran yang tercetak pada dokumen." class="mb-3">
                                 <a-input v-model:value="form.meta.lampiran" placeholder="Contoh: 1 Lembar, 3 Berkas, atau -" />
                             </a-form-item>
@@ -434,9 +430,9 @@ const submitAndSign = () => {
                                         <a-row :gutter="8">
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nama" placeholder="Nama" class="mb-2" /></a-col>
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nik" placeholder="NIK" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.tanggal" placeholder="Tanggal" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.absensi_in" placeholder="Absensi IN" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.absensi_out" placeholder="Absensi Out" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.tanggal" type="date" placeholder="Tanggal" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.absensi_in" type="time" placeholder="Absensi IN" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.absensi_out" type="time" placeholder="Absensi Out" class="mb-2" /></a-col>
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.ket" placeholder="Keterangan" class="mb-2" /></a-col>
                                         </a-row>
                                     </template>
