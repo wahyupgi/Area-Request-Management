@@ -7,6 +7,7 @@ import { Modal } from 'ant-design-vue';
 
 const props = defineProps({
     areas: { type: Array, default: () => [] },
+    provinces: { type: Array, default: () => [] },
     kcUsers: { type: Array, default: () => [] },
     branches: { type: Array, default: () => [] },
 });
@@ -21,7 +22,7 @@ const editingKc = ref(null);
 const editingAreaId = ref(null);
 const areaModalOpen = ref(false);
 const form = useForm({ area_id: null, branch_ids: [] });
-const areaForm = useForm({ name: '', existing_branches: [], branch_names: [''] });
+const areaForm = useForm({ name: '', parent_id: null, existing_branches: [], branch_names: [''] });
 
 const filteredKcUsers = computed(() => {
     const query = searchQuery.value.trim().toLowerCase();
@@ -30,6 +31,7 @@ const filteredKcUsers = computed(() => {
     return props.kcUsers.filter((kc) =>
         kc.name.toLowerCase().includes(query) ||
         kc.area?.name?.toLowerCase().includes(query) ||
+        kc.province?.name?.toLowerCase().includes(query) ||
         kc.branches.some((branch) => branch.name.toLowerCase().includes(query))
     );
 });
@@ -78,6 +80,7 @@ const save = () => {
 const openCreateArea = () => {
     editingAreaId.value = null;
     areaForm.name = '';
+    areaForm.parent_id = null;
     areaForm.existing_branches = [];
     areaForm.branch_names = [''];
     areaForm.clearErrors();
@@ -87,6 +90,7 @@ const openCreateArea = () => {
 const openEditArea = (area) => {
     editingAreaId.value = area.id;
     areaForm.name = area.name;
+    areaForm.parent_id = area.parent_id ?? null;
     areaForm.existing_branches = props.branches
         .filter((branch) => branch.area_id === area.id)
         .map((branch) => ({ id: branch.id, name: branch.name }));
@@ -102,6 +106,11 @@ const existingBranchError = (index) =>
     areaForm.errors[`existing_branches.${index}.name`] || areaForm.errors[`existing_branches.${index}.id`];
 
 const saveArea = () => {
+    if (!areaForm.parent_id) {
+        areaForm.setError('parent_id', 'Pilih provinsi untuk kota/kabupaten ini.');
+        return;
+    }
+
     areaForm.transform((data) => ({
         ...data,
         branch_names: data.branch_names.map((name) => name.trim()).filter(Boolean),
@@ -175,7 +184,9 @@ const columns = [
                 >
                     <template #bodyCell="{ column, record, index }">
                         <template v-if="column.key === 'number'">{{ (kcPage - 1) * KC_PAGE_SIZE + index + 1 }}</template>
-                        <template v-else-if="column.key === 'area'">{{ record.area?.name || 'Belum ditetapkan' }}</template>
+                        <template v-else-if="column.key === 'area'">
+                            {{ record.area ? `${record.area.name} — ${record.province?.name || 'Provinsi belum ditetapkan'}` : 'Belum ditetapkan' }}
+                        </template>
                         <template v-else-if="column.key === 'branches'">
                             <div v-if="record.branches.length" class="admin-branch-tags">
                                 <a-tag v-for="branch in record.branches.slice(0, 3)" :key="branch.id" color="blue">
@@ -223,19 +234,20 @@ const columns = [
             <a-card :bordered="false" class="admin-branch-mapping-card admin-area-list-card">
                 <div class="admin-area-list-heading">
                     <div>
-                        <h2>Daftar Wilayah</h2>
-                        <p>Kelola daftar wilayah yang dapat ditetapkan kepada KC.</p>
+                        <h2>Daftar Kota / Kabupaten</h2>
+                        <p>Kelola kota/kabupaten di dalam provinsi yang dapat ditetapkan kepada KC.</p>
                     </div>
                     <a-button type="primary" @click="openCreateArea">
                         <template #icon><PlusOutlined /></template>
-                        Tambah Wilayah
+                        Tambah Kota / Kabupaten
                     </a-button>
                 </div>
                 <a-table
                     :data-source="areas"
                     :columns="[
                         { title: 'No', key: 'number', width: 54 },
-                        { title: 'Nama Wilayah', dataIndex: 'name', key: 'name' },
+                        { title: 'Kota / Kabupaten', dataIndex: 'name', key: 'name' },
+                        { title: 'Provinsi', key: 'province' },
                         { title: 'Jumlah KC', dataIndex: 'kc_users_count', key: 'kc_users_count', width: 120 },
                         { title: 'Jumlah Cabang', dataIndex: 'branches_count', key: 'branches_count', width: 150 },
                         { title: 'Aksi', key: 'action', width: 100, align: 'center' },
@@ -248,6 +260,7 @@ const columns = [
                 >
                     <template #bodyCell="{ column, record, index }">
                         <template v-if="column.key === 'number'">{{ (areaPage - 1) * AREA_PAGE_SIZE + index + 1 }}</template>
+                        <template v-else-if="column.key === 'province'">{{ record.parent?.name || '-' }}</template>
                         <template v-if="column.key === 'action'">
                             <a-space>
                                 <a-button type="link" aria-label="Edit wilayah" @click="openEditArea(record)">
@@ -278,8 +291,8 @@ const columns = [
                 <a-form-item label="Wilayah" :validate-status="form.errors.area_id ? 'error' : ''" :help="form.errors.area_id">
                     <a-select
                         v-model:value="form.area_id"
-                        :options="areas.map((area) => ({ value: area.id, label: area.name }))"
-                        placeholder="Pilih wilayah"
+                    :options="areas.map((area) => ({ value: area.id, label: `${area.name} — ${area.parent?.name || 'Provinsi belum ditetapkan'}` }))"
+                    placeholder="Pilih kota/kabupaten"
                         allow-clear
                         @change="changeArea"
                     />
@@ -301,21 +314,26 @@ const columns = [
                         </span>
                     </label>
                 </div>
-                <a-empty v-else description="Belum ada cabang yang tersedia di wilayah ini" />
-                <p class="admin-branch-modal-hint">Pilih wilayah terlebih dahulu, lalu tentukan cabang yang menjadi tanggung jawab {{ editingKc.name }}.</p>
+                <a-empty v-else description="Belum ada cabang yang tersedia di kota/kabupaten ini" />
+                <p class="admin-branch-modal-hint">Pilih kota/kabupaten terlebih dahulu, lalu tentukan cabang yang menjadi tanggung jawab {{ editingKc.name }}.</p>
             </template>
         </a-modal>
 
         <a-modal
             v-model:open="areaModalOpen"
-            :title="editingAreaId ? 'Edit Wilayah' : 'Tambah Wilayah'"
+            :title="editingAreaId ? 'Edit Kota / Kabupaten' : 'Tambah Kota / Kabupaten'"
             :confirm-loading="areaForm.processing"
             ok-text="Simpan"
             cancel-text="Batal"
             @ok="saveArea"
         >
             <a-form layout="vertical">
-                <a-form-item label="Nama Wilayah" :validate-status="areaForm.errors.name ? 'error' : ''" :help="areaForm.errors.name">
+                <a-form-item label="Provinsi" :validate-status="areaForm.errors.parent_id ? 'error' : ''" :help="areaForm.errors.parent_id">
+                    <a-select v-model:value="areaForm.parent_id" placeholder="Pilih provinsi" @change="areaForm.clearErrors('parent_id')">
+                        <a-select-option v-for="province in provinces" :key="province.id" :value="province.id">{{ province.name }}</a-select-option>
+                    </a-select>
+                </a-form-item>
+                <a-form-item label="Nama Kota / Kabupaten" :validate-status="areaForm.errors.name ? 'error' : ''" :help="areaForm.errors.name">
                     <a-input v-model:value="areaForm.name" placeholder="Contoh: Surakarta" />
                 </a-form-item>
                 <a-form-item v-if="editingAreaId" label="Cabang Saat Ini">

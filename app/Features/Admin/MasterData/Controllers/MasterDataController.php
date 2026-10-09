@@ -21,7 +21,7 @@ class MasterDataController extends Controller
 
     public function areas()
     {
-        $areas = Area::with(['kcUsers' => fn ($query) => $query->orderBy('name')])
+        $areas = Area::with(['parent:id,name', 'kcUsers' => fn ($query) => $query->orderBy('name')])
             ->withCount('branches')
             ->get()
             ->map(function (Area $area) {
@@ -47,11 +47,13 @@ class MasterDataController extends Controller
     public function storeArea(StoreAreaRequest $request)
     {
         DB::transaction(function () use ($request) {
-            $area = Area::create(['name' => $request->name]);
-            if ($request->has('kc_user_ids')) {
+            $area = Area::create($request->only('name', 'parent_id'));
+            if ($area->parent_id && $request->has('kc_user_ids')) {
                 $this->syncAreaKcUsers($area, $request->input('kc_user_ids') ?? []);
             }
-            $this->createAreaBranches($area, $request->input('branch_names') ?? []);
+            if ($area->parent_id) {
+                $this->createAreaBranches($area, $request->input('branch_names') ?? []);
+            }
         });
 
         return back()->with('success', 'Wilayah berhasil ditambahkan.');
@@ -60,12 +62,32 @@ class MasterDataController extends Controller
     public function updateArea(StoreAreaRequest $request, Area $area)
     {
         DB::transaction(function () use ($request, $area) {
-            $area->update(['name' => $request->name]);
-            if ($request->has('kc_user_ids')) {
+            if ($area->cities()->exists() && $request->filled('parent_id')) {
+                throw ValidationException::withMessages([
+                    'parent_id' => 'Provinsi yang sudah memiliki kota/kabupaten tidak dapat dipindahkan.',
+                ]);
+            }
+            if ($area->parent_id && !$request->filled('parent_id')
+                && ($area->branches()->exists() || $area->kcUsers()->exists())) {
+                throw ValidationException::withMessages([
+                    'parent_id' => 'Kota/kabupaten dengan cabang atau KC tidak dapat diubah menjadi provinsi.',
+                ]);
+            }
+            if (!$area->parent_id && $request->filled('parent_id')
+                && $area->users()->where('role', 'AM')->exists()) {
+                throw ValidationException::withMessages([
+                    'parent_id' => 'Pindahkan Area Manager ke provinsi terlebih dahulu sebelum menjadikan wilayah ini kota/kabupaten.',
+                ]);
+            }
+
+            $area->update($request->only('name', 'parent_id'));
+            if ($area->parent_id && $request->has('kc_user_ids')) {
                 $this->syncAreaKcUsers($area, $request->input('kc_user_ids') ?? []);
             }
             $this->renameAreaBranches($area, $request->input('existing_branches') ?? []);
-            $this->createAreaBranches($area, $request->input('branch_names') ?? []);
+            if ($area->parent_id) {
+                $this->createAreaBranches($area, $request->input('branch_names') ?? []);
+            }
         });
 
         return back()->with('success', 'Wilayah berhasil diperbarui.');
@@ -129,6 +151,10 @@ class MasterDataController extends Controller
 
     public function deleteArea(Area $area)
     {
+        if ($area->cities()->exists()) {
+            return back()->with('error', 'Provinsi tidak dapat dihapus selama masih memiliki kota/kabupaten.');
+        }
+
         $area->delete();
         return back()->with('success', 'Area berhasil dihapus.');
     }
@@ -138,7 +164,7 @@ class MasterDataController extends Controller
     public function branches()
     {
         $branches = Branch::with(['area', 'kcUser'])->get();
-        $areas    = Area::all();
+        $areas    = Area::whereNotNull('parent_id')->with('parent:id,name')->get();
         $kcUsers  = User::where('role', 'KC')->whereNull('branch_id')->get();
 
         return Inertia::render('Admin/MasterData/Branches', [
@@ -163,8 +189,8 @@ class MasterDataController extends Controller
 
     public function users()
     {
-        $users = User::with(['branch', 'area'])->orderBy('name')->get();
-        $areas = Area::all();
+        $users = User::with(['branch', 'area.parent'])->orderBy('name')->get();
+        $areas = Area::with('parent:id,name')->orderBy('name')->get();
 
         return Inertia::render('Admin/MasterData/Users', [
             'users' => $users,
@@ -181,7 +207,7 @@ class MasterDataController extends Controller
             'password' => $request->password,
             'role' => $request->role,
             'branch_id' => null,
-            'area_id' => $request->role === 'AM' ? $request->area_id : null,
+            'area_id' => in_array($request->role, ['AM', 'KC'], true) ? $request->area_id : null,
         ]);
 
         return back()->with('success', 'User berhasil ditambahkan.');

@@ -9,7 +9,17 @@ class Area extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'parent_id'];
+
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function cities()
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
 
     public function branches()
     {

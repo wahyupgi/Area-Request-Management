@@ -161,13 +161,15 @@ class BeritaAcaraApprovalController extends Controller
         $user = auth()->user();
 
         $beritaAcara->load([
+            'branch.area.parent.areaManager.digitalSignature',
             'branch.area.areaManager.digitalSignature',
             'creator.digitalSignature',
             'areaManager.digitalSignature',
         ]);
 
         if ($user->isKC() && $beritaAcara->created_by !== $user->id) abort(403);
-        $branchAreaManager = $beritaAcara->branch?->area?->areaManager;
+        $branchAreaManager = $beritaAcara->branch?->area?->parent?->areaManager
+            ?? $beritaAcara->branch?->area?->areaManager;
         $areaManagerId = $beritaAcara->area_manager_id ?? $branchAreaManager?->id;
         if ($user->isAM() && $areaManagerId !== $user->id) abort(403);
 

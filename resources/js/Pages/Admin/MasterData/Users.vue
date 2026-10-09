@@ -12,10 +12,15 @@ const props = defineProps({
 
 const sortedUsers = computed(() =>
     [...(props.users ?? [])].sort((a, b) => {
-        if ((a.role === 'ADMIN') !== (b.role === 'ADMIN')) return a.role === 'ADMIN' ? -1 : 1;
+        const roleOrder = { ADMIN: 0, AM: 1, KC: 2 };
+        const roleDifference = (roleOrder[a.role] ?? 3) - (roleOrder[b.role] ?? 3);
+        if (roleDifference !== 0) return roleDifference;
         return (a.name ?? '').localeCompare(b.name ?? '', 'id', { sensitivity: 'base' });
     })
 );
+const availableAreas = computed(() => (props.areas || []).filter((area) =>
+    form.role === 'AM' ? !area.parent_id : form.role === 'KC' ? Boolean(area.parent_id) : false
+));
 
 const showModal = ref(false);
 const editingId = ref(null);
@@ -56,6 +61,9 @@ const openEdit = (user) => {
     form.area_id = user.area_id || null;
     form.clearErrors();
     showModal.value = true;
+};
+const changeRole = () => {
+    form.area_id = null;
 };
 
 const save = () => {
@@ -134,7 +142,11 @@ const columns = [
                             {{ roleConfig[record.role]?.label || record.role }}
                         </template>
                         <template v-if="column.key === 'location'">
-                            {{ record.area?.name || record.branch?.name || '-' }}
+                            {{ record.role === 'AM'
+                                ? record.area?.name || '-'
+                                : record.role === 'KC'
+                                    ? [record.area?.name, record.area?.parent?.name].filter(Boolean).join(' — ') || record.branch?.name || '-'
+                                    : '-' }}
                         </template>
                         <template v-if="column.key === 'action'">
                             <a-space>
@@ -173,16 +185,18 @@ const columns = [
                         <a-input-password v-model:value="form.password" />
                     </a-form-item>
                     <a-form-item class="col-span-2" label="Role" :validateStatus="form.errors.role ? 'error' : ''" :help="form.errors.role">
-                        <a-select v-model:value="form.role">
+                        <a-select v-model:value="form.role" @change="changeRole">
                             <a-select-option value="KC">Kepala Cabang</a-select-option>
                             <a-select-option value="AM">Area Manager</a-select-option>
                             <a-select-option value="ADMIN">Administrator</a-select-option>
                         </a-select>
                     </a-form-item>
                     
-                    <a-form-item v-if="form.role === 'AM'" class="col-span-2" label="Area" :validateStatus="form.errors.area_id ? 'error' : ''" :help="form.errors.area_id">
-                        <a-select v-model:value="form.area_id" placeholder="Pilih Area" allowClear>
-                            <a-select-option v-for="a in areas" :key="a.id" :value="a.id">{{ a.name }}</a-select-option>
+                    <a-form-item v-if="form.role === 'AM' || form.role === 'KC'" class="col-span-2" :label="form.role === 'AM' ? 'Provinsi' : 'Kota / Kabupaten'" :validateStatus="form.errors.area_id ? 'error' : ''" :help="form.errors.area_id">
+                        <a-select v-model:value="form.area_id" :placeholder="form.role === 'AM' ? 'Pilih provinsi' : 'Pilih kota/kabupaten'" allowClear>
+                            <a-select-option v-for="area in availableAreas" :key="area.id" :value="area.id">
+                                {{ area.name }}{{ form.role === 'KC' && area.parent ? ` — ${area.parent.name}` : '' }}
+                            </a-select-option>
                         </a-select>
                     </a-form-item>
                 </div>

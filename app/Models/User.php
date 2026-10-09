@@ -78,7 +78,10 @@ class User extends Authenticatable
         }
 
         if ($this->isAM() && $this->area_id) {
-            return Branch::query()->where('area_id', $this->area_id);
+            return Branch::query()->where(function ($query) {
+                $query->where('area_id', $this->area_id)
+                    ->orWhereHas('area', fn ($areaQuery) => $areaQuery->where('parent_id', $this->area_id));
+            });
         }
 
         if ($this->isAdmin()) {
@@ -91,8 +94,12 @@ class User extends Authenticatable
     public function areaManagerForBranch(Branch $branch): ?self
     {
         $areaManagers = self::query()->where('role', 'AM');
+        $provinceId = $branch->area?->parent_id;
 
-        return (clone $areaManagers)->where('area_id', $branch->area_id)->first()
+        return ($provinceId
+            ? (clone $areaManagers)->where('area_id', $provinceId)->first()
+            : null)
+            ?? (clone $areaManagers)->where('area_id', $branch->area_id)->first()
             ?? $areaManagers->orderBy('id')->first();
     }
 
@@ -100,8 +107,14 @@ class User extends Authenticatable
     {
         $areaId = $this->area_id;
 
-        if (!$areaId) {
-            $areaIds = $this->assignedBranches()->distinct()->pluck('area_id');
+        if (!$areaId || $this->isKC()) {
+            $areaIds = $this->assignedBranches()
+                ->with('area:id,parent_id')
+                ->get()
+                ->map(fn (Branch $branch) => $branch->area?->parent_id ?? $branch->area_id)
+                ->filter()
+                ->unique()
+                ->values();
             if ($areaIds->count() !== 1) {
                 return null;
             }

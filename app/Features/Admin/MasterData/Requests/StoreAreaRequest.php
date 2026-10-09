@@ -16,6 +16,12 @@ class StoreAreaRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'parent_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('areas', 'id')->whereNull('parent_id'),
+                Rule::notIn([$this->route('area')?->id]),
+            ],
             'kc_user_ids' => ['nullable', 'array'],
             'kc_user_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', 'KC')],
             'existing_branches' => ['nullable', 'array'],

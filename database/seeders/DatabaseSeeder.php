@@ -8,15 +8,50 @@ use App\Models\DigitalSignature;
 use App\Models\MemoTemplate;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-       
-        $area1 = Area::create(['name' => 'Area Jawa Tengah']);
-        $area2 = Area::create(['name' => 'Area Jawa Timur']);
-        $area3 = Area::create(['name' => 'Area Jawa Barat']);
+        DB::transaction(function () {
+            $provinces = [];
+            foreach (['Jawa Tengah', 'Jawa Timur', 'Jawa Barat'] as $provinceName) {
+                $provinces[$provinceName] = Area::query()->firstOrCreate([
+                    'name' => $provinceName,
+                    'parent_id' => null,
+                ]);
+            }
+
+            foreach (['Karanganyar', 'Sragen', 'Surakarta'] as $cityName) {
+                $city = Area::query()
+                    ->where('name', $cityName)
+                    ->whereNull('parent_id')
+                    ->first();
+
+                if (!$city) {
+                    Area::query()->firstOrCreate([
+                        'name' => $cityName,
+                        'parent_id' => $provinces['Jawa Tengah']->id,
+                    ]);
+                    continue;
+                }
+
+                User::query()
+                    ->where('role', 'AM')
+                    ->where('area_id', $city->id)
+                    ->update(['area_id' => $provinces['Jawa Tengah']->id]);
+
+                $city->update(['parent_id' => $provinces['Jawa Tengah']->id]);
+            }
+        });
+
+        $area1 = Area::query()->where('name', 'Jawa Tengah')->whereNull('parent_id')->firstOrFail();
+        $city1 = Area::query()->firstOrCreate([
+            'name' => 'Surakarta',
+            'parent_id' => $area1->id,
+        ]);
 
 
         $admin = User::create([
@@ -36,18 +71,17 @@ class DatabaseSeeder extends Seeder
             'area_id' => $area1->id,
         ]);
 
-      
         $kc1 = User::create([
             'name' => 'Gibran',
             'username' => 'gibran',
             'email' => 'devopss077@gmail.com',
             'password' => bcrypt('gibran123'),
             'role' => 'KC',
-            'area_id' => $area1->id,
+            'area_id' => $city1->id,
         ]);
         Branch::create([
             'name' => 'SKT001',
-            'area_id' => $area1->id,
+            'area_id' => $city1->id,
             'kc_user_id' => $kc1->id,
         ]);
 
@@ -147,6 +181,10 @@ class DatabaseSeeder extends Seeder
             'created_by' => $admin->id,
         ]);
 
-        $this->call(DocumentTemplateSeeder::class);
+        if (!User::query()->where('role', 'ADMIN')->exists()) {
+            throw new RuntimeException('Buat akun ADMIN sebelum menjalankan DatabaseSeeder.');
+        }
+
+        MemoTemplate::ensureRequiredDefaults();
     }
 }

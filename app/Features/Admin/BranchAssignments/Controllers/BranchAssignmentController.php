@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Area;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
@@ -17,17 +18,20 @@ class BranchAssignmentController extends Controller
     public function index()
     {
         $kcUsers = User::where('role', 'KC')
-            ->with('area:id,name')
+            ->with('area.parent:id,name')
             ->orderBy('name')
             ->get(['id', 'name', 'area_id', 'branch_id']);
 
-        $branches = Branch::with(['area:id,name', 'kcUser:id,name'])
+        $branches = Branch::with(['area:id,name,parent_id', 'area.parent:id,name', 'kcUser:id,name'])
             ->orderBy('name')
             ->get(['id', 'name', 'area_id', 'kc_user_id']);
 
         return Inertia::render('Admin/BranchAssignments', [
+            'provinces' => Area::query()->whereNull('parent_id')->orderBy('name')->get(['id', 'name']),
             'areas' => Area::query()
-                ->select(['id', 'name'])
+                ->whereNotNull('parent_id')
+                ->with('parent:id,name')
+                ->select(['id', 'name', 'parent_id'])
                 ->withCount('branches')
                 ->addSelect([
                     'kc_users_count' => User::query()
@@ -56,7 +60,8 @@ class BranchAssignmentController extends Controller
                 return [
                     'id' => $kcUser->id,
                     'name' => $kcUser->name,
-                    'area' => $kcUser->area?->only('id', 'name'),
+                    'area' => $kcUser->area?->only('id', 'name', 'parent_id'),
+                    'province' => $kcUser->area?->parent?->only('id', 'name'),
                     'branch_ids' => $assignedBranches->pluck('id')->all(),
                     'branches' => $assignedBranches->map(fn (Branch $branch) => [
                         'id' => $branch->id,
@@ -71,6 +76,7 @@ class BranchAssignmentController extends Controller
                 'kc_user_id' => $branch->kc_user_id,
                 'kc_user_name' => $branch->kcUser?->name,
                 'area' => $branch->area?->only('id', 'name'),
+                'province' => $branch->area?->parent?->only('id', 'name'),
             ])->values(),
         ]);
     }
@@ -80,7 +86,7 @@ class BranchAssignmentController extends Controller
         abort_unless($user->role === 'KC', 404);
 
         $validated = Validator::make($request->all(), [
-            'area_id' => ['present', 'nullable', 'integer', 'exists:areas,id'],
+            'area_id' => ['present', 'nullable', 'integer', Rule::exists('areas', 'id')->where(fn ($query) => $query->whereNotNull('parent_id'))],
             'branch_ids' => ['present', 'array'],
             'branch_ids.*' => [
                 'integer',

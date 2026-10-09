@@ -11,7 +11,8 @@ const showModal = ref(false);
 const editingId = ref(null);
 const openKcDropdownId = ref(null);
 const kcSearchQuery = ref('');
-const form = useForm({ name: '', kc_user_ids: [] });
+const form = useForm({ name: '', parent_id: null, kc_user_ids: [] });
+const provinces = computed(() => (props.areas || []).filter((area) => !area.parent_id));
 
 const selectedKcUsers = computed(() => (props.kcUsers || []).filter((user) =>
     form.kc_user_ids.includes(user.id)
@@ -36,6 +37,7 @@ const handleKcDropdownChange = (userId, isOpen) => {
 
 const openCreate = () => {
     form.reset();
+    form.parent_id = null;
     form.kc_user_ids = [];
     editingId.value = null;
     kcSearchQuery.value = '';
@@ -43,6 +45,7 @@ const openCreate = () => {
 };
 const openEdit = (area) => {
     form.name = area.name;
+    form.parent_id = area.parent_id ?? null;
     form.kc_user_ids = (area.kc_users || []).map((user) => user.id);
     editingId.value = area.id;
     kcSearchQuery.value = '';
@@ -71,7 +74,9 @@ const deleteArea = (area) => {
 };
 
 const columns = [
+    { title: 'Jenis', key: 'type', width: '140px' },
     { title: 'Nama Wilayah', dataIndex: 'name', key: 'name' },
+    { title: 'Provinsi', key: 'parent', width: '180px' },
     { title: 'KC & Cabang yang Dipegang', key: 'kc_assignments' },
     { title: 'Aksi', key: 'action', width: '150px' },
 ];
@@ -110,8 +115,14 @@ const columns = [
                     class="admin-document-table ant-table-dark-custom"
                 >
                     <template #bodyCell="{ column, record }">
-                        <template v-if="column.key === 'kc_assignments'">
-                            <a-space v-if="record.kc_users?.length" wrap>
+                        <template v-if="column.key === 'type'">
+                            {{ record.parent_id ? 'Kota / Kabupaten' : 'Provinsi' }}
+                        </template>
+                        <template v-else-if="column.key === 'parent'">
+                            {{ record.parent?.name || '-' }}
+                        </template>
+                        <template v-else-if="column.key === 'kc_assignments'">
+                            <a-space v-if="record.parent_id && record.kc_users?.length" wrap>
                                 <a-dropdown
                                     v-for="user in record.kc_users"
                                     :key="user.id"
@@ -140,7 +151,7 @@ const columns = [
                                     </template>
                                 </a-dropdown>
                             </a-space>
-                            <span v-else class="text-slate-400">Belum ada KC</span>
+                            <span v-else class="text-slate-400">{{ record.parent_id ? 'Belum ada KC' : 'Pilih kota/kabupaten' }}</span>
                         </template>
                         <template v-if="column.key === 'action'">
                             <a-space>
@@ -165,13 +176,24 @@ const columns = [
         >
             <a-form layout="vertical">
                 <a-form-item 
-                    label="Nama Wilayah" 
+                    label="Nama Provinsi / Kota / Kabupaten"
                     :validateStatus="form.errors.name ? 'error' : ''" 
                     :help="form.errors.name"
                 >
-                    <a-input v-model:value="form.name" placeholder="Contoh: Surakarta" />
+                    <a-input v-model:value="form.name" placeholder="Contoh: Jawa Tengah atau Surakarta" />
                 </a-form-item>
                 <a-form-item
+                    label="Provinsi Induk"
+                    :validateStatus="form.errors.parent_id ? 'error' : ''"
+                    :help="form.errors.parent_id"
+                >
+                    <a-select v-model:value="form.parent_id" placeholder="Kosongkan untuk membuat provinsi" allow-clear>
+                        <a-select-option v-for="province in provinces.filter((item) => item.id !== editingId)" :key="province.id" :value="province.id">
+                            {{ province.name }}
+                        </a-select-option>
+                    </a-select>
+                </a-form-item>
+                <a-form-item v-if="form.parent_id"
                     label="KC yang Bertugas"
                     :validateStatus="form.errors.kc_user_ids ? 'error' : ''"
                     :help="form.errors.kc_user_ids"
