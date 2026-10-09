@@ -9,6 +9,7 @@ import {
     HistoryOutlined,
     DownloadOutlined
 } from '@ant-design/icons-vue';
+import { createTablePagination } from '@/utils/tablePagination';
 
 const downloadCsv = () => {
     const rows = [
@@ -108,6 +109,10 @@ const filteredItems = computed(() => {
         const matchesDate = (!startDate || itemDate >= startDate) && (!endDate || itemDate <= endDate);
 
         return matchesQuery && matchesType && matchesDate;
+    });
+    const pagination = createTablePagination({
+        pageSize: 10,
+        getTotal: () => filteredItems.value.length,
     });
 });
 
@@ -224,7 +229,7 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
                         :columns="unifiedColumns"
                         table-layout="fixed"
                         row-key="id"
-                        :pagination="{ pageSize: 10, showSizeChanger: false, hideOnSinglePage: true }"
+                        :pagination="pagination"
                         class="am-inbox-table"
                     >
                         <template #bodyCell="{ column, record }">

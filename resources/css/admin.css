@@ -15,6 +15,201 @@
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
 }
 
+.table-pagination-control-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.table-pagination-edge-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.table-pagination-edge-button:not(:disabled):hover {
+    border-color: #9ca3af;
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.table-pagination-edge-button:disabled {
+    border-color: #e5e7eb;
+    background: #f9fafb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+html .ant-table-wrapper .ant-pagination .ant-pagination-prev,
+html .ant-table-wrapper .ant-pagination .ant-pagination-next {
+    width: auto !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-inline-end: 5px !important;
+}
+
+html:not(.theme-light) .table-pagination-edge-button {
+    border-color: #475569;
+    background: #1e293b;
+    color: #e2e8f0;
+}
+
+html:not(.theme-light) .table-pagination-edge-button:not(:disabled):hover {
+    border-color: #64748b;
+    background: #334155;
+    color: #ffffff;
+}
+
+html:not(.theme-light) .table-pagination-edge-button:disabled {
+    border-color: #334155;
+    background: #172033;
+    color: #64748b;
+}
+
+html .ant-table-wrapper .ant-pagination .ant-pagination-item,
+html .ant-table-wrapper .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+html .ant-table-wrapper .ant-pagination .ant-pagination-next .ant-pagination-item-link,
+html .ant-table-wrapper .ant-pagination .ant-pagination-jump-prev .ant-pagination-item-container,
+html .ant-table-wrapper .ant-pagination .ant-pagination-jump-next .ant-pagination-item-container {
+    min-width: 32px !important;
+    height: 32px !important;
+    line-height: 30px !important;
+    margin-inline-end: 5px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    color: #374151 !important;
+    text-align: center !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+}
+
+html .ant-table-wrapper .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+html .ant-table-wrapper .ant-pagination .ant-pagination-next .ant-pagination-item-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+html .ant-table-wrapper .ant-pagination .ant-pagination-item a {
+    color: inherit !important;
+    line-height: 30px !important;
+}
+
+html .ant-table-wrapper .ant-pagination .ant-pagination-item:not(.ant-pagination-item-active):hover,
+html .ant-table-wrapper .ant-pagination .ant-pagination-prev:not(.ant-pagination-disabled) .ant-pagination-item-link:hover,
+html .ant-table-wrapper .ant-pagination .ant-pagination-next:not(.ant-pagination-disabled) .ant-pagination-item-link:hover,
+html .ant-table-wrapper .ant-pagination .ant-pagination-jump-prev:hover .ant-pagination-item-container,
+html .ant-table-wrapper .ant-pagination .ant-pagination-jump-next:hover .ant-pagination-item-container {
+    border-color: #9ca3af !important;
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+}
+
+html .ant-table-wrapper .ant-pagination .ant-pagination-item-active,
+html .ant-table-wrapper .ant-pagination .ant-pagination-item-active:hover {
+    border-color: #1f69a8 !important;
+    background: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+html .ant-table-wrapper .ant-pagination .ant-pagination-item-active a,
+html .ant-table-wrapper .ant-pagination .ant-pagination-item-active:hover a {
+    color: #ffffff !important;
+}
+
+html .ant-table-wrapper .ant-pagination .ant-pagination-disabled .ant-pagination-item-link {
+    border-color: #e5e7eb !important;
+    background: #f9fafb !important;
+    color: #9ca3af !important;
+    cursor: not-allowed !important;
+}
+
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-item,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-next .ant-pagination-item-link,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-jump-prev .ant-pagination-item-container,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-jump-next .ant-pagination-item-container {
+    border-color: #475569 !important;
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-item:not(.ant-pagination-item-active):hover,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-prev:not(.ant-pagination-disabled) .ant-pagination-item-link:hover,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-next:not(.ant-pagination-disabled) .ant-pagination-item-link:hover,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-jump-prev:hover .ant-pagination-item-container,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-jump-next:hover .ant-pagination-item-container {
+    border-color: #64748b !important;
+    background: #334155 !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-item-active,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-item-active:hover {
+    border-color: #1f69a8 !important;
+    background: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-item-active a,
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-item-active:hover a {
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .ant-table-wrapper .ant-pagination .ant-pagination-disabled .ant-pagination-item-link {
+    border-color: #334155 !important;
+    background: #172033 !important;
+    color: #64748b !important;
+}
+
+html:not(.theme-light) .admin-area-list-card .admin-action-edit,
+html.theme-light .admin-area-list-card .admin-action-edit,
+html:not(.theme-light) .admin-user-list-card .admin-action-edit,
+html.theme-light .admin-user-list-card .admin-action-edit {
+    background: #1f69a8 !important;
+    border-color: #1f69a8 !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .admin-area-list-card .admin-action-edit:hover,
+html.theme-light .admin-area-list-card .admin-action-edit:hover,
+html:not(.theme-light) .admin-user-list-card .admin-action-edit:hover,
+html.theme-light .admin-user-list-card .admin-action-edit:hover {
+    background: #18598f !important;
+    border-color: #18598f !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .admin-area-list-card .admin-action-delete,
+html.theme-light .admin-area-list-card .admin-action-delete,
+html:not(.theme-light) .admin-user-list-card .admin-action-delete,
+html.theme-light .admin-user-list-card .admin-action-delete {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+html:not(.theme-light) .admin-area-list-card .admin-action-delete:hover,
+html.theme-light .admin-area-list-card .admin-action-delete:hover,
+html:not(.theme-light) .admin-user-list-card .admin-action-delete:hover,
+html.theme-light .admin-user-list-card .admin-action-delete:hover {
+    background: #b91c1c !important;
+    border-color: #b91c1c !important;
+    color: #ffffff !important;
+}
+
 html:not(.theme-light) .admin-action-edit {
     background: #1e4b76 !important;
     border-color: #2f6da1 !important;

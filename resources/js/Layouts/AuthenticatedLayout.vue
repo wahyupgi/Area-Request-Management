@@ -130,7 +130,7 @@ const navItems = computed(() => {
         { name: 'Pengaturan TTD', route: 'signature.settings', icon: SettingOutlined, roles: ['AM'] },
         { name: 'Report GA', route: 'reports.ga', icon: BarChartOutlined, roles: ['AM'] },
         { name: 'Template Memo', route: 'admin.templates.index', icon: AppstoreOutlined, roles: ['ADMIN'] },
-        { name: 'Cabang Saya', route: 'admin.branch-assignments.index', icon: BankOutlined, roles: ['ADMIN'] },
+        { name: 'Kelola Cabang', route: 'admin.branch-assignments.index', icon: BankOutlined, roles: ['ADMIN'] },
         { name: 'Kelola User', route: 'admin.users.index', icon: TeamOutlined, roles: ['ADMIN'] },
     ];
     return items.filter(item => item.roles.includes(role));

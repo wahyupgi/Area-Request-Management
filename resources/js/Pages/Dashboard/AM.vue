@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, h, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { createTablePagination } from '@/utils/tablePagination';
 import {
     DownloadOutlined,
     FilterOutlined,
@@ -320,18 +321,26 @@ const tableData = computed(() => {
     }));
 });
 
+const previewPagination = createTablePagination({
+    pageSize: 50,
+    getTotal: () => tableData.value.length,
+    showQuickJumper: true,
+    hideOnSinglePage: false,
+});
+
 const pagination = computed(() => {
     if (!props.gaReport) return false;
-    return {
+    return createTablePagination({
         current: props.gaReport.current_page,
         pageSize: props.gaReport.per_page,
         total: props.gaReport.total,
+        getTotal: () => props.gaReport.total,
         showSizeChanger: false,
         showTotal: (total, range) => `${range[0]}-${range[1]} dari ${total} memo`,
         onChange: (page) => {
             router.get(route('reports.ga'), { ...cleanFilters(), page }, { preserveScroll: true });
         },
-    };
+    });
 });
 </script>
 
@@ -673,7 +682,7 @@ const pagination = computed(() => {
                     :columns="tableColumns"
                     :data-source="tableData"
                     :scroll="{ x: 1380, y: 420 }"
-                    :pagination="{ pageSize: 50, showSizeChanger: false, showQuickJumper: true }"
+                    :pagination="previewPagination"
                     row-key="key"
                     class="ga-full-preview-table"
                     size="small"

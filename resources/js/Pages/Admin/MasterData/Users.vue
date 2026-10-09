@@ -4,6 +4,7 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue';
+import { createTablePagination } from '@/utils/tablePagination';
 
 const props = defineProps({
     users: Array,
@@ -34,6 +35,7 @@ const filteredUsers = computed(() => {
         user.branch?.name,
     ].some((value) => value?.toLowerCase().includes(query)));
 });
+const pagination = createTablePagination({ pageSize: 10, getTotal: () => filteredUsers.value.length });
 const availableAreas = computed(() => (props.areas || []).filter((area) =>
     form.role === 'AM' ? !area.parent_id : form.role === 'KC' ? Boolean(area.parent_id) : false
 ));
@@ -133,7 +135,7 @@ const columns = [
         </template>
 
         <div class="admin-master-page w-full">
-            <a-card :bordered="false" class="bg-slate-800/50 border border-white/5">
+            <a-card :bordered="false" class="bg-slate-800/50 border border-white/5 admin-user-list-card">
                 <template #title>
                     <span class="text-white font-medium">Daftar User ({{ users.length }})</span>
                 </template>
@@ -156,7 +158,7 @@ const columns = [
                     :dataSource="filteredUsers"
                     :columns="columns" 
                     :rowKey="(record) => record.id"
-                    :pagination="{ pageSize: 10 }"
+                    :pagination="pagination"
                     :scroll="{ x: 'max-content' }"
                     size="small"
                     class="admin-document-table ant-table-dark-custom"

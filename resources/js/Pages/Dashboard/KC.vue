@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { createTablePagination } from '@/utils/tablePagination';
 
 const props = defineProps({
     memos: Array,
@@ -156,6 +157,11 @@ const filteredDocuments = computed(() => {
 
     return list;
 });
+const documentsPagination = createTablePagination({
+    pageSize: 8,
+    getTotal: () => filteredDocuments.value.length,
+    hideOnSinglePage: false,
+});
 
 const focusDocuments = (status) => {
     statusFilter.value = status;
@@ -303,7 +309,7 @@ const focusDocuments = (status) => {
                 :data-source="filteredDocuments"
                 :columns="documentColumns"
                 :row-key="record => `${record._documentType}-${record.id}`"
-                :pagination="{ pageSize: 8, showSizeChanger: false }"
+                :pagination="documentsPagination"
                 :scroll="{ x: 900 }"
             >
                 <template #bodyCell="{ column, record }">

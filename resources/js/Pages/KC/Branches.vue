@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { BankOutlined, CheckCircleOutlined } from '@ant-design/icons-vue';
+import { createTablePagination } from '@/utils/tablePagination';
 
 const props = defineProps({
     area: Object,
@@ -24,6 +25,10 @@ const filteredBranches = computed(() => {
     return query
         ? props.branches.filter((branch) => branch.name.toLowerCase().includes(query))
         : props.branches;
+});
+const pagination = createTablePagination({
+    pageSize: 8,
+    getTotal: () => filteredBranches.value.length,
 });
 
 const selectedCount = computed(() => form.branch_ids.length);
@@ -94,7 +99,7 @@ const columns = [
                             :data-source="filteredBranches"
                             :columns="columns"
                             :row-key="(record) => record.id"
-                            :pagination="{ pageSize: 8, showSizeChanger: false, hideOnSinglePage: true }"
+                            :pagination="pagination"
                             :scroll="{ x: 560 }"
                             size="small"
                             class="kc-branches-table"

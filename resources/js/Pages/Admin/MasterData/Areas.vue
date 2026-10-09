@@ -4,8 +4,10 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined, RightOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue';
+import { createTablePagination } from '@/utils/tablePagination';
 
 const props = defineProps({ areas: Array, kcUsers: Array });
+const pagination = createTablePagination({ pageSize: 10, getTotal: () => props.areas?.length ?? 0 });
 
 const showModal = ref(false);
 const editingId = ref(null);
@@ -109,7 +111,7 @@ const columns = [
                     :dataSource="areas" 
                     :columns="columns" 
                     :rowKey="(record) => record.id"
-                    :pagination="{ pageSize: 10 }"
+                    :pagination="pagination"
                     :scroll="{ x: 'max-content' }"
                     size="small"
                     class="admin-document-table ant-table-dark-custom"

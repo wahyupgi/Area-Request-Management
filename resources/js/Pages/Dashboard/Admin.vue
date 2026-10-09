@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { createTablePagination } from '@/utils/tablePagination';
 import {
     AppstoreOutlined,
     BankOutlined,
@@ -152,6 +153,10 @@ if (documentTypeFilter.value === 'form_pengajuan') {
     }
     
     return list;
+});
+const documentsPagination = createTablePagination({
+    pageSize: 10,
+    getTotal: () => filteredDocuments.value.length,
 });
 
 const totalMemosCount = computed(() => props.submissionStats?.total ?? props.stats?.total_memos ?? props.recentMemos?.length ?? 0);
@@ -413,7 +418,7 @@ const statusChartData = computed(() => [
                         :data-source="filteredDocuments"
                         :columns="documentColumns"
                         :row-key="document => `${document._documentType}-${document.id}`"
-                        :pagination="{ pageSize: 10, showSizeChanger: false, hideOnSinglePage: true }"
+                        :pagination="documentsPagination"
                         :scroll="{ x: 1080 }"
                         size="small"
                     >

@@ -4,6 +4,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { DeleteOutlined, EditOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue';
+import { createTablePagination } from '@/utils/tablePagination';
 
 const props = defineProps({
     areas: { type: Array, default: () => [] },
@@ -17,7 +18,20 @@ const kcPage = ref(1);
 const areaPage = ref(1);
 const KC_PAGE_SIZE = 8;
 const AREA_PAGE_SIZE = 6;
-watch(searchQuery, () => { kcPage.value = 1; });
+const kcPagination = createTablePagination({
+    pageSize: KC_PAGE_SIZE,
+    getTotal: () => filteredKcUsers.value.length,
+    onChange: (page) => { kcPage.value = page; },
+});
+const areaPagination = createTablePagination({
+    pageSize: AREA_PAGE_SIZE,
+    getTotal: () => props.areas.length,
+    onChange: (page) => { areaPage.value = page; },
+});
+watch(searchQuery, () => {
+    kcPage.value = 1;
+    kcPagination.current = 1;
+});
 const editingKc = ref(null);
 const editingAreaId = ref(null);
 const areaModalOpen = ref(false);
@@ -149,13 +163,13 @@ const columns = [
 </script>
 
 <template>
-    <Head title="Cabang Saya" />
+    <Head title="Kelola Cabang" />
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-3">
                 <Link :href="route('dashboard')" class="text-sm text-slate-500 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">Dashboard</Link>
                 <span class="text-slate-400">/</span>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Cabang Saya</h1>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Kelola Cabang</h1>
             </div>
         </template>
 
@@ -177,7 +191,7 @@ const columns = [
                     :data-source="filteredKcUsers"
                     :columns="columns"
                     :row-key="(record) => record.id"
-                    :pagination="{ pageSize: KC_PAGE_SIZE, current: kcPage, showSizeChanger: false, hideOnSinglePage: true }"
+                    :pagination="kcPagination"
                     :scroll="{ x: 900 }"
                     size="small"
                     class="admin-branch-mapping-table"
@@ -254,7 +268,7 @@ const columns = [
                         { title: 'Aksi', key: 'action', width: 100, align: 'center' },
                     ]"
                     :row-key="(record) => record.id"
-                    :pagination="{ pageSize: AREA_PAGE_SIZE, current: areaPage, showSizeChanger: false, hideOnSinglePage: true }"
+                    :pagination="areaPagination"
                     size="small"
                     class="admin-branch-mapping-table"
                     @change="(pagination) => (areaPage = pagination.current)"
@@ -264,10 +278,10 @@ const columns = [
                         <template v-else-if="column.key === 'province'">{{ record.parent?.name || '-' }}</template>
                         <template v-if="column.key === 'action'">
                             <a-space>
-                                <a-button type="link" aria-label="Edit wilayah" @click="openEditArea(record)">
+                                <a-button type="link" class="admin-action-button admin-action-edit" aria-label="Edit wilayah" @click="openEditArea(record)">
                                     <template #icon><EditOutlined /></template>
                                 </a-button>
-                                <a-button type="link" danger aria-label="Hapus wilayah" @click="deleteArea(record)">
+                                <a-button type="link" danger class="admin-action-button admin-action-delete" aria-label="Hapus wilayah" @click="deleteArea(record)">
                                     <template #icon><DeleteOutlined /></template>
                                 </a-button>
                             </a-space>

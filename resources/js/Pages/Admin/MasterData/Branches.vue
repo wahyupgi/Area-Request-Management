@@ -4,6 +4,7 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue';
+import { createTablePagination } from '@/utils/tablePagination';
 
 const props = defineProps({
     branches: Array,
@@ -14,6 +15,7 @@ const props = defineProps({
 const showModal = ref(false);
 const editingId = ref(null);
 const form = useForm({ name: '', area_id: null, kc_user_id: null });
+const pagination = createTablePagination({ pageSize: 10, getTotal: () => props.branches.length });
 
 const openCreate = () => { form.reset(); editingId.value = null; showModal.value = true; };
 const openEdit = (branch) => { 
@@ -80,7 +82,7 @@ const columns = [
                     :dataSource="branches" 
                     :columns="columns" 
                     :rowKey="(record) => record.id"
-                    :pagination="{ pageSize: 10 }"
+                    :pagination="pagination"
                     :scroll="{ x: 'max-content' }"
                     size="small"
                     class="admin-document-table ant-table-dark-custom"

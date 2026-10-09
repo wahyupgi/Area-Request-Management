@@ -9,8 +9,18 @@
 /* Keep primary actions aligned with the sidebar palette. */
 button.bg-indigo-600,
 a.bg-indigo-600,
+button.bg-indigo-500,
+a.bg-indigo-500,
 button.bg-blue-600,
 a.bg-blue-600,
+button.bg-blue-500,
+a.bg-blue-500,
+button.bg-sky-600,
+a.bg-sky-600,
+button.bg-sky-500,
+a.bg-sky-500,
+button.ant-btn-primary,
+a.ant-btn-primary,
 input[type="file"]::file-selector-button {
     background-color: #1f69a8 !important;
     color: #ffffff !important;
@@ -18,10 +28,42 @@ input[type="file"]::file-selector-button {
 
 button.bg-indigo-600:hover,
 a.bg-indigo-600:hover,
+button.bg-indigo-500:hover,
+a.bg-indigo-500:hover,
 button.bg-blue-600:hover,
 a.bg-blue-600:hover,
+button.bg-blue-500:hover,
+a.bg-blue-500:hover,
+button.bg-sky-600:hover,
+a.bg-sky-600:hover,
+button.bg-sky-500:hover,
+a.bg-sky-500:hover,
+button.ant-btn-primary:not(:disabled):hover,
+a.ant-btn-primary:hover,
+button.hover\:bg-indigo-500:hover,
+a.hover\:bg-indigo-500:hover,
+button.hover\:bg-blue-500:hover,
+a.hover\:bg-blue-500:hover,
+button.hover\:bg-sky-500:hover,
+a.hover\:bg-sky-500:hover,
+button.active\:bg-indigo-700:active,
+a.active\:bg-indigo-700:active,
+button.active\:bg-blue-700:active,
+a.active\:bg-blue-700:active,
+button.active\:bg-sky-700:active,
+a.active\:bg-sky-700:active,
 input[type="file"]:hover::file-selector-button {
     background-color: #18598f !important;
+}
+
+button.ant-btn-primary,
+a.ant-btn-primary {
+    border-color: #1f69a8 !important;
+}
+
+button.ant-btn-primary:not(:disabled):hover,
+a.ant-btn-primary:hover {
+    border-color: #18598f !important;
 }
 
 /* Ant Design sidebar menu */

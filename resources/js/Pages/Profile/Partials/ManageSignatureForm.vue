@@ -212,8 +212,8 @@ const remove = () => {
 
 .profile-signature-card .profile-signature-save.ant-btn-primary {
     color: #ffffff !important;
-    background-color: #1677ff !important;
-    border-color: #1677ff !important;
+    background-color: #1f69a8 !important;
+    border-color: #1f69a8 !important;
     font-family: inherit;
     font-size: 14px;
     font-weight: 600;
@@ -221,8 +221,8 @@ const remove = () => {
 
 .profile-signature-card .profile-signature-save.ant-btn-primary:not(:disabled):hover {
     color: #ffffff !important;
-    background-color: #4096ff !important;
-    border-color: #4096ff !important;
+    background-color: #18598f !important;
+    border-color: #18598f !important;
 }
 
 html.theme-light .profile-signature-card {
