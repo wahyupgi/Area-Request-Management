@@ -119,8 +119,8 @@ class ReportController extends Controller
         $html .= '<tr>';
         $html .= '<td style="width: 20px;"></td>'; // Left margin column
         $html .= '<td rowspan="3" colspan="4" style="border: 1px solid #000000; text-align: center; vertical-align: middle; font-weight: bold; color: #344f82; font-size: 16px;">TANDA TERIMA GA</td>';
-        $html .= '<td colspan="4" style="border: 1px solid #000000; text-align: center;">Diketahui oleh,</td>';
-        $html .= '<td colspan="4" style="border: 1px solid #000000; text-align: center;">Diketahui oleh,</td>';
+        $html .= '<td colspan="4" style="border: 1px solid #000000; text-align: center;">Disetujui oleh,</td>';
+        $html .= '<td colspan="4" style="border: 1px solid #000000; text-align: center;">Disetujui oleh,</td>';
         $html .= '</tr>';
         $html .= '<tr>';
         $html .= '<td></td>';

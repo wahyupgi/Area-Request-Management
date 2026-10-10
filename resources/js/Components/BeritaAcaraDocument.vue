@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { signatureColumnFractions } from '@/composables/signatureLayout';
+import { managerDisplayName, signatureColumnFractions } from '@/composables/signatureLayout';
 
 const props = defineProps({
     beritaAcara: { type: Object, required: true },
@@ -45,7 +45,9 @@ const signatureSlots = computed(() => {
         role: overrides[index]?.role ?? slot.role,
     })).filter((_, index) => index < 2 || (overrides[index]?.enabled ?? index < defaultSlotCount));
 
-    return resolved;
+    return resolved.map((slot, index) => (index === 1
+        ? { ...slot, name: managerDisplayName(slot.name, resolved.length) }
+        : slot));
 });
 const signatureWidths = computed(() => {
     const fractions = signatureColumnFractions(signatureSlots.value);

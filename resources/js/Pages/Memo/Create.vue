@@ -354,11 +354,12 @@ const submitAndSign = () => {
                                     <div v-else-if="field.type === 'table'" class="mt-2 space-y-3">
                                         <div v-for="(subRow, subIndex) in ensureTableRows(item, field.key, field.columns)" :key="'sub-' + subIndex" class="flex gap-2 items-start bg-gray-50 p-3 rounded border border-gray-200">
                                             <a-row :gutter="12" class="flex-1">
-                                                <a-col :span="24 / Math.min(field.columns.length, 3)" v-for="col in field.columns" :key="col.key" class="mb-2">
-                                                    <div class="text-xs text-gray-500 mb-1">{{ col.label }}</div>
-                                                    <a-input-number v-if="col.type === 'number'" v-model:value="subRow[col.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(col))" :parser="parseIntegerInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" size="small" class="w-full" />
-                                                    <a-input v-else-if="col.type === 'date'" v-model:value="subRow[col.key]" type="date" size="small" />
-                                                    <a-input v-else v-model:value="subRow[col.key]" size="small" />
+                                                <a-col :span="col.type === 'textarea' ? 24 : 24 / Math.min(field.columns.length, 3)" v-for="col in field.columns" :key="col.key" class="mb-3">
+                                                    <div class="text-sm text-gray-600 mb-1">{{ col.label }}</div>
+                                                    <a-input-number v-if="col.type === 'number'" v-model:value="subRow[col.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(col))" :parser="parseIntegerInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" />
+                                                    <a-input v-else-if="col.type === 'date'" v-model:value="subRow[col.key]" type="date" />
+                                                    <a-textarea v-else-if="col.type === 'textarea'" v-model:value="subRow[col.key]" :rows="3" />
+                                                    <a-input v-else v-model:value="subRow[col.key]" />
                                                 </a-col>
                                             </a-row>
                                             <a-button v-if="item[field.key].length > 1" type="text" danger class="mt-5" @click="removeTableRow(item, field.key, subIndex)">

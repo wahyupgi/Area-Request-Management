@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { signatureColumnFractions } from '@/composables/signatureLayout';
+import { managerDisplayName, signatureColumnFractions } from '@/composables/signatureLayout';
 
 const props = defineProps({
     memo: { type: Object, required: true },
@@ -78,9 +78,16 @@ const roleLines = (role) => {
     return [value];
 };
 
+const isManagerSlot = (slot) => ['Area Manager', 'Manager'].includes(slot.role);
+
+const displayName = (slot) => {
+    const name = slot.name || slot.user?.name || (isManagerSlot(slot) ? props.memo.area_manager?.name || '' : '');
+    return isManagerSlot(slot) ? managerDisplayName(name, props.documentSignatures.length) : name;
+};
+
 const signatureGridStyle = computed(() => {
     const count = props.documentSignatures.length;
-    const fractions = signatureColumnFractions(props.documentSignatures);
+    const fractions = signatureColumnFractions(props.documentSignatures, displayName);
     return {
         gridTemplateColumns: fractions
             ? fractions.map((fraction) => `${fraction}fr`).join(' ')
@@ -244,7 +251,7 @@ const signatureGridStyle = computed(() => {
             <div class="h-16 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-2 w-full whitespace-nowrap text-[10px] mt-2 text-black leading-none">{{ slot.name || slot.user?.name || (['Area Manager', 'Manager'].includes(slot.role) ? memo.area_manager?.name || '' : '') }}</p>
+            <p class="relative top-2 w-full whitespace-nowrap text-[10px] mt-2 text-black leading-none">{{ displayName(slot) }}</p>
             <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
                 <span v-for="(line, roleIndex) in roleLines(slot.role === 'Area Manager' ? 'Manager' : slot.role)" :key="roleIndex" class="block whitespace-nowrap">{{ line }}</span>
             </p>

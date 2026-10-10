@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { signatureColumnFractions } from '@/composables/signatureLayout';
+import { managerDisplayName, signatureColumnFractions } from '@/composables/signatureLayout';
 
 const props = defineProps({
     memo: { type: Object, required: true },
@@ -36,7 +36,7 @@ const signatures = computed(() => {
         signature: isApproved
             ? (getApprovedSignature()?.signature_image || props.memo.area_manager?.digital_signature?.signature_image)
             : null,
-        label: 'Diketahui Oleh,',
+        label: 'Disetujui Oleh,',
     };
     const normalizeSlot = (slot, fallback) => slot ? {
         displayName: slot.name || slot.user?.name || fallback.displayName,
@@ -45,7 +45,7 @@ const signatures = computed(() => {
         label: slot.label || fallback.label,
     } : fallback;
 
-    return [
+    const finalSlots = [
         normalizeSlot(configuredKc, creatorSig),
         { ...normalizeSlot(configuredAm, amSig), label: 'Disetujui Oleh,' },
         ...additionalSlots.map((slot) => normalizeSlot(slot, {
@@ -55,6 +55,10 @@ const signatures = computed(() => {
             label: 'Disetujui Oleh,',
         })),
     ];
+
+    return finalSlots.map((slot) => (slot.displayRole === 'Manager'
+        ? { ...slot, displayName: managerDisplayName(slot.displayName, finalSlots.length) }
+        : slot));
 });
 
 const signatureCount = computed(() => signatures.value.length);

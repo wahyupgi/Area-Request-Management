@@ -120,7 +120,7 @@ const printMemo = () => {
         <template #header>
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
-                    <Link :href="user.role === 'AM' ? route('approvals.pending') : route('memos.index')">
+                    <Link :href="user.role === 'AM' ? route('approvals.pending') : user.role === 'ADMIN' ? route('dashboard') : route('memos.index')">
                         <a-button type="text" shape="circle">
                             <template #icon><arrow-left-outlined /></template>
                         </a-button>

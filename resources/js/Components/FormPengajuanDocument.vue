@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { shortManagerName } from '@/composables/signatureLayout';
 
 const props = defineProps({
     beritaAcara: { type: Object, required: true },
@@ -44,10 +45,7 @@ const areaName = computed(() => props.beritaAcara.creator?.area?.name
     || props.beritaAcara.areaManager?.area?.name
     || props.beritaAcara.area_manager?.area?.name
     || '');
-const areaManagerSignatureName = computed(() => {
-    const name = areaManagerName.value.replace(/^Bpk\.\s*/i, '').split(/\s+/)[0];
-    return name ? `Bpk. ${name}` : '';
-});
+const areaManagerSignatureName = computed(() => shortManagerName(areaManagerName.value));
 const fitmkAreaManagerName = computed(() => {
     const name = areaManagerName.value.replace(/^Bpk\.?\s*/i, '').trim();
     if (!name) return '';

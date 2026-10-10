@@ -59,8 +59,8 @@ const isSubmitting = ref(false);
 
 const inputClass = computed(() => (
     isLightTheme.value
-        ? 'w-full bg-white border border-slate-300 rounded-xl px-5 py-3.5 text-slate-900 placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors'
-        : 'w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors'
+        ? 'w-full bg-white border border-slate-300 rounded-xl px-5 py-3.5 text-slate-900 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors'
+        : 'w-full bg-slate-800/50 border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors'
 ));
 
 const passwordToggleClass = computed(() => (
@@ -133,7 +133,7 @@ const submit = async () => {
                 <div class="relative z-10 flex flex-col items-center text-center">
                     <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-28 h-28 mb-8 object-contain bg-transparent" />
                     <h1 class="text-3xl font-bold text-white mb-2 leading-tight">SISTEM LAYANAN PENGAJUAN</h1>
-                    <h2 class="text-xl font-medium text-indigo-400">Area Manager</h2>
+                    <h2 class="text-xl font-medium text-blue-400">Area Manager</h2>
                     <p class="text-slate-400 mt-6 max-w-sm leading-relaxed text-sm">
                        Kelola pengajuan memo cabang secara mudah, cepat, dan terintegrasi.
                     </p>
@@ -235,8 +235,8 @@ const submit = async () => {
 :deep(.login-custom-form .ant-input:focus),
 :deep(.login-custom-form .ant-input-affix-wrapper:focus),
 :deep(.login-custom-form .ant-input-affix-wrapper-focused) {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 1px #6366f1 !important;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6 !important;
 }
 :deep(.login-custom-form .ant-input-affix-wrapper .ant-input) {
     background-color: transparent !important;
@@ -311,28 +311,28 @@ const submit = async () => {
 :deep(.login-submit-button.dark-login-button:hover),
 :deep(.login-submit-button.dark-login-button:focus),
 :deep(.login-submit-button.dark-login-button:disabled) {
-    border-color: #6366f1 !important;
-    background: #4f46e5 !important;
+    border-color: #2563eb !important;
+    background: #2563eb !important;
     color: #ffffff !important;
 }
 
 :deep(.login-submit-button.dark-login-button:hover),
 :deep(.login-submit-button.dark-login-button:focus) {
-    background: #4338ca !important;
+    background: #1d4ed8 !important;
 }
 
 :deep(.login-submit-button.light-login-button),
 :deep(.login-submit-button.light-login-button:hover),
 :deep(.login-submit-button.light-login-button:focus),
 :deep(.login-submit-button.light-login-button:disabled) {
-    border-color: #4f46e5 !important;
-    background: #4f46e5 !important;
+    border-color: #2563eb !important;
+    background: #2563eb !important;
     color: #ffffff !important;
 }
 
 :deep(.login-submit-button.light-login-button:hover),
 :deep(.login-submit-button.light-login-button:focus) {
-    background: #4338ca !important;
+    background: #1d4ed8 !important;
 }
 
 :deep(.login-submit-button:disabled) {

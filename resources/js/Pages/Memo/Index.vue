@@ -14,7 +14,7 @@ const paginationLinks = computed(() => props.memos?.links ?? []);
 
 const columns = [
     { title: 'Kode', dataIndex: 'code', key: 'code' },
-    { title: 'Perihal', dataIndex: ['template', 'name'], key: 'template' },
+    { title: 'Perihal', key: 'template' },
     { title: 'Cabang', dataIndex: ['branch', 'name'], key: 'branch' },
     { title: 'Status', dataIndex: 'status', key: 'status' },
     { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at' },
@@ -79,7 +79,10 @@ const onFilterChange = (e) => {
                 class="memo-table-pgi mb-4"
             >
                 <template #bodyCell="{ column, record }">
-                    <template v-if="column.key === 'status'">
+                    <template v-if="column.key === 'template'">
+                        {{ record.field_values?.meta?.perihal || record.title || record.template?.name || '-' }}
+                    </template>
+                    <template v-else-if="column.key === 'status'">
                         <a-tag :color="getStatusColor(record.status)">
                             {{ getStatusLabel(record.status) }}
                         </a-tag>

@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import KipasMemo from '@/Components/MemoTemplates/KipasMemo.vue';
 import CashOutMemo from '@/Components/MemoTemplates/CashOutMemo.vue';
 import StandardMemo from '@/Components/MemoTemplates/StandardMemo.vue';
+import { managerDisplayName, roleLines, signatureColumnFractions } from '@/composables/signatureLayout';
 
 const props = defineProps({
     memo: { type: Object, required: true },
@@ -148,6 +149,19 @@ const configuredSignatures = computed(() => {
 
 const documentSignatures = computed(() => configuredSignatures.value.filter((slot) => (slot.location || 'document') === 'document'));
 const parafSignatures = computed(() => configuredSignatures.value.filter((slot) => slot.location === 'bottom_right'));
+
+const blankSlotName = (slot) => {
+    const name = slot.name || slot.user?.name || '';
+    return isAreaManagerRole(slot.role) ? managerDisplayName(name, documentSignatures.value.length) : name;
+};
+const blankSignatureGridStyle = computed(() => {
+    const fractions = signatureColumnFractions(documentSignatures.value, blankSlotName);
+    return {
+        gridTemplateColumns: fractions
+            ? fractions.map((fraction) => `${fraction}fr`).join(' ')
+            : `repeat(${Math.max(documentSignatures.value.length, 1)}, minmax(0, 1fr))`,
+    };
+});
 const footerBoxCount = computed(() => Number(props.memo.field_values?.footer_box_count) === 1 ? 1 : 2);
 
 const handleImgError = (event) => {
@@ -202,10 +216,10 @@ const handleImgError = (event) => {
             <template v-else-if="!memo.template">
                 <table v-if="memoItems.some((item) => item?.uraian || item?.keterangan)" class="w-full text-xs border-collapse border border-black mb-5">
                     <thead>
-                        <tr class="bg-[#0284c7] text-white">
-                            <th class="border border-black px-2.5 py-1.5 w-10 text-center font-bold">No.</th>
-                            <th class="border border-black px-3 py-1.5 text-left font-bold">Uraian</th>
-                            <th class="border border-black px-3 py-1.5 text-left font-bold">Keterangan</th>
+                        <tr class="bg-[#1f497d] text-white">
+                            <th class="border border-black px-2.5 py-1.5 w-10 text-center font-bold !text-white">No.</th>
+                            <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Uraian</th>
+                            <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Keterangan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -218,6 +232,19 @@ const handleImgError = (event) => {
                 </table>
                 <div v-else-if="memo.field_values?.body" class="whitespace-pre-wrap text-justify">{{ memo.field_values.body }}</div>
                 <p class="mt-2 whitespace-pre-wrap">{{ memo.field_values?.penutup || 'Demikian Internal Memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.' }}</p>
+
+                <div v-if="documentSignatures.length" class="mt-4 grid gap-3 items-start text-xs w-full mb-4 [break-inside:avoid]" :style="blankSignatureGridStyle">
+                    <div v-for="(slot, index) in documentSignatures" :key="'blank-sign-' + index" class="flex min-w-0 flex-col items-center text-center">
+                        <p class="mb-1">{{ slot.label || 'Disetujui Oleh,' }}</p>
+                        <div class="h-16 w-full flex items-end justify-center relative">
+                            <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
+                        </div>
+                        <p class="relative top-2 w-full whitespace-nowrap text-[10px] mt-2 text-black leading-none">{{ blankSlotName(slot) }}</p>
+                        <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
+                            <span v-for="(line, lineIndex) in roleLines(slot.role)" :key="lineIndex" class="block whitespace-nowrap">{{ line }}</span>
+                        </p>
+                    </div>
+                </div>
             </template>
             <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
         </div>

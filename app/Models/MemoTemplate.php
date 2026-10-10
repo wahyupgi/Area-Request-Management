@@ -171,7 +171,7 @@ class MemoTemplate extends Model
                             ['key' => 'pinjaman_pokok', 'label' => 'Pinjaman Pokok (Rp)', 'type' => 'number'],
                             ['key' => 'no_faktur', 'label' => 'No. Faktur', 'type' => 'text'],
                             ['key' => 'jenis_barang', 'label' => 'Jenis Barang', 'type' => 'text'],
-                            ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'text'],
+                            ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'textarea'],
                         ],
                     ],
                     ['key' => 'nominal_seharusnya', 'label' => 'Nominal Sebelum Reclaim (Rp)', 'type' => 'number', 'required' => true],
@@ -190,7 +190,7 @@ class MemoTemplate extends Model
                 'signature_schema' => [
                     ['label' => 'Dibuat oleh,', 'role' => 'Kepala Cabang'],
                     ['label' => 'Disetujui oleh,', 'role' => 'Area Manager'],
-                    ['label' => 'Diketahui oleh,', 'name' => 'Bpk. Nugroho Samudra Sujatmiko, Ko', 'role' => 'Senior Executive Vice President Bisnis dan Operasional'],
+                    ['label' => 'Disetujui oleh,', 'name' => 'Bpk. Nugroho Samudra Sujatmiko, Ko', 'role' => 'Senior Executive Vice President Bisnis dan Operasional'],
                 ],
             ],
             // ─── Berita Acara Templates ───────────────────────────────

@@ -48,12 +48,28 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->post('/login', [
+        $response = $this->postJson('/login', [
             'username' => $user->username,
             'password' => 'wrong-password',
         ]);
 
         $this->assertGuest();
+        $response
+            ->assertJsonValidationErrors('password')
+            ->assertJsonPath('errors.password.0', 'password salah');
+    }
+
+    public function test_users_receive_an_username_error_when_the_username_is_not_found(): void
+    {
+        $response = $this->postJson('/login', [
+            'username' => 'unknown-user',
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response
+            ->assertJsonValidationErrors('username')
+            ->assertJsonPath('errors.username.0', 'username salah');
     }
 
     public function test_users_can_logout(): void

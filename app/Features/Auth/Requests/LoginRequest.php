@@ -2,6 +2,7 @@
 
 namespace App\Features\Auth\Requests;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -50,8 +51,15 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            $usernameField = array_key_first($credentials);
+            $userExists = User::query()
+                ->where($usernameField, $login)
+                ->exists();
+            $errorField = $userExists ? 'password' : 'username';
+            $errorMessage = $userExists ? 'password salah' : 'username salah';
+
             throw ValidationException::withMessages([
-                'username' => trans('auth.failed'),
+                $errorField => $errorMessage,
             ]);
         }
 

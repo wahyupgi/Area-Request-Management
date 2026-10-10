@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { signatureColumnFractions } from '@/composables/signatureLayout';
+import { managerDisplayName, signatureColumnFractions } from '@/composables/signatureLayout';
 
 const props = defineProps({
     memo: { type: Object, required: true },
@@ -47,7 +47,7 @@ const signatureColumns = computed(() => {
         });
     }
 
-    return [
+    const columns = [
         {
             label: 'Dibuat oleh,',
             name: props.memo.creator?.name || '',
@@ -62,6 +62,10 @@ const signatureColumns = computed(() => {
         },
         ...additionalColumns,
     ];
+
+    return columns.map((slot) => (slot.role === 'Manager'
+        ? { ...slot, name: managerDisplayName(slot.name, columns.length) }
+        : slot));
 });
 
 const handleImgError = (event) => {
