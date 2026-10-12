@@ -42,6 +42,10 @@ watch(() => page.props.flash?.error, (message) => {
     if (message) error(message);
 });
 
+watch(() => page.props.unreadNotificationsCount, (count) => {
+    unreadCount.value = count || 0;
+});
+
 const notifications = ref([]);
 const userMenuOpen = ref(false);
 const sidebarStateKey = 'arm-sidebar-collapsed';
@@ -177,15 +181,31 @@ const onNavPress = (item) => {
 
 const fetchNotifications = async () => {
     try {
-        const response = await fetch(route('notifications.index'));
-        notifications.value = await response.json();
-        unreadCount.value = notifications.value.filter(notification => !notification.is_read).length;
-    } catch (e) {}
+        const [notificationsResponse, countResponse] = await Promise.all([
+            fetch(route('notifications.index')),
+            fetch(route('notifications.unreadCount')),
+        ]);
+        if (!notificationsResponse.ok || !countResponse.ok) {
+            throw new Error('Gagal memuat notifikasi.');
+        }
+
+        const [notificationList, countResult] = await Promise.all([
+            notificationsResponse.json(),
+            countResponse.json(),
+        ]);
+        notifications.value = notificationList;
+        unreadCount.value = countResult.count;
+    } catch (e) {
+        error('Gagal memuat notifikasi.');
+    }
 };
 
 const markAsRead = async (notification) => {
     try {
-        await fetch(route('notifications.read', notification.id), { method: 'POST', headers: { 'X-CSRF-TOKEN': page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content } });
+        const response = await fetch(route('notifications.read', notification.id), { method: 'POST', headers: { 'X-CSRF-TOKEN': page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content } });
+        if (!response.ok) {
+            throw new Error('Gagal menandai notifikasi telah dibaca.');
+        }
         if (!notification.is_read) {
             notification.is_read = true;
             unreadCount.value = Math.max(0, unreadCount.value - 1);
@@ -193,15 +213,22 @@ const markAsRead = async (notification) => {
         if (notification.memo_id) {
             router.visit(route('memos.show', notification.memo_id));
         }
-    } catch (e) {}
+    } catch (e) {
+        error('Gagal menandai notifikasi telah dibaca.');
+    }
 };
 
 const markAllRead = async () => {
     try {
-        await fetch(route('notifications.readAll'), { method: 'POST', headers: { 'X-CSRF-TOKEN': page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content } });
+        const response = await fetch(route('notifications.readAll'), { method: 'POST', headers: { 'X-CSRF-TOKEN': page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content } });
+        if (!response.ok) {
+            throw new Error('Gagal menandai semua notifikasi telah dibaca.');
+        }
         notifications.value.forEach(n => n.is_read = true);
         unreadCount.value = 0;
-    } catch (e) {}
+    } catch (e) {
+        error('Gagal menandai semua notifikasi telah dibaca.');
+    }
 };
 
 const handleNotificationDropdown = (visible) => {

@@ -13,6 +13,8 @@ class TemplateController extends Controller
 {
     public function index()
     {
+        MemoTemplate::ensureOtherMemoTemplate();
+
         $templates = MemoTemplate::with('creator')
             ->orderBy('created_at', 'desc')
             ->get();

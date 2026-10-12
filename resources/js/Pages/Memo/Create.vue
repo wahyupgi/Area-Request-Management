@@ -13,7 +13,6 @@ import {
 
 const props = defineProps({ templates: Array, branches: Array });
 
-const blankTemplateValue = '__blank__';
 const defaultClosing = 'Demikian Internal Memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
 
 const form = useForm({
@@ -32,7 +31,6 @@ const form = useForm({
 });
 
 const selectedTemplate = ref(null);
-const isBlankMemo = computed(() => form.template_id === blankTemplateValue);
 const attachment = ref(null);
 const autoPerihal = ref('');
 const { success } = useSweetAlert();
@@ -61,16 +59,15 @@ const groupedTemplates = computed(() => {
         if (!groups[cat]) groups[cat] = [];
         groups[cat].push(t);
     });
-    return [...Object.keys(groups).map(key => ({
+    return Object.keys(groups).map(key => ({
         label: key === 'GA' ? 'Divisi GA' : key,
         options: groups[key].map(t => ({
             value: t.id,
-            label: `[${/^(fin|hrd)\s*-/i.test(String(t.name || '').trim()) ? (String(t.name).trim().toUpperCase().startsWith('FIN') ? 'FIN' : 'HRD') : String(t.category || '').trim()}] ${String(t.name || '').replace(/^(FIN|HRD)\s*-\s*/i, '')}`
+            label: String(t.category || '').trim().toLowerCase() === 'lainnya'
+                ? String(t.name || '')
+                : `[${/^(fin|hrd)\s*-/i.test(String(t.name || '').trim()) ? (String(t.name).trim().toUpperCase().startsWith('FIN') ? 'FIN' : 'HRD') : String(t.category || '').trim()}] ${String(t.name || '').replace(/^(FIN|HRD)\s*-\s*/i, '')}`
         }))
-    })), {
-        label: 'Lainnya',
-        options: [{ value: blankTemplateValue, label: 'Lainnya' }],
-    }];
+    }));
 });
 
 watch(() => form.template_id, (val) => {
@@ -82,7 +79,7 @@ watch(() => form.template_id, (val) => {
             : ''),
         penutup: documentDefaults.penutup || defaultClosing,
         body: '',
-        items: val === blankTemplateValue ? [{ uraian: '', keterangan: '' }] : [{}],
+        items: [{}],
         meta: {
             ...defaultDocumentMeta,
             ...Object.fromEntries(Object.entries(documentDefaults).filter(([key]) => !['pengantar', 'penutup'].includes(key))),
@@ -158,7 +155,6 @@ const submit = () => {
     form.submit_after_save = false;
     form.transform((data) => ({
         ...data,
-        template_id: data.template_id === blankTemplateValue ? null : data.template_id,
         attachment: attachment.value,
     })).post(route('memos.store'), {
         forceFormData: true,
@@ -170,7 +166,6 @@ const submitAndSign = () => {
     form.submit_after_save = true;
     form.transform((data) => ({
         ...data,
-        template_id: data.template_id === blankTemplateValue ? null : data.template_id,
         attachment: attachment.value,
     })).post(route('memos.store'), { forceFormData: true });
 };
@@ -219,7 +214,7 @@ const submitAndSign = () => {
                 </a-form-item>
             </a-card>
 
-            <a-row :gutter="24" v-if="selectedTemplate || isBlankMemo">
+            <a-row :gutter="24" v-if="selectedTemplate">
                 <a-col :xs="24" :lg="10" class="mb-6">
                     <div class="flex flex-col gap-6">
                         <!-- Informasi Memo -->
@@ -292,42 +287,7 @@ const submitAndSign = () => {
 
                 <a-col :xs="24" :lg="14">
                     <!-- Dynamic Fields -->
-                    <a-card v-if="isBlankMemo" :bordered="false" class="rounded-lg shadow-sm">
-                        <h2 class="text-sm font-semibold mb-4">Rincian Memo</h2>
-                        <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                            <a-form-item :label="`Uraian ${itemIndex + 1}`" class="mb-0">
-                                <a-input v-model:value="item.uraian" placeholder="Masukkan uraian" />
-                            </a-form-item>
-                            <a-form-item label="Keterangan" class="mb-0">
-                                <div class="flex gap-2">
-                                    <a-input v-model:value="item.keterangan" placeholder="Masukkan keterangan" />
-                                    <a-button v-if="form.field_values.items.length > 1" type="text" danger @click="removeItem(itemIndex)">
-                                        <template #icon><delete-outlined /></template>
-                                    </a-button>
-                                </div>
-                            </a-form-item>
-                        </div>
-                        <a-button type="dashed" block @click="addItem">
-                            <template #icon><plus-outlined /></template>
-                            Tambah Baris
-                        </a-button>
-                        <a-form-item label="Kalimat Penutup" class="mt-5 mb-0">
-                            <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
-                        </a-form-item>
-
-                        <div class="mt-8 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
-                            <a-button size="large" type="default" class="memo-save-draft-button" @click="submit" :loading="form.processing && !form.submit_after_save">
-                                <template #icon><save-outlined /></template>
-                                Simpan Draft
-                            </a-button>
-                            <a-button size="large" type="primary" @click="submitAndSign" :loading="form.processing && form.submit_after_save" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
-                                <template #icon><send-outlined /></template>
-                                Tanda Tangani &amp; Kirim ke AM
-                            </a-button>
-                        </div>
-                    </a-card>
-
-                    <a-card v-else :bordered="false" class="rounded-lg shadow-sm">
+                    <a-card :bordered="false" class="rounded-lg shadow-sm">
                         <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-gray-200 rounded-lg p-5 mb-4 relative">
                             <div class="flex justify-between items-center border-b pb-2 mb-4">
                                 <h3 class="font-semibold">Item {{ itemIndex + 1 }}</h3>

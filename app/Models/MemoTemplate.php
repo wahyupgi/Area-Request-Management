@@ -27,6 +27,8 @@ class MemoTemplate extends Model
             return;
         }
 
+        static::ensureOtherMemoTemplate();
+
         $keringananClosing = 'Demikianlah internal memo ini dibuat agar dapat dipergunakan dengan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
 
         $templates = [
@@ -360,6 +362,33 @@ class MemoTemplate extends Model
         }
 
         Cache::forget('active_memo_templates');
+    }
+
+    public static function ensureOtherMemoTemplate(): void
+    {
+        $admin = User::query()->where('role', 'ADMIN')->first();
+
+        if (!$admin) {
+            return;
+        }
+
+        $template = static::query()->firstOrCreate(
+            ['name' => 'Lainnya', 'type' => 'memo'],
+            [
+                'category' => 'Lainnya',
+                'field_schema' => [
+                    ['key' => 'uraian', 'label' => 'Uraian', 'type' => 'text', 'required' => true],
+                    ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'text', 'required' => false],
+                ],
+                'document_defaults' => [],
+                'is_active' => true,
+                'created_by' => $admin->id,
+            ]
+        );
+
+        if ($template->wasRecentlyCreated) {
+            Cache::forget('active_memo_templates');
+        }
     }
 
     public function creator()
