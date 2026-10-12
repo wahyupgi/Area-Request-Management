@@ -126,4 +126,68 @@ class FormPengajuanTest extends TestCase
             'area_manager_id' => $areaManager->id,
         ]);
     }
+
+    public function test_display_name_for_loan_template_is_normalized_and_loan_fields_are_required(): void
+    {
+        $area = Area::create(['name' => 'Area Form Pinjaman']);
+        $areaManager = User::factory()->create([
+            'role' => 'AM',
+            'area_id' => $area->id,
+        ]);
+        $branch = Branch::create([
+            'name' => 'Cabang Form Pinjaman',
+            'area_id' => $area->id,
+        ]);
+        $kc = User::factory()->create([
+            'role' => 'KC',
+            'area_id' => $area->id,
+            'branch_id' => $branch->id,
+        ]);
+        $requestData = [
+            'full_name' => 'Pemohon Pinjaman',
+            'position' => 'Kepala Cabang',
+            'work_location' => 'Cabang Form Pinjaman',
+            'employment_date' => '2020-01-01',
+            'reason' => 'Keperluan keluarga',
+        ];
+
+        $this->actingAs($kc)
+            ->from(route('form-pengajuan.create'))
+            ->post(route('form-pengajuan.store'), [
+                'branch_id' => $branch->id,
+                'template' => 'Form Permohonan Pinjaman (FPP)',
+                'title' => 'Form Permohonan Pinjaman (FPP)',
+                'meta' => ['request_data' => $requestData],
+                'submit' => true,
+            ])
+            ->assertRedirect(route('form-pengajuan.create'))
+            ->assertSessionHasErrors([
+                'meta.request_data.loan_amount',
+                'meta.request_data.repayment_months',
+                'meta.request_data.salary_deduction',
+                'meta.request_data.loan_type',
+            ]);
+
+        $requestData += [
+            'loan_amount' => 'Rp 5.000.000',
+            'repayment_months' => 10,
+            'salary_deduction' => 'Bersedia',
+            'loan_type' => 'pinjaman_uang',
+        ];
+
+        $this->actingAs($kc)
+            ->post(route('form-pengajuan.store'), [
+                'branch_id' => $branch->id,
+                'template' => 'Form Permohonan Pinjaman (FPP)',
+                'title' => 'Form Permohonan Pinjaman (FPP)',
+                'meta' => ['request_data' => $requestData],
+                'submit' => true,
+            ])
+            ->assertRedirect(route('form-pengajuan.index'));
+
+        $document = FormPengajuan::query()->latest('id')->firstOrFail();
+        $this->assertSame('form_permohonan_pinjaman', $document->template);
+        $this->assertSame(FormPengajuan::STATUS_SUBMITTED, $document->status);
+        $this->assertSame($areaManager->id, $document->area_manager_id);
+    }
 }

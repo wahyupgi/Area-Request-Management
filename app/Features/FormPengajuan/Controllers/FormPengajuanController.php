@@ -31,13 +31,19 @@ class FormPengajuanController extends Controller
         $user = auth()->user();
         $branchIds = $user->availableBranchesForDocuments()->pluck('branches.id')->all();
         $template = $request->input('template');
+        $template = match ($template) {
+            'Form Permohonan Pinjaman (FPP)' => 'form_permohonan_pinjaman',
+            'Form Ijin Tidak Masuk Kerja (FITMK)' => 'form_ijin_tidak_masuk_kerja',
+            default => $template,
+        };
+        $request->merge(['template' => $template]);
         $isSubmit = $request->boolean('submit');
         $required = Rule::requiredIf($isSubmit);
         $requiredForLoan = Rule::requiredIf($isSubmit && $template === 'form_permohonan_pinjaman');
         $requiredForLeave = Rule::requiredIf($isSubmit && $template === 'form_ijin_tidak_masuk_kerja');
         $validated = $request->validate([
             'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->whereIn('id', $branchIds)],
-            'template' => ['required', 'string'],
+            'template' => ['required', 'string', Rule::in(FormPengajuan::TEMPLATES)],
             'meta.request_data' => 'nullable|array:full_name,position,work_location,employment_date,late_months,absence_months,request_number,salary_after_approval,minimum_salary,loan_amount,repayment_months,salary_deduction,loan_type,leave_type,start_date,duration,reason,handover,substitute,substitute_position,phone',
             'meta.request_data.full_name' => [$required, 'nullable', 'string', 'max:255'],
             'meta.request_data.position' => 'nullable|string|max:255',

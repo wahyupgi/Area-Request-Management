@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
@@ -53,17 +53,44 @@ const sidebarCollapsed = ref(
     typeof window !== 'undefined' && window.localStorage.getItem(sidebarStateKey) === 'true'
 );
 
+const mobileQuery = '(max-width: 991.98px)';
+const isMobile = ref(typeof window !== 'undefined' && window.matchMedia(mobileQuery).matches);
+const mobileNavOpen = ref(false);
+let mobileMediaList = null;
+const onMobileChange = (event) => {
+    isMobile.value = event.matches;
+    if (!event.matches) mobileNavOpen.value = false;
+};
+
 const toggleSidebar = () => {
+    if (isMobile.value) {
+        mobileNavOpen.value = !mobileNavOpen.value;
+        return;
+    }
     sidebarCollapsed.value = !sidebarCollapsed.value;
     localStorage.setItem(sidebarStateKey, String(sidebarCollapsed.value));
 };
 
+const closeMobileNav = () => { mobileNavOpen.value = false; };
+const effectiveCollapsed = computed(() => !isMobile.value && sidebarCollapsed.value);
+
+watch(mobileNavOpen, (open) => {
+    if (typeof document !== 'undefined') {
+        document.body.classList.toggle('mobile-nav-open', open && isMobile.value);
+    }
+});
+
 onMounted(() => {
+    mobileMediaList = window.matchMedia(mobileQuery);
+    isMobile.value = mobileMediaList.matches;
+    mobileMediaList.addEventListener('change', onMobileChange);
     removeNavigationStart = router.on('start', () => { isNavigating.value = true; });
     removeNavigationFinish = router.on('finish', () => { isNavigating.value = false; });
 });
 
 onUnmounted(() => {
+    mobileMediaList?.removeEventListener('change', onMobileChange);
+    document.body.classList.remove('mobile-nav-open');
     removeNavigationStart?.();
     removeNavigationFinish?.();
 });
@@ -168,6 +195,7 @@ watch(() => route().current(), (currentRoute) => {
 }, { immediate: true });
 
 const onNavClick = (item) => {
+    closeMobileNav();
     router.visit(route(item.route));
 };
 
@@ -245,25 +273,26 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <a-layout :style="{ height: '100vh', overflow: 'hidden', background: isLightTheme ? '#f8fafc' : '#0f172a' }">
+    <a-layout class="app-shell" :style="{ height: '100vh', overflow: 'hidden', background: isLightTheme ? '#f8fafc' : '#0f172a' }">
         <div v-if="isNavigating" class="navigation-feedback" aria-live="polite" aria-label="Memuat halaman"></div>
         <!-- Sidebar -->
+        <div v-if="isMobile && mobileNavOpen" class="sidebar-backdrop" @click="closeMobileNav"></div>
         <a-layout-sider
-            v-model:collapsed="sidebarCollapsed"
+            :collapsed="effectiveCollapsed"
             :trigger="null"
             collapsible
             theme="dark"
             :style="{ background: isLightTheme ? '#2474ad' : '#155080', height: '100vh', position: 'sticky', top: 0 }"
             :class="[
                 isLightTheme ? 'border-r border-blue-600' : 'border-r border-slate-800',
-                { 'sidebar-is-collapsed': sidebarCollapsed }
+                { 'sidebar-is-collapsed': effectiveCollapsed, 'sidebar-mobile': isMobile, 'is-open': mobileNavOpen }
             ]"
             :width="280"
             :collapsedWidth="80"
         >
             <div class="flex items-center gap-3 px-5 py-4 border-b border-blue-500/80">
                 <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-10 h-10 rounded-lg object-contain border border-blue-700 p-0.5 shadow-sm flex-shrink-0" />
-                <div class="sidebar-brand-details flex flex-col min-w-0 text-white" :class="{ 'is-hidden': sidebarCollapsed }">
+                <div class="sidebar-brand-details flex flex-col min-w-0 text-white" :class="{ 'is-hidden': effectiveCollapsed }">
                     <span class="sidebar-brand-title text-xs font-bold text-white tracking-wider uppercase leading-tight">PUSAT GADAI INDONESIA</span>
                     <div class="flex items-center gap-1.5 mt-1 text-[10px] text-blue-100">
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-300 animate-pulse flex-shrink-0"></span>
@@ -346,21 +375,21 @@ const handleLogout = () => {
         </a-layout-sider>
 
         <!-- Main Content -->
-        <a-layout class="main-layout" :class="{ 'is-navigating': isNavigating }" :style="{ background: isLightTheme ? '#f8fafc' : '#0f172a' }">
+        <a-layout class="main-layout app-main" :class="{ 'is-navigating': isNavigating }" :style="{ background: isLightTheme ? '#f8fafc' : '#0f172a' }">
             <!-- Top Bar -->
             <a-layout-header
-                class="px-6 sticky top-0 z-10 border-b"
+                class="app-header px-6 sticky top-0 z-10 border-b"
                 :style="{ padding: '0 24px', height: '64px', color: isLightTheme ? '#0f172a' : '#e2e8f0', background: isLightTheme ? '#ffffff' : '#17233a', backgroundColor: isLightTheme ? '#ffffff' : '#17233a', borderColor: isLightTheme ? '#e2e8f0' : '#334155' }"
             >
-                <div class="header-left flex items-center gap-4" :class="isLightTheme ? 'text-slate-700' : 'text-slate-200'">
+                <div class="header-left flex items-center gap-4 min-w-0" :class="isLightTheme ? 'text-slate-700' : 'text-slate-200'">
                     <menu-unfold-outlined
-                        v-if="sidebarCollapsed"
-                        class="text-lg cursor-pointer hover:text-blue-600 transition-colors flex-shrink-0"
+                        v-if="isMobile ? !mobileNavOpen : sidebarCollapsed"
+                        class="header-toggle text-lg cursor-pointer hover:text-blue-600 transition-colors flex-shrink-0"
                         @click="toggleSidebar"
                     />
                     <menu-fold-outlined
                         v-else
-                        class="text-lg cursor-pointer hover:text-blue-600 transition-colors flex-shrink-0"
+                        class="header-toggle text-lg cursor-pointer hover:text-blue-600 transition-colors flex-shrink-0"
                         @click="toggleSidebar"
                     />
                     <div class="leading-none flex items-center min-w-0" :class="isLightTheme ? 'text-slate-800' : 'text-slate-100'">
@@ -382,7 +411,7 @@ const handleLogout = () => {
                                 <span v-if="unreadCount > 0" class="notif-count">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
                             </div>
                         <template #overlay>
-                            <div class="bg-white rounded-lg shadow-lg border border-gray-100 w-80 overflow-hidden">
+                            <div class="notification-panel bg-white rounded-lg shadow-lg border border-gray-100 w-80 overflow-hidden">
                                 <div class="flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
                                     <span class="font-medium">Notifikasi</span>
                                     <a-button type="link" size="small" @click="markAllRead" class="text-xs">
@@ -424,7 +453,7 @@ const handleLogout = () => {
                             <a-avatar size="small" class="bg-blue-500 flex items-center justify-center">
                                 <template #icon><user-outlined /></template>
                             </a-avatar>
-                            <span class="text-sm font-medium hidden sm:block leading-none">{{ user?.name }}</span>
+                            <span class="user-menu-name text-sm font-medium hidden sm:block leading-none">{{ user?.name }}</span>
                             <down-outlined :class="['user-menu-arrow text-[10px] opacity-70', { 'is-open': userMenuOpen }]" />
                         </div>
                         <template #overlay>
@@ -451,7 +480,7 @@ const handleLogout = () => {
             <!-- Main Content Area -->
             <a-layout-content
                 :style="{ margin: '24px 16px', padding: '24px', background: isLightTheme ? '#ffffff' : '#1e293b', minHeight: '280px', height: 'calc(100vh - 64px - 48px)', overflowY: 'auto', borderColor: isLightTheme ? '#f3f4f6' : '#334155' }"
-                class="rounded-lg shadow-sm border overflow-initial"
+                class="app-content rounded-lg shadow-sm border overflow-initial"
             >
                 <slot />
             </a-layout-content>

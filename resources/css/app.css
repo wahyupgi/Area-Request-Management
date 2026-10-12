@@ -9,6 +9,7 @@
 @import './theme.css';
 @import './sidebar.css';
 @import './components.css';
+@import './responsive.css';
 
 @tailwind base;
 @tailwind components;

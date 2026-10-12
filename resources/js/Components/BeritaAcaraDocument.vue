@@ -100,7 +100,7 @@ const formatCurrency = (value) => {
     >
         <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
-                <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-14 h-14 object-contain" @error="handleImgError" />
+                <img src="/PGI-Document-Logo.png" alt="Logo PGI" class="h-14 w-auto max-w-[8rem] object-contain" @error="handleImgError" />
             </div>
             <div :class="isTemplateOne ? 'border border-gray-300 px-3 py-1 text-xs font-normal text-gray-300 bg-white' : 'border border-black px-3 py-1 text-xs font-bold tracking-tight bg-white'">
                 {{ beritaAcara.creator?.name }}

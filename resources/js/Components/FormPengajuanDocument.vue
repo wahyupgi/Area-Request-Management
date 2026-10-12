@@ -7,7 +7,8 @@ const props = defineProps({
 });
 
 const data = computed(() => props.beritaAcara.meta?.request_data || {});
-const isLoan = computed(() => props.beritaAcara.meta?.template === 'form_permohonan_pinjaman');
+const isLoan = computed(() => ['form_permohonan_pinjaman', 'Form Permohonan Pinjaman (FPP)']
+    .includes(props.beritaAcara.meta?.template));
 const leaveTypeLabels = {
     cuti_tahunan: 'Cuti Tahunan',
     ijin: 'Ijin (Belum Ada Hak Cuti)',
@@ -134,7 +135,7 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
             <div class="fitmk-form">
                 <table class="fitmk-header">
                     <tbody><tr>
-                        <td class="fitmk-logo"><img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" /></td>
+                        <td class="fitmk-logo"><img src="/PGI-Document-Logo.png" alt="Logo PGI" /></td>
                         <td class="fitmk-company">PT PUSAT GADAI INDONESIA</td>
                         <td class="fitmk-code">FORM 03-HRD-LEAVE/UNPAID<br />2019/2020</td>
                     </tr></tbody>
@@ -240,7 +241,7 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
 .fitmk-header td { border: 0; }
 .fitmk-header td + td { border-left: 1px solid #222; }
 .fitmk-logo { width: 25%; }
-.fitmk-logo img { width: 75px; height: 55px; object-fit: contain; }
+.fitmk-logo img { width: 110px; height: 55px; object-fit: contain; }
 .fitmk-company { width: 48%; font-size: 19px; font-weight: 700; }
 .fitmk-code { width: 27%; font-size: 10px; }
 .fitmk-title {
