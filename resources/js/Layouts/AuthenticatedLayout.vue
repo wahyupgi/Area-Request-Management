@@ -129,7 +129,7 @@ const navItems = computed(() => {
             roles: ['KC'],
             children: [
                 {
-                    name: 'Memo',
+                    name: 'Internal Memo',
                     key: 'memo-submenu',
                     icon: FileTextOutlined,
                     children: [
@@ -138,7 +138,7 @@ const navItems = computed(() => {
                     ],
                 },
                 {
-                    name: 'BA',
+                    name: 'Berita Acara',
                     key: 'berita-acara-submenu',
                     icon: AuditOutlined,
                     children: [

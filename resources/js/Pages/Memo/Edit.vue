@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
@@ -57,7 +57,7 @@ const form = useForm({
 
 const fileInput = ref(null);
 const uploading = ref(false);
-const showSignatureDialog = ref(props.openSignature);
+const showSignatureDialog = ref(props.openSignature && !props.signature?.signature_image);
 const signatureFile = ref(null);
 const signaturePreview = ref(null);
 const submittingMemo = ref(false);
@@ -75,10 +75,6 @@ const save = () => {
     form.put(route('memos.update', props.memo.id), {
         onSuccess: () => success('Draft memo berhasil disimpan.'),
     });
-};
-
-const submitMemo = () => {
-    showSignatureDialog.value = true;
 };
 
 const addItem = () => { form.field_values.items.push({}); };
@@ -112,14 +108,14 @@ const selectSignature = (event) => {
     reader.readAsDataURL(file);
 };
 
-const confirmSubmit = () => {
-    if (!props.signature && !signatureFile.value) return;
+const submitWithSignature = (signatureToUpload = signatureFile.value) => {
+    if (!props.signature?.signature_image && !signatureToUpload) return;
     submittingMemo.value = true;
     form.put(route('memos.update', props.memo.id), {
         preserveScroll: true,
         onSuccess: () => {
             const formData = new FormData();
-            if (signatureFile.value) formData.append('signature_image', signatureFile.value);
+            if (signatureToUpload) formData.append('signature_image', signatureToUpload);
             router.post(route('memos.submit', props.memo.id), formData, {
                 forceFormData: true,
                 onError: (errors) => {
@@ -131,6 +127,23 @@ const confirmSubmit = () => {
         onError: () => { submittingMemo.value = false; showSignatureDialog.value = false; },
     });
 };
+
+const submitMemo = () => {
+    if (props.signature?.signature_image) {
+        submitWithSignature(null);
+        return;
+    }
+
+    showSignatureDialog.value = true;
+};
+
+const confirmSubmit = () => submitWithSignature(signatureFile.value);
+
+onMounted(() => {
+    if (props.openSignature && props.signature?.signature_image) {
+        submitWithSignature(null);
+    }
+});
 
 const uploadFile = () => {
     const file = fileInput.value?.files[0];

@@ -3,8 +3,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BeritaAcaraDocument from '@/Components/BeritaAcaraDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { useTheme } from '@/composables/useTheme';
 import {
+    ArrowLeftOutlined,
     PaperClipOutlined,
     DownloadOutlined,
     PrinterOutlined
@@ -13,9 +13,7 @@ import {
 const props = defineProps({
     beritaAcara: Object,
 });
-
 const page = usePage();
-const { theme } = useTheme();
 const isKcUser = page.props.auth.user?.role === 'KC';
 const isAdminUser = page.props.auth.user?.role === 'ADMIN';
 const backUrl = isAdminUser
@@ -98,12 +96,9 @@ const printBA = () => {
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
                     <Link :href="backUrl">
-                        <span
-                            class="ba-history-back-link"
-                            :style="{ color: theme === 'light' ? '#000000' : '#f8fafc' }"
-                        >
-                            {{ backLabel }}
-                        </span>
+                        <a-button type="text" shape="circle" :title="`Kembali ke ${backLabel}`">
+                            <template #icon><arrow-left-outlined /></template>
+                        </a-button>
                     </Link>
                     <div>
                         <h1 class="text-base font-bold text-gray-800 mb-0 tracking-tight">Riwayat Berita Acara</h1>
@@ -202,28 +197,3 @@ const printBA = () => {
         </div>
     </AuthenticatedLayout>
 </template>
-
-<style scoped>
-/* Semua styling BA document menggunakan Tailwind utility classes inline.
-   Style block ini hanya untuk override minimal jika diperlukan. */
-.ba-history-back-link {
-    color: #f8fafc;
-    font-size: 14px;
-    font-weight: 400;
-    white-space: nowrap;
-}
-
-.ba-history-back-link:hover {
-    color: #e2e8f0;
-    text-decoration: underline;
-}
-
-:global(html.theme-light) .ba-history-back-link {
-    color: #000000;
-}
-
-:global(html.theme-light) .ba-history-back-link:hover {
-    color: #1f2937;
-}
-
-</style>

@@ -25,6 +25,7 @@ class BeritaAcaraApprovalController extends Controller
 
         return Inertia::render('BeritaAcara/Review', [
             'beritaAcara' => $beritaAcara,
+            'signature' => $user->digitalSignature,
         ]);
     }
 

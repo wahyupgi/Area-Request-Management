@@ -5,7 +5,10 @@ import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps({ formPengajuan: { type: Object, required: true } });
+const props = defineProps({
+    formPengajuan: { type: Object, required: true },
+    signature: { type: Object, default: null },
+});
 const showRejectModal = ref(false);
 const showApproveModal = ref(false);
 const approveForm = useForm({});
@@ -30,6 +33,14 @@ const attachments = [
 const approve = () => approveForm.post(route('approvals.form-pengajuan.approve', props.formPengajuan.id), {
     onSuccess: () => { showApproveModal.value = false; },
 });
+const requestApprove = () => {
+    if (props.signature?.signature_image) {
+        approve();
+        return;
+    }
+
+    showApproveModal.value = true;
+};
 const reject = () => rejectForm.post(route('approvals.form-pengajuan.reject', props.formPengajuan.id), {
     onSuccess: () => { showRejectModal.value = false; },
 });
@@ -59,7 +70,7 @@ const reject = () => rejectForm.post(route('approvals.form-pengajuan.reject', pr
                 <a-card title="Keputusan Persetujuan" :bordered="false" class="rounded-lg shadow-sm">
                     <a-alert type="info" show-icon message="Periksa formulir dan lampiran sebelum memberi keputusan." />
                     <div class="mt-4 flex flex-col gap-2">
-                        <a-button type="primary" block @click="showApproveModal = true">Setujui Form</a-button>
+                        <a-button type="primary" block @click="requestApprove">Setujui Form</a-button>
                         <a-button danger block @click="showRejectModal = true">Tolak Form</a-button>
                     </div>
                     <a-alert v-if="approveForm.errors.signature" class="mt-3" type="error" show-icon :message="approveForm.errors.signature" />

@@ -72,6 +72,15 @@ const handleApprove = () => {
     });
 };
 
+const requestApprove = () => {
+    if (props.signature?.signature_image) {
+        handleApprove();
+        return;
+    }
+
+    showApproveConfirm.value = true;
+};
+
 const handleReject = () => {
     rejectForm.post(route('approvals.reject', props.memo.id), {
         onSuccess: () => { showRejectModal.value = false; },
@@ -286,7 +295,7 @@ const formatDate = (dateString) => {
                                 Periksa kelayakan rincian permohonan memo. Keputusan Anda akan dibubuhkan tanda tangan digital dan tercatat pada riwayat audit sistem.
                             </p>
 
-                            <a-button type="primary" block size="large" class="bg-green-600 hover:bg-green-500 border-green-600" @click="showApproveConfirm = true">
+                            <a-button type="primary" block size="large" class="bg-green-600 hover:bg-green-500 border-green-600" @click="requestApprove">
                                 <template #icon></template> Setujui & Tanda Tangani Memo
                             </a-button>
 

@@ -162,10 +162,14 @@ class FormPengajuanController extends Controller
 
     public function review(FormPengajuan $formPengajuan)
     {
-        abort_unless($formPengajuan->area_manager_id === auth()->id(), 403);
+        $user = auth()->user();
+        abort_unless($formPengajuan->area_manager_id === $user->id, 403);
         $formPengajuan->load(['branch.area', 'creator.area', 'creator.digitalSignature', 'areaManager.area', 'areaManager.digitalSignature', 'attachments']);
 
-        return Inertia::render('FormPengajuan/Review', ['formPengajuan' => $formPengajuan]);
+        return Inertia::render('FormPengajuan/Review', [
+            'formPengajuan' => $formPengajuan,
+            'signature' => $user->digitalSignature,
+        ]);
     }
 
     public function approve(FormPengajuan $formPengajuan)

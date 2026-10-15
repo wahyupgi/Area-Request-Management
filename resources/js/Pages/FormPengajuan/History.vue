@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FormPengajuanDocument from '@/Components/FormPengajuanDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ArrowLeftOutlined } from '@ant-design/icons-vue';
 const page = usePage();
 
 const props = defineProps({ formPengajuan: { type: Object, required: true } });
@@ -42,7 +43,9 @@ const statusConfig = {
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <Link :href="isAdmin ? route('dashboard') : route('form-pengajuan.index')">
-                        {{ isAdmin ? 'Dashboard' : 'Riwayat Form Pengajuan' }}
+                        <a-button type="text" shape="circle" :title="isAdmin ? 'Kembali ke Dashboard' : 'Kembali ke Riwayat Form Pengajuan'">
+                            <template #icon><arrow-left-outlined /></template>
+                        </a-button>
                     </Link>
                     <div>
                         <h1 class="mb-0 text-base font-bold">Detail Form Pengajuan</h1>

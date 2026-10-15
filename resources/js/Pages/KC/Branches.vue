@@ -259,6 +259,36 @@ html:not(.theme-light) .kc-branches-table .ant-table-tbody > tr > td > * {
     margin-top: 14px;
 }
 
+html:not(.theme-light) .kc-branches-page .ant-alert-info {
+    color: #dbeafe !important;
+    background: #172d46 !important;
+    border-color: #28547a !important;
+}
+
+html:not(.theme-light) .kc-branches-page .ant-alert-info .ant-alert-message,
+html:not(.theme-light) .kc-branches-page .ant-alert-info .ant-alert-description {
+    color: #dbeafe !important;
+}
+
+html:not(.theme-light) .kc-branches-page .ant-alert-info .ant-alert-icon {
+    color: #60a5fa !important;
+}
+
+html:not(.theme-light) .kc-branches-page .ant-alert-warning {
+    color: #fef3c7 !important;
+    background: #332a1a !important;
+    border-color: #715626 !important;
+}
+
+html:not(.theme-light) .kc-branches-page .ant-alert-warning .ant-alert-message,
+html:not(.theme-light) .kc-branches-page .ant-alert-warning .ant-alert-description {
+    color: #fef3c7 !important;
+}
+
+html:not(.theme-light) .kc-branches-page .ant-alert-warning .ant-alert-icon {
+    color: #fbbf24 !important;
+}
+
 html.theme-light .kc-branches-card {
     color: #334155;
     background: #ffffff !important;

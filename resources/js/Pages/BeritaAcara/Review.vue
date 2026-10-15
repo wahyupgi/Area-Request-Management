@@ -14,6 +14,7 @@ import {
 
 const props = defineProps({
     beritaAcara: Object,
+    signature: { type: Object, default: null },
 });
 
 const showRejectModal = ref(false);
@@ -113,6 +114,15 @@ const handleApprove = () => {
     approveForm.post(route('approvals.ba.approve', props.beritaAcara.id), {
         onSuccess: () => { showApproveConfirm.value = false; },
     });
+};
+
+const requestApprove = () => {
+    if (props.signature?.signature_image) {
+        handleApprove();
+        return;
+    }
+
+    showApproveConfirm.value = true;
 };
 
 const handleReject = () => {
@@ -216,7 +226,7 @@ const formatDate = (dateString) => {
                                 Silakan periksa rincian Berita Acara yang diajukan. Keputusan Anda akan dicatat dalam sistem.
                             </p>
 
-                            <a-button type="primary" block size="large" class="bg-green-600 hover:bg-green-500 border-green-600" @click="showApproveConfirm = true">
+                            <a-button type="primary" block size="large" class="bg-green-600 hover:bg-green-500 border-green-600" @click="requestApprove">
                                 <template #icon><check-circle-outlined /></template> Setujui
                             </a-button>
 
