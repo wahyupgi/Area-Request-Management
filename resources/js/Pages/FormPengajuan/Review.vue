@@ -18,11 +18,15 @@ const document = {
     ...props.formPengajuan,
     meta: { document_kind: 'form_pengajuan', template: props.formPengajuan.template, request_data: props.formPengajuan.data },
 };
-const attachment = props.formPengajuan.attachment_path ? [{
-    id: props.formPengajuan.id,
-    file_path: props.formPengajuan.attachment_path,
-    original_name: props.formPengajuan.attachment_name,
-}] : [];
+const attachments = [
+    ...(props.formPengajuan.attachments || []),
+    ...(props.formPengajuan.attachment_path ? [{
+        id: `legacy-form-${props.formPengajuan.id}`,
+        legacy: true,
+        file_path: props.formPengajuan.attachment_path,
+        original_name: props.formPengajuan.attachment_name,
+    }] : []),
+];
 const printDocument = () => window.print();
 const approve = () => approveForm.post(route('approvals.form-pengajuan.approve', props.formPengajuan.id), {
     onSuccess: () => { showApproveModal.value = false; },
@@ -69,7 +73,7 @@ const reject = () => rejectForm.post(route('approvals.form-pengajuan.reject', pr
                 </a-card>
             </div>
         </div>
-        <div class="mx-auto max-w-7xl px-4"><MemoAttachments :attachments="attachment" :subject="formPengajuan.title" /></div>
+        <div class="mx-auto max-w-7xl px-4"><MemoAttachments :attachments="attachments" :subject="formPengajuan.title" /></div>
 
         <a-modal v-model:open="showApproveModal" title="Setujui Form Pengajuan" :confirm-loading="approveForm.processing" ok-text="Ya, Setujui" cancel-text="Batal" @ok="approve">
             <p>Pastikan tanda tangan digital Anda telah terdaftar sebelum menyetujui.</p>

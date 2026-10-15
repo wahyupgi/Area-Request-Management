@@ -3,9 +3,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FormPengajuanDocument from '@/Components/FormPengajuanDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+const page = usePage();
 
 const props = defineProps({ formPengajuan: { type: Object, required: true } });
-const isAdmin = usePage().props.auth.user?.role === 'ADMIN';
+const currentUser = page.props.auth.user;
+const isAdmin = currentUser?.role === 'ADMIN';
 const templateLabels = {
     form_permohonan_pinjaman: 'Form Permohonan Pinjaman (FPP)',
     form_ijin_tidak_masuk_kerja: 'Form Ijin Tidak Masuk Kerja (FITMK)',
@@ -14,11 +16,17 @@ const document = {
     ...props.formPengajuan,
     meta: { document_kind: 'form_pengajuan', template: props.formPengajuan.template, request_data: props.formPengajuan.data },
 };
-const attachment = props.formPengajuan.attachment_path ? [{
-    id: props.formPengajuan.id,
-    file_path: props.formPengajuan.attachment_path,
-    original_name: props.formPengajuan.attachment_name,
-}] : [];
+const attachments = [
+    ...(props.formPengajuan.attachments || []),
+    ...(props.formPengajuan.attachment_path ? [{
+        id: `legacy-form-${props.formPengajuan.id}`,
+        legacy: true,
+        file_path: props.formPengajuan.attachment_path,
+        original_name: props.formPengajuan.attachment_name,
+    }] : []),
+];
+const canDeleteAttachments = props.formPengajuan.status === 'draft'
+    && props.formPengajuan.created_by === currentUser?.id;
 const statusLabels = { draft: 'Draft', submitted: 'Menunggu Persetujuan', approved: 'Disetujui', rejected: 'Ditolak' };
 const printDocument = () => window.print();
 </script>
@@ -60,6 +68,14 @@ const printDocument = () => window.print();
                 </a-descriptions>
             </a-card>
         </div>
-        <div class="mx-auto max-w-7xl px-4"><MemoAttachments :attachments="attachment" :subject="formPengajuan.title" /></div>
+        <div class="mx-auto max-w-7xl px-4">
+            <MemoAttachments
+                :attachments="attachments"
+                :subject="formPengajuan.title"
+                delete-route-name="form-pengajuan.attachments.destroy"
+                :document-id="formPengajuan.id"
+                :can-delete="canDeleteAttachments"
+            />
+        </div>
     </AuthenticatedLayout>
 </template>

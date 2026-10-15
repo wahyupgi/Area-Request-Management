@@ -124,11 +124,15 @@ const handleReject = () => {
 };
 
 const attachmentUrl = () => '/storage/' + props.beritaAcara.attachment_path;
-const printAttachments = props.beritaAcara.attachment_path ? [{
-    id: props.beritaAcara.id,
-    file_path: props.beritaAcara.attachment_path,
-    original_name: props.beritaAcara.attachment_name,
-}] : [];
+const printAttachments = [
+    ...(props.beritaAcara.attachments || []),
+    ...(props.beritaAcara.attachment_path ? [{
+        id: `legacy-ba-${props.beritaAcara.id}`,
+        legacy: true,
+        file_path: props.beritaAcara.attachment_path,
+        original_name: props.beritaAcara.attachment_name,
+    }] : []),
+];
 
 const printBA = () => {
     const printWindow = window.open('', '_blank');

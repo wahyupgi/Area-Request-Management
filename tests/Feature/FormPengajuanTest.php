@@ -50,11 +50,12 @@ class FormPengajuanTest extends TestCase
                 'template' => 'form_ijin_tidak_masuk_kerja',
                 'request_data' => [
                     'full_name' => 'Pemohon Ijin',
-                    'leave_type' => 'cuti_tahunan',
+                    'leave_type' => 'lainnya',
+                    'leave_type_other' => 'Ijin mengikuti kegiatan keluarga',
                     'start_date' => '2026-10-07',
                     'duration' => 1,
                     'reason' => 'Keperluan keluarga',
-                    'substitute' => 'Ana Fauziyah',
+                    'handover' => 'Ana Fauziyah',
                     'substitute_position' => 'Kepala Unit',
                 ],
             ],
@@ -77,6 +78,8 @@ class FormPengajuanTest extends TestCase
             $this->assertStringStartsWith('FP/RBO/BRL/PGI/', $document->code);
             $this->assertSame(FormPengajuan::STATUS_SUBMITTED, $document->status);
             if ($form['template'] === 'form_ijin_tidak_masuk_kerja') {
+                $this->assertSame('Ijin mengikuti kegiatan keluarga', $document->data['leave_type_other']);
+                $this->assertSame('Ana Fauziyah', $document->data['handover']);
                 $this->assertSame('Kepala Unit', $document->data['substitute_position']);
             }
             $this->assertNull($document->branch_id);

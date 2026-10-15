@@ -4,8 +4,11 @@ namespace App\Features\BeritaAcara\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\BeritaAcara;
+use App\Models\BeritaAcaraAttachment;
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -57,42 +60,63 @@ class BeritaAcaraController extends Controller
             'rincian_data.*.value'  => 'nullable|string|max:500',
             'keterangan_tambahan'   => 'nullable|string',
             'penutup'               => 'nullable|string',
-            'attachment'            => 'nullable|file|mimes:doc,docx|max:10240',
+            'attachments'            => 'nullable|array|max:3',
+            'attachments.*'          => 'file|mimes:docx,pdf|max:10240',
             'submit_after_save'     => 'boolean',
         ]);
 
-        $attachmentPath = null;
-        $attachmentName = null;
-
-        if ($request->hasFile('attachment')) {
-            $file           = $request->file('attachment');
-            $attachmentPath = $file->store('berita-acara-attachments', 'public');
-            $attachmentName = $file->getClientOriginalName();
-        }
-
         $branch = Branch::findOrFail($validated['branch_id']);
-        $ba = BeritaAcara::create([
-            'title'               => $validated['title'],
-            'meta'                => $validated['meta'] ?? [],
-            'pengantar'           => $validated['pengantar'] ?? null,
-            'rincian_data'        => $validated['rincian_data'] ?? [],
-            'keterangan_tambahan' => $validated['keterangan_tambahan'] ?? null,
-            'penutup'             => $validated['penutup'] ?? null,
-            'attachment_path'     => $attachmentPath,
-            'attachment_name'     => $attachmentName,
-            'branch_id'           => $branch->id,
-            'created_by'          => $user->id,
-            'area_manager_id'     => $user->areaManagerForBranch($branch)?->id,
-            'status'              => BeritaAcara::STATUS_DRAFT,
-        ]);
+        $storedPaths = [];
+
+        try {
+            $ba = DB::transaction(function () use ($validated, $user, $branch, $request, &$storedPaths) {
+                $ba = BeritaAcara::create([
+                    'title'               => $validated['title'],
+                    'meta'                => $validated['meta'] ?? [],
+                    'pengantar'           => $validated['pengantar'] ?? null,
+                    'rincian_data'        => $validated['rincian_data'] ?? [],
+                    'keterangan_tambahan' => $validated['keterangan_tambahan'] ?? null,
+                    'penutup'             => $validated['penutup'] ?? null,
+                    'branch_id'           => $branch->id,
+                    'created_by'          => $user->id,
+                    'area_manager_id'     => $user->areaManagerForBranch($branch)?->id,
+                    'status'              => BeritaAcara::STATUS_DRAFT,
+                ]);
+
+                foreach ($request->file('attachments', []) as $file) {
+                    $path = $file->store('berita-acara-attachments/' . $ba->id, 'public');
+                    if (!$path) {
+                        throw new \RuntimeException('Lampiran Berita Acara gagal disimpan.');
+                    }
+
+                    $storedPaths[] = $path;
+                    $ba->attachments()->create([
+                        'file_path' => $path,
+                        'original_name' => $file->getClientOriginalName(),
+                    ]);
+                }
+
+                if ($request->boolean('submit_after_save')) {
+                    $ba->update([
+                        'status'       => BeritaAcara::STATUS_SUBMITTED,
+                        'submitted_at' => now(),
+                    ]);
+                }
+
+                return $ba;
+            });
+        } catch (\Throwable $exception) {
+            if ($storedPaths && !Storage::disk('public')->delete($storedPaths)) {
+                \Log::warning('Gagal membersihkan lampiran Berita Acara setelah penyimpanan gagal.', [
+                    'paths' => $storedPaths,
+                ]);
+            }
+
+            throw $exception;
+        }
 
         // Jika user pilih "Kirim langsung"
         if ($request->boolean('submit_after_save')) {
-            $ba->update([
-                'status'       => BeritaAcara::STATUS_SUBMITTED,
-                'submitted_at' => now(),
-            ]);
-
             return redirect()->route('berita-acara.index')
                 ->with('success', 'Berita Acara berhasil dikirim ke Area Manager.');
         }
@@ -116,5 +140,17 @@ class BeritaAcaraController extends Controller
         return Inertia::render('BeritaAcara/Index', [
             'items' => $items,
         ]);
+    }
+
+    public function deleteAttachment(BeritaAcara $beritaAcara, BeritaAcaraAttachment $attachment)
+    {
+        abort_unless($attachment->berita_acara_id === $beritaAcara->id, 404);
+        abort_unless($beritaAcara->created_by === auth()->id(), 403);
+        abort_unless($beritaAcara->status === BeritaAcara::STATUS_DRAFT, 403);
+
+        Storage::disk('public')->delete($attachment->file_path);
+        $attachment->delete();
+
+        return back()->with('success', 'Lampiran Berita Acara berhasil dihapus.');
     }
 }

@@ -145,7 +145,7 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
                     <table class="fitmk-details">
                         <tbody>
                             <tr><th>1.</th><td>Nama</td><td>:</td><td class="fitmk-applicant">{{ data.full_name || beritaAcara.creator?.name || '-' }}</td></tr>
-                            <tr><th>2.</th><td>Detail ijin tidak masuk kerja</td><td>:</td><td>{{ leaveTypeLabels[data.leave_type] || '-' }}</td></tr>
+                            <tr><th>2.</th><td>Detail ijin tidak masuk kerja</td><td>:</td><td>{{ data.leave_type === 'lainnya' && data.leave_type_other ? `Lainnya: ${data.leave_type_other}` : leaveTypeLabels[data.leave_type] || '-' }}</td></tr>
                             <tr><th></th><td colspan="3" class="fitmk-options">
                                 <span v-for="(label, value) in leaveTypeLabels" :key="value" class="fitmk-option">
                                     <span class="fitmk-option-mark">{{ data.leave_type === value ? '✓' : '◯' }}</span>{{ label }}
@@ -174,7 +174,7 @@ const managerSignature = computed(() => props.beritaAcara.areaManager?.digital_s
                         </tr>
                         <tr class="fitmk-signature-names">
                             <td><strong>{{ data.full_name || beritaAcara.creator?.name || '-' }}</strong><br />Kepala Cabang</td>
-                            <td><strong>{{ data.substitute || '-' }}</strong><br />{{ data.substitute_position || 'Pengganti' }}</td>
+                            <td><strong>{{ data.substitute || data.handover || '-' }}</strong><br />{{ data.substitute_position || 'Pengganti' }}</td>
                             <td><strong>{{ fitmkAreaManagerName || '-' }}</strong><br />Manager</td>
                             <td><strong>HRD</strong></td>
                         </tr>

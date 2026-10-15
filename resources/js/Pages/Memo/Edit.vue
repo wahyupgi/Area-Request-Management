@@ -256,12 +256,16 @@ const deleteMemo = async () => {
                                         </template>
                                     </a-list>
                                 </div>
+                                <p class="mb-2 text-xs text-gray-400">
+                                    Maksimal 3 lampiran DOCX/PDF, 10 MB per file. {{ memo.attachments.length }}/3 file digunakan.
+                                </p>
                                 <div class="flex items-center gap-3">
                                     <input
                                         ref="fileInput"
                                         type="file"
                                         @change="uploadFile"
-                                        accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                                        :disabled="memo.attachments.length >= 3 || uploading"
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                     />
                                     <span v-if="uploading" class="text-sm text-gray-500">Mengupload...</span>

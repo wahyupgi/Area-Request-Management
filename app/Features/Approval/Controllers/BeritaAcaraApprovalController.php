@@ -21,7 +21,7 @@ class BeritaAcaraApprovalController extends Controller
             abort(403);
         }
 
-        $beritaAcara->load(['branch', 'creator.digitalSignature', 'areaManager.digitalSignature']);
+        $beritaAcara->load(['branch', 'creator.digitalSignature', 'areaManager.digitalSignature', 'attachments']);
 
         return Inertia::render('BeritaAcara/Review', [
             'beritaAcara' => $beritaAcara,
@@ -165,6 +165,7 @@ class BeritaAcaraApprovalController extends Controller
             'branch.area.areaManager.digitalSignature',
             'creator.digitalSignature',
             'areaManager.digitalSignature',
+            'attachments',
         ]);
 
         if ($user->isKC() && $beritaAcara->created_by !== $user->id) abort(403);

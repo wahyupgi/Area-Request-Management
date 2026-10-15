@@ -32,11 +32,17 @@ const backLabel = isAdminUser
         : 'Kotak Masuk';
 
 const attachmentUrl = () => '/storage/' + props.beritaAcara.attachment_path;
-const printAttachments = props.beritaAcara.attachment_path ? [{
-    id: props.beritaAcara.id,
-    file_path: props.beritaAcara.attachment_path,
-    original_name: props.beritaAcara.attachment_name,
-}] : [];
+const printAttachments = [
+    ...(props.beritaAcara.attachments || []),
+    ...(props.beritaAcara.attachment_path ? [{
+        id: `legacy-ba-${props.beritaAcara.id}`,
+        legacy: true,
+        file_path: props.beritaAcara.attachment_path,
+        original_name: props.beritaAcara.attachment_name,
+    }] : []),
+];
+const canDeleteAttachments = props.beritaAcara.status === 'draft'
+    && props.beritaAcara.created_by === page.props.auth.user?.id;
 
 const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -201,7 +207,13 @@ const printBA = () => {
                     </a-card>
                 </a-col>
             </a-row>
-            <MemoAttachments :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
+            <MemoAttachments
+                :attachments="printAttachments"
+                :subject="beritaAcara.meta?.perihal || beritaAcara.title"
+                delete-route-name="berita-acara.attachments.destroy"
+                :document-id="beritaAcara.id"
+                :can-delete="canDeleteAttachments"
+            />
         </div>
     </AuthenticatedLayout>
 </template>

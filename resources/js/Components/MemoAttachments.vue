@@ -3,12 +3,16 @@ import { onBeforeUnmount, onMounted, reactive } from 'vue';
 import { renderAsync } from 'docx-preview';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { router } from '@inertiajs/vue3';
 
 GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const props = defineProps({
     attachments: { type: Array, default: () => [] },
     subject: { type: String, default: '' },
+    deleteRouteName: { type: String, default: '' },
+    documentId: { type: Number, default: null },
+    canDelete: { type: Boolean, default: false },
 });
 
 const docxContainers = {};
@@ -20,6 +24,14 @@ const docxErrors = reactive({});
 const pdfLoading = reactive({});
 const pdfErrors = reactive({});
 const attachmentUrl = (attachment) => '/storage/' + attachment.file_path;
+const deleteAttachment = (attachment) => {
+    if (!props.canDelete || attachment.legacy || !props.deleteRouteName) return;
+    if (!window.confirm(`Hapus lampiran "${attachment.original_name || attachment.file_path}"?`)) return;
+
+    router.delete(route(props.deleteRouteName, [props.documentId, attachment.id]), {
+        preserveScroll: true,
+    });
+};
 const isImageAttachment = (attachment) => /\.(jpe?g|png|gif|webp)$/i.test(attachment.file_path || '');
 const isPdfAttachment = (attachment) => /\.pdf$/i.test(attachment.file_path || '');
 const isDocxAttachment = (attachment) => /\.docx?$/i.test(attachment.file_path || '');
@@ -184,6 +196,20 @@ onBeforeUnmount(() => {
             class="memo-print-attachment mt-6 w-full bg-white p-4 shadow-md print:mt-0 print:min-h-0 print:p-0 print:shadow-none"
         >
             <p v-if="subject" class="mb-2 text-center text-xs font-medium print:hidden">Perihal: {{ subject }}</p>
+            <div class="mb-3 flex justify-end gap-3 text-sm print:hidden">
+                <a :href="attachmentUrl(attachment)" :download="attachment.original_name || undefined" class="text-blue-600 hover:underline">
+                    Unduh lampiran
+                </a>
+                <a-button
+                    v-if="canDelete && !attachment.legacy && deleteRouteName"
+                    type="link"
+                    danger
+                    size="small"
+                    @click="deleteAttachment(attachment)"
+                >
+                    Hapus
+                </a-button>
+            </div>
             <h2 :class="['mb-4 text-center text-sm font-bold print:mb-2', { 'print:hidden': isDocxAttachment(attachment) || isPdfAttachment(attachment) }]">Lampiran: {{ attachment.original_name || attachment.file_path }}</h2>
             <img
                 v-if="isImageAttachment(attachment)"

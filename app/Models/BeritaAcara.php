@@ -80,4 +80,9 @@ class BeritaAcara extends Model
     {
         return $this->belongsTo(User::class, 'area_manager_id');
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(BeritaAcaraAttachment::class);
+    }
 }

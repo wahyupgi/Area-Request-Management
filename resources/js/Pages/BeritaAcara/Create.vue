@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
@@ -14,6 +14,10 @@ const props = defineProps({
 
 const page = usePage();
 const { success } = useSweetAlert();
+const attachmentError = ref('');
+const attachmentValidationError = computed(() => Object.entries(form.errors)
+    .find(([key]) => key === 'attachments' || key.startsWith('attachments.'))?.[1] || '');
+const allowedAttachmentExtensions = '.docx,.pdf';
 const availableTemplates = computed(() => {
     return (props.templates || []).map(t => ({ value: t.name, label: t.name, templateData: t }));
 });
@@ -57,7 +61,7 @@ const form = useForm({
     ],
     keterangan_tambahan: 'Adapun alasan mengajukan...',
     penutup: 'Demikian berita acara ini dibuat agar dapat dipergunakan sebagai mana mestinya. Terima kasih atas perhatiannya dan kerjasamanya.',
-    attachment: null,
+    attachments: [],
     submit_after_save: false,
 });
 
@@ -123,7 +127,24 @@ watch(() => form.meta.template, (templateName) => {
 });
 
 const selectAttachment = (event) => {
-    form.attachment = event.target.files[0] || null;
+    attachmentError.value = '';
+    const selectedFiles = Array.from(event.target.files || []);
+    const allFiles = [...form.attachments, ...selectedFiles];
+
+    if (allFiles.length > 3) {
+        attachmentError.value = 'Maksimal 3 lampiran untuk setiap dokumen.';
+    } else if (selectedFiles.some((file) => file.size > 10 * 1024 * 1024)) {
+        attachmentError.value = 'Ukuran setiap file maksimal 10 MB.';
+    } else {
+        form.attachments = allFiles;
+    }
+
+    event.target.value = '';
+};
+
+const removeAttachment = (index) => {
+    form.attachments.splice(index, 1);
+    attachmentError.value = '';
 };
 
 const addRincian = () => {
@@ -132,6 +153,11 @@ const addRincian = () => {
 
 const removeRincian = (index) => {
     form.rincian_data.splice(index, 1);
+};
+
+const resetOtherLeaveType = () => {
+    form.meta.request_data.leave_type = 'cuti_tahunan';
+    form.meta.request_data.leave_type_other = '';
 };
 
 const addTemplateRow = () => {
@@ -190,9 +216,9 @@ const submit = () => {
             template: data.meta.template,
             meta: { request_data: data.meta.request_data },
             submit: false,
-            attachment: form.attachment,
+            attachments: data.attachments,
         })
-        : ({ ...data, attachment: form.attachment }))
+        : ({ ...data }))
         .post(props.formPengajuanOnly ? route('form-pengajuan.store') : route('berita-acara.store'), {
             forceFormData: true,
             onSuccess: () => success(props.formPengajuanOnly
@@ -210,13 +236,13 @@ const submitAndSign = () => {
             template: data.meta.template,
             meta: { request_data: data.meta.request_data },
             submit: true,
-            attachment: form.attachment,
+            attachments: data.attachments,
         })).post(route('form-pengajuan.store'), { forceFormData: true });
         return;
     }
 
     form.submit_after_save = true;
-    form.transform(data => ({ ...data, attachment: form.attachment }))
+    form.transform(data => ({ ...data }))
         .post(route('berita-acara.store'), { forceFormData: true });
 };
 </script>
@@ -299,17 +325,31 @@ const submitAndSign = () => {
 
                         </a-card>
 
-                        <!-- Lampiran Word -->
+                        <!-- Lampiran Pendukung -->
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <h2 class="text-sm font-semibold mb-1">Lampiran Pendukung</h2>
-                            <p class="text-xs text-gray-400 mb-3">Unggah dokumen atau bukti pendukung (PDF, Word, atau gambar; maks. 10MB).</p>
+                            <p class="text-xs text-gray-400 mb-3">
+                                Unggah file DOCX atau PDF. Maksimal 3 file, 10 MB per file.
+                            </p>
                             <input
                                 type="file"
                                 @change="selectAttachment"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
+                                multiple
+                                :accept="allowedAttachmentExtensions"
                                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                             />
-                            <p v-if="form.attachment" class="mt-2 text-xs text-green-600">✓ {{ form.attachment.name }}</p>
+                            <a-alert v-if="attachmentError" class="mt-3" type="error" show-icon :message="attachmentError" />
+                            <a-alert v-if="attachmentValidationError" class="mt-3" type="error" show-icon :message="attachmentValidationError" />
+                            <a-list v-if="form.attachments.length" class="mt-3" size="small" :data-source="form.attachments">
+                                <template #renderItem="{ item, index }">
+                                    <a-list-item>
+                                        <span class="truncate">{{ item.name }}</span>
+                                        <template #actions>
+                                            <a-button type="link" danger size="small" @click="removeAttachment(index)">Hapus</a-button>
+                                        </template>
+                                    </a-list-item>
+                                </template>
+                            </a-list>
                         </a-card>
                     </div>
                 </a-col>
@@ -341,12 +381,25 @@ const submitAndSign = () => {
                                 <a-alert class="mb-4" type="info" show-icon message="Form Ijin Tidak Masuk Kerja (FITMK)" description="Isi detail ketidakhadiran dan serah terima pekerjaan." />
                                 <a-row :gutter="12">
                                     <a-col :xs="24" :md="12"><a-form-item label="Nama" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']"><a-input v-model:value="form.meta.request_data.full_name" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Detail ijin tidak masuk kerja"><a-select v-model:value="form.meta.request_data.leave_type"><a-select-option value="cuti_tahunan">Cuti Tahunan</a-select-option><a-select-option value="ijin">Ijin (Belum Ada Hak Cuti)</a-select-option><a-select-option value="cuti_melahirkan">Cuti Melahirkan</a-select-option><a-select-option value="cuti_khusus">Cuti Khusus (Menikah/Kematian/Hari Raya)</a-select-option><a-select-option value="sakit">Sakit (Melampirkan Surat Dokter)</a-select-option><a-select-option value="lainnya">Lainnya</a-select-option></a-select></a-form-item></a-col>
+                                    <a-col :xs="24" :md="12">
+                                        <a-form-item label="Detail ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.leave_type_other'] ? 'error' : ''" :help="form.errors['meta.request_data.leave_type_other']">
+                                            <a-input v-if="form.meta.request_data.leave_type === 'lainnya'" v-model:value="form.meta.request_data.leave_type_other" placeholder="Tuliskan jenis ijin">
+                                                <template #addonAfter><a-button type="link" size="small" @click="resetOtherLeaveType">Pilih jenis lain</a-button></template>
+                                            </a-input>
+                                            <a-select v-else v-model:value="form.meta.request_data.leave_type">
+                                                <a-select-option value="cuti_tahunan">Cuti Tahunan</a-select-option>
+                                                <a-select-option value="ijin">Ijin (Belum Ada Hak Cuti)</a-select-option>
+                                                <a-select-option value="cuti_melahirkan">Cuti Melahirkan</a-select-option>
+                                                <a-select-option value="cuti_khusus">Cuti Khusus (Menikah/Kematian/Hari Raya)</a-select-option>
+                                                <a-select-option value="sakit">Sakit (Melampirkan Surat Dokter)</a-select-option>
+                                                <a-select-option value="lainnya">Lainnya</a-select-option>
+                                            </a-select>
+                                        </a-form-item>
+                                    </a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Tanggal ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.start_date'] ? 'error' : ''" :help="form.errors['meta.request_data.start_date']"><a-input v-model:value="form.meta.request_data.start_date" type="date" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Durasi (hari)" :validateStatus="form.errors['meta.request_data.duration'] ? 'error' : ''" :help="form.errors['meta.request_data.duration']"><a-input-number v-model:value="form.meta.request_data.duration" :min="1" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" /></a-form-item></a-col>
                                     <a-col :span="24"><a-form-item label="Alasan ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']"><a-textarea v-model:value="form.meta.request_data.reason" :rows="3" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Pekerjaan selama tidak masuk dilimpahkan ke"><a-input v-model:value="form.meta.request_data.handover" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Nama pengganti"><a-input v-model:value="form.meta.request_data.substitute" /></a-form-item></a-col>
                                     <a-col :xs="24" :md="12"><a-form-item label="Jabatan pengganti"><a-input v-model:value="form.meta.request_data.substitute_position" placeholder="Contoh: Kepala Unit" /></a-form-item></a-col>
                                     <a-col :span="24"><a-form-item label="Kontak selama tidak masuk kerja (Telepon / HP)"><a-input v-model:value="form.meta.request_data.phone" @keydown="restrictToDigits" @paste="preventNonDigitPaste" /></a-form-item></a-col>
                                 </a-row>

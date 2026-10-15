@@ -315,11 +315,11 @@ class MemoTemplate extends Model
                 'field_schema' => [
                     ['key' => 'full_name', 'label' => 'Nama', 'type' => 'text', 'required' => true],
                     ['key' => 'leave_type', 'label' => 'Detail ijin tidak masuk kerja', 'type' => 'select', 'required' => true],
+                    ['key' => 'leave_type_other', 'label' => 'Detail ijin lainnya', 'type' => 'text', 'required' => false],
                     ['key' => 'start_date', 'label' => 'Tanggal ijin tidak masuk kerja', 'type' => 'date', 'required' => true],
                     ['key' => 'duration', 'label' => 'Durasi (hari)', 'type' => 'number', 'required' => true],
                     ['key' => 'reason', 'label' => 'Alasan ijin tidak masuk kerja', 'type' => 'textarea', 'required' => true],
                     ['key' => 'handover', 'label' => 'Pekerjaan selama tidak masuk dilimpahkan ke', 'type' => 'text', 'required' => false],
-                    ['key' => 'substitute', 'label' => 'Nama pengganti', 'type' => 'text', 'required' => false],
                     ['key' => 'phone', 'label' => 'Kontak selama tidak masuk kerja (Telepon / HP)', 'type' => 'text', 'required' => false],
                 ],
             ],

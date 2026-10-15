@@ -206,6 +206,10 @@ class MemoController extends Controller
             return back()->withErrors(['status' => 'Tidak bisa menambah lampiran pada memo yang sudah dikirim.']);
         }
 
+        if ($memo->attachments()->count() >= 3) {
+            return back()->withErrors(['file' => 'Memo maksimal memiliki 3 lampiran.']);
+        }
+
         $file = $request->file('file');
         $this->service->storeAttachment($memo, $file);
 
