@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
+import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { computed, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
@@ -78,7 +79,15 @@ watch(() => form.meta.template, (templateName) => {
     const t = selected.templateData;
     form.title = t.name;
     form.meta.perihal = t.document_defaults?.perihal || t.name;
-    form.meta.data = { rows: [], kronologi: '' };
+    const isOtherBa = t.name === 'Berita Acara Lainnya';
+    const tableColumns = isOtherBa
+        ? (t.field_schema || []).map(({ key, label, type, required }) => ({ key, label, type, required }))
+        : [];
+    form.meta.data = {
+        rows: isOtherBa ? [Object.fromEntries(tableColumns.map((column) => [column.key, '']))] : [],
+        kronologi: '',
+        ...(isOtherBa ? { table_columns: tableColumns } : {}),
+    };
 
     if (t.type === 'form') {
         const requestData = {};
@@ -121,7 +130,9 @@ watch(() => form.meta.template, (templateName) => {
             form.meta.data.rows = [{ cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }];
         } else if (t.name === 'Berita Acara Lainnya') {
             form.rincian_data = [];
-            form.meta.data.rows = [{ uraian: '', keterangan: '' }];
+            form.meta.data.rows = [
+                Object.fromEntries(tableColumns.map((column) => [column.key, ''])),
+            ];
         } else {
             form.rincian_data = (t.field_schema || []).map(f => ({ label: f.label, value: '' }));
             form.meta.data.rows = [];
@@ -171,7 +182,7 @@ const addTemplateRow = () => {
         ? { nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }
         : form.meta.template === 'Penghapusan Barang Sitaan'
             ? { cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }
-            : { uraian: '', keterangan: '' };
+            : Object.fromEntries((form.meta.data.table_columns || []).map((column) => [column.key, '']));
     form.meta.data.rows.push(row);
 };
 
@@ -505,32 +516,10 @@ const saveSignatureAndSubmit = () => {
                             <div v-else class="border border-gray-200 rounded p-4 mb-4 overflow-x-auto">
                                 <h3 class="font-semibold text-sm mb-3">{{ form.meta.template === 'Permintaan Revisi Absensi' ? 'Data Absensi' : form.meta.template === 'Penghapusan Barang Sitaan' ? 'Data Barang Sitaan' : 'Daftar Item' }}</h3>
                                 <template v-if="form.meta.template === 'Berita Acara Lainnya'">
-                                    <table class="w-full min-w-[520px] border-collapse text-sm">
-                                        <thead>
-                                            <tr class="bg-gray-50">
-                                                <th class="border border-gray-200 px-3 py-2 text-center font-semibold">No.</th>
-                                                <th class="border border-gray-200 px-3 py-2 text-left font-semibold">Uraian</th>
-                                                <th class="border border-gray-200 px-3 py-2 text-left font-semibold">Keterangan</th>
-                                                <th class="w-12 border border-gray-200 px-2 py-2"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(row, index) in form.meta.data.rows" :key="index">
-                                                <td class="border border-gray-200 px-3 py-2 text-center">{{ index + 1 }}</td>
-                                                <td class="border border-gray-200 px-2 py-2"><a-input v-model:value="row.uraian" placeholder="Uraian item" /></td>
-                                                <td class="border border-gray-200 px-2 py-2"><a-input v-model:value="row.keterangan" placeholder="Keterangan" /></td>
-                                                <td class="border border-gray-200 px-1 py-2 text-center">
-                                                    <a-button type="text" danger aria-label="Hapus baris" @click="removeTemplateRow(index)">
-                                                        <template #icon><delete-outlined /></template>
-                                                    </a-button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <a-button type="dashed" block class="mt-3" @click="addTemplateRow">
-                                        <template #icon><plus-outlined /></template>
-                                        Tambah Baris
-                                    </a-button>
+                                    <DocumentTableEditor
+                                        v-model:columns="form.meta.data.table_columns"
+                                        v-model:rows="form.meta.data.rows"
+                                    />
                                 </template>
                                 <template v-else>
                                 <div v-for="(row, index) in form.meta.data.rows" :key="index" class="border border-gray-200 rounded p-3 mb-3">

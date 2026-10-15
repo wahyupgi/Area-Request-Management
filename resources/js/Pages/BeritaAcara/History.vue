@@ -5,8 +5,6 @@ import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { useTheme } from '@/composables/useTheme';
 import {
-    CheckCircleOutlined,
-    CloseCircleOutlined,
     PaperClipOutlined,
     DownloadOutlined,
     PrinterOutlined
@@ -117,21 +115,6 @@ const printBA = () => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <a-button @click="printBA" class="hidden sm:inline-flex print:hidden">
-                        <template #icon><printer-outlined /></template>
-                        Cetak BA
-                    </a-button>
-                    <a-tag v-if="beritaAcara.status === 'approved'" color="success" class="font-semibold">
-                        <template #icon><check-circle-outlined /></template> Disetujui
-                    </a-tag>
-                    <a-tag v-else-if="beritaAcara.status === 'rejected'" color="error" class="font-semibold">
-                        <template #icon><close-circle-outlined /></template> Ditolak
-                    </a-tag>
-                    <a-tag v-else color="warning" class="font-semibold">
-                        Menunggu Persetujuan
-                    </a-tag>
-                </div>
             </div>
         </template>
 

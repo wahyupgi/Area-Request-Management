@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
@@ -24,6 +25,9 @@ const props = defineProps({
 const initialItems = Array.isArray(props.memo.field_values?.items)
     ? props.memo.field_values.items
     : [props.memo.field_values || {}];
+const defaultOtherMemoColumns = props.memo.template?.name === 'Lainnya'
+    ? (props.memo.template.field_schema || []).map(({ key, label, type, required }) => ({ key, label, type, required }))
+    : [];
 const defaultClosing = 'Demikian Internal Memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
 
 const form = useForm({
@@ -35,7 +39,10 @@ const form = useForm({
         pengantar: props.memo.field_values?.pengantar || (props.memo.template ? `Sehubungan dengan pengajuan ${props.memo.template.name}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:` : ''),
         penutup: props.memo.field_values?.penutup || defaultClosing,
         body: props.memo.field_values?.body || '',
-        items: props.memo.template ? initialItems : (initialItems.length ? initialItems : [{ uraian: '', keterangan: '' }]).map((item) => ({ uraian: '', keterangan: '', ...item })),
+        items: props.memo.template?.name === 'Lainnya' && !initialItems.length
+            ? [Object.fromEntries(defaultOtherMemoColumns.map((column) => [column.key, '']))]
+            : props.memo.template ? initialItems : (initialItems.length ? initialItems : [{ uraian: '', keterangan: '' }]).map((item) => ({ uraian: '', keterangan: '', ...item })),
+        table_columns: props.memo.field_values?.table_columns || defaultOtherMemoColumns,
         meta: {
             direktorat: props.memo.field_values?.meta?.direktorat || 'Regional Branch Office',
             divisi: props.memo.field_values?.meta?.divisi || 'Branch Leader',
@@ -277,6 +284,12 @@ const deleteMemo = async () => {
                     <a-col :xs="24" :lg="14">
                         <!-- Dynamic Fields -->
                         <a-card v-if="memo.template" :bordered="false" class="rounded-lg shadow-sm">
+                            <DocumentTableEditor
+                                v-if="memo.template.name === 'Lainnya'"
+                                v-model:columns="form.field_values.table_columns"
+                                v-model:rows="form.field_values.items"
+                            />
+                            <template v-else>
                             <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-gray-200 rounded-lg p-5 mb-4">
                                 <div class="flex justify-between items-center border-b pb-2 mb-4">
                                     <h3 class="font-semibold">Item {{ itemIndex + 1 }}</h3>
@@ -327,6 +340,7 @@ const deleteMemo = async () => {
                                 <template #icon><plus-outlined /></template>
                                 Tambah Item
                             </a-button>
+                            </template>
                             <a-form-item label="Kalimat Penutup" class="mt-5 mb-0">
                                 <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
                             </a-form-item>

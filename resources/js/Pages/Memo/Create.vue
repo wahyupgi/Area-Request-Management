@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { ref, watch, computed } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
@@ -44,6 +45,11 @@ const defaultDocumentMeta = {
     lampiran: '',
 };
 
+const columnsForOtherMemo = (template) => template?.name === 'Lainnya'
+    ? (template.field_schema || []).map(({ key, label, type, required }) => ({ key, label, type, required }))
+    : [];
+const emptyRowForColumns = (columns) => Object.fromEntries(columns.map((column) => [column.key, '']));
+
 const groupedTemplates = computed(() => {
     const groups = {};
     (props.templates || []).forEach(t => {
@@ -73,13 +79,15 @@ const groupedTemplates = computed(() => {
 watch(() => form.template_id, (val) => {
     selectedTemplate.value = (props.templates || []).find(t => t.id == val) || null;
     const documentDefaults = selectedTemplate.value?.document_defaults || {};
+    const tableColumns = columnsForOtherMemo(selectedTemplate.value);
     form.field_values = {
         pengantar: documentDefaults.pengantar || (selectedTemplate.value
             ? `Sehubungan dengan pengajuan ${selectedTemplate.value.name}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`
             : ''),
         penutup: documentDefaults.penutup || defaultClosing,
         body: '',
-        items: [{}],
+        items: [emptyRowForColumns(tableColumns)],
+        table_columns: tableColumns,
         meta: {
             ...defaultDocumentMeta,
             ...Object.fromEntries(Object.entries(documentDefaults).filter(([key]) => !['pengantar', 'penutup'].includes(key))),
@@ -288,6 +296,12 @@ const submitAndSign = () => {
                 <a-col :xs="24" :lg="14">
                     <!-- Dynamic Fields -->
                     <a-card :bordered="false" class="rounded-lg shadow-sm">
+                        <DocumentTableEditor
+                            v-if="selectedTemplate.name === 'Lainnya'"
+                            v-model:columns="form.field_values.table_columns"
+                            v-model:rows="form.field_values.items"
+                        />
+                        <template v-else>
                         <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-gray-200 rounded-lg p-5 mb-4 relative">
                             <div class="flex justify-between items-center border-b pb-2 mb-4">
                                 <h3 class="font-semibold">Item {{ itemIndex + 1 }}</h3>
@@ -339,6 +353,7 @@ const submitAndSign = () => {
                             <template #icon><plus-outlined /></template>
                             Tambah Item
                         </a-button>
+                        </template>
                         <a-form-item label="Kalimat Penutup" class="mt-5 mb-0">
                             <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
                         </a-form-item>

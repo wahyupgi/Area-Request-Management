@@ -465,10 +465,12 @@ const handleLogout = () => {
                                     </div>
                                 </a-menu-item>
                                 <a-menu-divider />
+                                <slot name="user-menu-extra" />
+                                <a-menu-divider v-if="$slots['user-menu-extra']" />
                                 <a-menu-item key="profile" @click="router.visit(route('profile.edit'))">
                                     <user-outlined class="mr-2" /> Profil Saya
                                 </a-menu-item>
-                                <a-menu-item key="logout" class="text-red-500" @click="handleLogout">
+                                <a-menu-item key="logout" class="user-menu-logout" @click="handleLogout">
                                     <logout-outlined class="mr-2" /> Keluar
                                 </a-menu-item>
                             </a-menu>
@@ -716,6 +718,13 @@ html:not(.theme-light) .header-user-dropdown .ant-menu-item.text-red-500 {
     color: #fca5a5 !important;
 }
 
+html:not(.theme-light) .header-user-dropdown .user-menu-logout,
+html:not(.theme-light) .header-user-dropdown .user-menu-logout *,
+html.theme-light .header-user-dropdown .user-menu-logout,
+html.theme-light .header-user-dropdown .user-menu-logout * {
+    color: #dc2626 !important;
+}
+
 html:not(.theme-light) .header-user-dropdown .ant-menu-item .anticon,
 html:not(.theme-light) .header-user-dropdown .ant-menu-item .anticon + span,
 html:not(.theme-light) .header-user-dropdown .ant-menu-item span,
@@ -738,6 +747,44 @@ html:not(.theme-light) .ant-menu-item,
 html:not(.theme-light) .ant-menu-submenu-title,
 html:not(.theme-light) .ant-menu-item * {
     color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker:hover,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker:focus,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-focused {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    box-shadow: none !important;
+}
+
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker input,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker .ant-picker-suffix {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-panel-container,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-header,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-panel {
+    background: #17233a !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-header,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-header button,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-cell,
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-cell button {
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-cell:hover:not(.ant-picker-cell-selected) .ant-picker-cell-inner {
+    background: #334155 !important;
+}
+
+html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-cell-selected .ant-picker-cell-inner {
+    background: #2563eb !important;
+    color: #ffffff !important;
 }
 
 </style>

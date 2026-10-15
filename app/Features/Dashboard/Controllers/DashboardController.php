@@ -4,18 +4,19 @@ namespace App\Features\Dashboard\Controllers;
 
 use App\Features\Dashboard\Services\DashboardStatsService;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
     public function __construct(protected DashboardStatsService $statsService) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
         if ($user->isKC()) {
-            return $this->kcDashboard($user);
+            return $this->kcDashboard($user, $request);
         }
 
         if ($user->isAM()) {
@@ -25,11 +26,16 @@ class DashboardController extends Controller
         return $this->adminDashboard();
     }
 
-    private function kcDashboard($user)
+    private function kcDashboard($user, Request $request)
     {
-        $dashboard = $this->statsService->forKcUser($user);
+        $validated = $request->validate([
+            'month' => ['nullable', 'date_format:Y-m'],
+        ]);
+        $month = $validated['month'] ?? now()->format('Y-m');
+        $dashboard = $this->statsService->forKcUser($user, $month);
 
         return Inertia::render('Dashboard/KC', [
+            'month' => $month,
             'memos' => $dashboard['memos'],
             'submissionStats' => $dashboard['submissionStats'],
             'baStats' => $dashboard['baStats'],

@@ -27,8 +27,12 @@ const attachments = [
 ];
 const canDeleteAttachments = props.formPengajuan.status === 'draft'
     && props.formPengajuan.created_by === currentUser?.id;
-const statusLabels = { draft: 'Draft', submitted: 'Menunggu Persetujuan', approved: 'Disetujui', rejected: 'Ditolak' };
-const printDocument = () => window.print();
+const statusConfig = {
+    draft: { label: 'Draft', color: 'default' },
+    submitted: { label: 'Menunggu AM', color: 'processing' },
+    approved: { label: 'Sudah Disetujui', color: 'success' },
+    rejected: { label: 'Perlu Revisi', color: 'error' },
+};
 </script>
 
 <template>
@@ -45,12 +49,6 @@ const printDocument = () => window.print();
                         <span class="font-mono text-xs text-blue-600">{{ formPengajuan.code }} · {{ formPengajuan.branch?.name || '-' }}</span>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <a-button class="print:hidden" @click="printDocument">Cetak Form</a-button>
-                    <a-tag :color="{ draft: 'default', submitted: 'warning', approved: 'success', rejected: 'error' }[formPengajuan.status]">
-                        {{ statusLabels[formPengajuan.status] }}
-                    </a-tag>
-                </div>
             </div>
         </template>
         <div class="mx-auto grid max-w-7xl gap-6 py-6 px-4 lg:grid-cols-[minmax(0,1fr)_280px]">
@@ -60,14 +58,34 @@ const printDocument = () => window.print();
                 </div>
             </a-card>
             <a-card title="Informasi Pengajuan" :bordered="false" class="h-fit rounded-lg shadow-sm">
-                <a-descriptions :column="1" size="small">
-                    <a-descriptions-item label="Template">{{ templateLabels[formPengajuan.template] }}</a-descriptions-item>
-                    <a-descriptions-item label="Pemohon">{{ formPengajuan.data?.full_name || formPengajuan.creator?.name || '-' }}</a-descriptions-item>
-                    <a-descriptions-item label="Cabang">{{ formPengajuan.branch?.name || '-' }}</a-descriptions-item>
-                    <a-descriptions-item label="Status">{{ statusLabels[formPengajuan.status] }}</a-descriptions-item>
-                    <a-descriptions-item v-if="formPengajuan.rejection_notes" label="Catatan Penolakan">{{ formPengajuan.rejection_notes }}</a-descriptions-item>
-                    <a-descriptions-item v-if="formPengajuan.approver" label="Disetujui oleh">{{ formPengajuan.approver.name }}</a-descriptions-item>
-                </a-descriptions>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-[82px_minmax(0,1fr)] items-start gap-3">
+                        <span class="text-xs text-gray-500">Template</span>
+                        <span class="min-w-0 break-words text-sm font-medium text-gray-800">{{ templateLabels[formPengajuan.template] || formPengajuan.template }}</span>
+                    </div>
+                    <div class="grid grid-cols-[82px_minmax(0,1fr)] items-start gap-3">
+                        <span class="text-xs text-gray-500">Pemohon</span>
+                        <span class="min-w-0 break-words text-sm font-medium text-gray-800">{{ formPengajuan.data?.full_name || formPengajuan.creator?.name || '-' }}</span>
+                    </div>
+                    <div class="grid grid-cols-[82px_minmax(0,1fr)] items-start gap-3">
+                        <span class="text-xs text-gray-500">Cabang</span>
+                        <span class="min-w-0 break-words text-sm font-medium text-gray-800">{{ formPengajuan.branch?.name || '-' }}</span>
+                    </div>
+                    <div class="grid grid-cols-[82px_minmax(0,1fr)] items-start gap-3">
+                        <span class="text-xs text-gray-500">Status</span>
+                        <a-tag :color="statusConfig[formPengajuan.status]?.color || 'default'" class="m-0 w-fit">
+                            {{ statusConfig[formPengajuan.status]?.label || formPengajuan.status }}
+                        </a-tag>
+                    </div>
+                    <div v-if="formPengajuan.rejection_notes" class="grid grid-cols-[82px_minmax(0,1fr)] items-start gap-3 border-t border-gray-100 pt-3">
+                        <span class="text-xs text-gray-500">Catatan</span>
+                        <span class="min-w-0 break-words text-sm text-gray-700">{{ formPengajuan.rejection_notes }}</span>
+                    </div>
+                    <div v-if="formPengajuan.approver" class="grid grid-cols-[82px_minmax(0,1fr)] items-start gap-3">
+                        <span class="text-xs text-gray-500">Disetujui oleh</span>
+                        <span class="min-w-0 break-words text-sm font-medium text-gray-800">{{ formPengajuan.approver.name }}</span>
+                    </div>
+                </div>
             </a-card>
         </div>
         <div class="mx-auto max-w-7xl px-4">

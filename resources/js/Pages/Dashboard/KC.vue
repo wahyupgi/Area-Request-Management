@@ -1,10 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { createTablePagination } from '@/utils/tablePagination';
 
 const props = defineProps({
+    month: { type: String, required: true },
     memos: Array,
     stats: Object,
     submissionStats: { type: Object, default: () => ({}) },
@@ -19,6 +20,25 @@ const user = computed(() => page.props.auth.user);
 
 const searchQuery = ref('');
 const statusFilter = ref('all');
+const selectedMonth = ref(props.month);
+watch(() => props.month, (month) => {
+    selectedMonth.value = month;
+});
+
+const selectedMonthLabel = computed(() => {
+    const [year, month] = selectedMonth.value.split('-').map(Number);
+    return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' })
+        .format(new Date(year, month - 1, 1));
+});
+
+const changeMonth = (month) => {
+    if (!month) return;
+    searchQuery.value = '';
+    statusFilter.value = 'all';
+    router.get(route('dashboard'), { month }, { preserveScroll: true, preserveState: true });
+};
+
+const getMonthPickerContainer = (trigger) => trigger.closest('.header-user-dropdown') || document.body;
 
 // Realtime Clock & Timer
 const now = ref(new Date());
@@ -176,6 +196,29 @@ const focusDocuments = (status) => {
         <template #header>
             <h2 class="text-base font-bold text-white tracking-tight">Dashboard Kepala Cabang</h2>
         </template>
+        <template #user-menu-extra>
+            <li
+                role="presentation"
+                class="ant-dropdown-menu-item !h-auto !w-[202px] !leading-normal !flex !flex-col !items-start cursor-default"
+                @mousedown.stop
+                @click.stop
+            >
+                <label class="mb-2 text-xs font-medium text-slate-500">Periode KPI</label>
+                <a-date-picker
+                    v-model:value="selectedMonth"
+                    picker="month"
+                    format="MMMM YYYY"
+                    value-format="YYYY-MM"
+                    :get-popup-container="getMonthPickerContainer"
+                    :allow-clear="false"
+                    aria-label="Pilih bulan dashboard"
+                    popup-class-name="kc-dashboard-month-picker-dropdown"
+                    class="kc-dashboard-month-picker"
+                    style="width: 178px"
+                    @update:value="changeMonth"
+                />
+            </li>
+        </template>
 
         <div class="dashboard-kc-theme">
 
@@ -209,11 +252,11 @@ const focusDocuments = (status) => {
 
         <!-- Stats Cards Grid -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <!-- Memo Masuk -->
-            <button type="button" @click="focusDocuments('received')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-slate-400 tracking-wider">Pengajuan Masuk</span>
+            <!-- Total Submissions -->
+            <button type="button" @click="focusDocuments('all')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
+                <span class="text-xs font-semibold text-slate-400 tracking-wider">Total Pengajuan</span>
                 <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.received ?? 0 }}</p>
-                <p class="text-[11px] text-slate-500 mt-2">Memo, BA &amp; Form Pengajuan terkirim</p>
+                <p class="text-[11px] text-slate-500 mt-2">Memo, BA &amp; Form Pengajuan</p>
             </button>
 
 
@@ -392,7 +435,7 @@ const focusDocuments = (status) => {
 
             <!-- Footer -->
             <div class="kc-memo-list-footer">
-                <span>Menampilkan {{ filteredDocuments.length }} dari {{ documents.length }} dokumen terbaru</span>
+                <span>Menampilkan {{ filteredDocuments.length }} dari {{ documents.length }} dokumen periode {{ selectedMonthLabel }}</span>
                 <span class="kc-memo-footer-brand">PT Pusat Gadai Indonesia</span>
             </div>
         </a-card>

@@ -30,6 +30,15 @@ const isItemBased = computed(() => {
 
 const isKipas = computed(() => props.memo.template?.name === 'Pengajuan Inventori/Kipas');
 const isCashOut = computed(() => props.memo.template?.name === 'FIN - Pemberitahuan Kas Keluar');
+const isOtherMemo = computed(() => props.memo.template?.name === 'Lainnya');
+const otherMemoColumns = computed(() => {
+    const customColumns = props.memo.field_values?.table_columns;
+    if (Array.isArray(customColumns) && customColumns.length) return customColumns;
+    return props.memo.template?.field_schema || [
+        { key: 'uraian', label: 'Uraian' },
+        { key: 'keterangan', label: 'Keterangan' },
+    ];
+});
 const cashOutValues = computed(() => memoItems.value[0] || {});
 const introText = computed(() => props.memo.field_values?.pengantar || `Sehubungan dengan pengajuan ${props.memo.title || 'memo ini'}, saya ingin mengajukan permintaan dengan rincian sebagai berikut:`);
 
@@ -213,20 +222,22 @@ const handleImgError = (event) => {
         <div class="mb-10">
             <KipasMemo v-if="isKipas" :memo="memo" :items="memoItems" :document-signatures="documentSignatures" />
             <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" :signature-slots="configuredSignatures" :approver-name="memoMeta.penyetuju_akhir" />
-            <template v-else-if="!memo.template">
-                <table v-if="memoItems.some((item) => item?.uraian || item?.keterangan)" class="w-full text-xs border-collapse border border-black mb-5">
+            <template v-else-if="!memo.template || isOtherMemo">
+                <table v-if="memoItems.some((item) => otherMemoColumns.some((column) => item?.[column.key]))" class="w-full text-xs border-collapse border border-black mb-5">
                     <thead>
                         <tr class="bg-[#1f497d] text-white">
                             <th class="border border-black px-2.5 py-1.5 w-10 text-center font-bold !text-white">No.</th>
-                            <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Uraian</th>
-                            <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Keterangan</th>
+                            <th v-for="column in otherMemoColumns" :key="column.key" class="border border-black px-3 py-1.5 text-left font-bold !text-white">
+                                {{ column.label }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(item, index) in memoItems" :key="'other-' + index">
                             <td class="border border-black px-2.5 py-1.5 text-center">{{ index + 1 }}.</td>
-                            <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ item?.uraian || '-' }}</td>
-                            <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ item?.keterangan || '-' }}</td>
+                            <td v-for="column in otherMemoColumns" :key="column.key" class="border border-black px-3 py-1.5 whitespace-pre-wrap">
+                                {{ item?.[column.key] || '-' }}
+                            </td>
                         </tr>
                     </tbody>
                 </table>

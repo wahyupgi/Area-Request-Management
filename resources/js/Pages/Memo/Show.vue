@@ -118,31 +118,18 @@ const printMemo = () => {
     <Head :title="'Detail Memo: ' + memo.code" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between w-full">
-                <div class="flex items-center gap-3">
-                    <Link :href="user.role === 'AM' ? route('approvals.pending') : user.role === 'ADMIN' ? route('dashboard') : route('memos.index')">
-                        <a-button type="text" shape="circle">
-                            <template #icon><arrow-left-outlined /></template>
-                        </a-button>
-                    </Link>
-                    <div>
-                        <h1 class="text-base font-bold text-gray-800 mb-0">Detail Dokumen Memo</h1>
-                        <div class="flex items-center gap-2 text-xs text-gray-500">
-                            <span class="font-mono font-semibold text-blue-600">{{ memo.code }}</span>
-                            <span>•</span>
-                            <span>{{ memo.branch?.name || 'Kantor Cabang' }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <div v-if="user.role === 'KC' && ['draft','rejected'].includes(memo.status)">
-                        <Link :href="route('memos.edit', memo.id)">
-                            <a-button type="primary">
-                                <template #icon><edit-outlined /></template>
-                                Edit Memo
-                            </a-button>
-                        </Link>
+            <div class="flex items-center gap-3">
+                <Link :href="user.role === 'AM' ? route('approvals.pending') : user.role === 'ADMIN' ? route('dashboard') : route('memos.index')">
+                    <a-button type="text" shape="circle">
+                        <template #icon><arrow-left-outlined /></template>
+                    </a-button>
+                </Link>
+                <div>
+                    <h1 class="text-base font-bold text-gray-800 mb-0">Detail Dokumen Memo</h1>
+                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                        <span class="font-mono font-semibold text-blue-600">{{ memo.code }}</span>
+                        <span>•</span>
+                        <span>{{ memo.branch?.name || 'Kantor Cabang' }}</span>
                     </div>
                 </div>
             </div>

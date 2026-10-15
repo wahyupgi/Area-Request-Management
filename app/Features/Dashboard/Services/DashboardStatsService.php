@@ -15,10 +15,16 @@ use Illuminate\Support\Collection;
 
 class DashboardStatsService
 {
-    public function forKcUser(User $user): array
+    public function forKcUser(User $user, string $month): array
     {
-        $baScope = BeritaAcara::query()->where('created_by', $user->id);
-        $formScope = FormPengajuan::query()->where('created_by', $user->id);
+        $monthStart = Carbon::createFromFormat('!Y-m', $month);
+        $monthEnd = $monthStart->copy()->addMonth();
+        $applyMonth = fn (Builder $query): Builder => $query
+            ->where('created_at', '>=', $monthStart)
+            ->where('created_at', '<', $monthEnd);
+
+        $baScope = $applyMonth(BeritaAcara::query()->where('created_by', $user->id));
+        $formScope = $applyMonth(FormPengajuan::query()->where('created_by', $user->id));
         $memos = Memo::with([
             'template:id,name',
             'branch:id,name',
@@ -26,10 +32,11 @@ class DashboardStatsService
             'latestApproval:id,memo_approvals.memo_id,action,signed_at',
         ])
             ->where('created_by', $user->id)
+            ->where('created_at', '>=', $monthStart)
+            ->where('created_at', '<', $monthEnd)
             ->orderByDesc('updated_at')
-            ->limit(8)
             ->get();
-        $memoStats = Memo::where('created_by', $user->id)
+        $memoStats = $applyMonth(Memo::where('created_by', $user->id))
             ->selectRaw(
                 "COUNT(*) as total, ".
                 "SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft, ".
@@ -49,12 +56,10 @@ class DashboardStatsService
             'recentBA' => (clone $baScope)
                 ->with('branch:id,name')
                 ->orderByDesc('updated_at')
-                ->limit(6)
                 ->get(),
             'recentFormPengajuans' => (clone $formScope)
                 ->with(['branch:id,name', 'creator:id,name'])
                 ->orderByDesc('updated_at')
-                ->limit(6)
                 ->get(),
             'stats' => $this->memoStats($memoStats),
         ];

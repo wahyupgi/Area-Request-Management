@@ -13,6 +13,15 @@ const isAttendanceRevision = computed(() => ['revisi_absensi', 'Permintaan Revis
 const isSeizedGoods = computed(() => ['penghapusan_barang_sitaan', 'Penghapusan Barang Sitaan'].includes(template.value));
 const isOtherTemplate = computed(() => ['lainnya', 'Berita Acara Lainnya'].includes(template.value));
 const templateRows = computed(() => props.beritaAcara.meta?.data?.rows || []);
+const otherTemplateColumns = computed(() => {
+    const columns = props.beritaAcara.meta?.data?.table_columns;
+    return Array.isArray(columns) && columns.length
+        ? columns
+        : [
+            { key: 'uraian', label: 'Uraian' },
+            { key: 'keterangan', label: 'Keterangan' },
+        ];
+});
 const signatureSlots = computed(() => {
     const beritaAcara = props.beritaAcara;
     const creator = beritaAcara.creator;
@@ -144,17 +153,24 @@ const formatCurrency = (value) => {
         </div>
 
         <table v-if="isOtherTemplate" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
-            <colgroup><col style="width:8%;" /><col style="width:42%;" /><col style="width:50%;" /></colgroup>
             <thead>
                 <tr>
-                    <th v-for="heading in ['No.', 'Uraian', 'Keterangan']" :key="heading" style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">{{ heading }}</th>
+                    <th style="width:8%;border:1px solid #000;background:#1f497d;color:#fff!important;padding:6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">No.</th>
+                    <th
+                        v-for="column in otherTemplateColumns"
+                        :key="column.key"
+                        style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;"
+                    >{{ column.label }}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(row, index) in templateRows" :key="index">
                     <td style="border:1px solid #000;padding:6px;text-align:center;">{{ index + 1 }}</td>
-                    <td style="border:1px solid #000;padding:6px;">{{ row.uraian }}</td>
-                    <td style="border:1px solid #000;padding:6px;">{{ row.keterangan }}</td>
+                    <td
+                        v-for="column in otherTemplateColumns"
+                        :key="column.key"
+                        style="border:1px solid #000;padding:6px;white-space:pre-wrap;overflow-wrap:anywhere;"
+                    >{{ row[column.key] || '-' }}</td>
                 </tr>
             </tbody>
         </table>

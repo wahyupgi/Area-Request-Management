@@ -27,7 +27,6 @@ const attachments = [
         original_name: props.formPengajuan.attachment_name,
     }] : []),
 ];
-const printDocument = () => window.print();
 const approve = () => approveForm.post(route('approvals.form-pengajuan.approve', props.formPengajuan.id), {
     onSuccess: () => { showApproveModal.value = false; },
 });
@@ -48,7 +47,6 @@ const reject = () => rejectForm.post(route('approvals.form-pengajuan.reject', pr
                         <span class="font-mono text-xs text-blue-600">{{ formPengajuan.code }} · {{ formPengajuan.branch?.name || '-' }}</span>
                     </div>
                 </div>
-                <a-button class="print:hidden" @click="printDocument">Cetak Form</a-button>
             </div>
         </template>
         <div class="mx-auto grid max-w-7xl gap-6 py-6 px-4 lg:grid-cols-[minmax(0,1fr)_280px]">
