@@ -67,7 +67,7 @@
             </div>
 
             <div class="cta">
-                <a href="{{ config('app.url') }}/approvals/pending">Review Memo Sekarang →</a>
+                <a href="{{ route('approvals.review', $memo) }}">Setujui Memo Sekarang →</a>
             </div>
         </div>
         <hr class="divider">

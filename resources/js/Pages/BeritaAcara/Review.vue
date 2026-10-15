@@ -227,7 +227,9 @@ const formatDate = (dateString) => {
                 <a-col :xs="24" :lg="18">
                     <a-card :bordered="false" class="rounded-lg shadow-sm mb-6">
                         <h2 class="text-lg font-bold border-b pb-2 mb-4">Dokumen Berita Acara</h2>
-                        <BeritaAcaraDocument :berita-acara="beritaAcara" />
+                        <div class="document-preview-scroll">
+                            <BeritaAcaraDocument :berita-acara="beritaAcara" />
+                        </div>
                     </a-card>
 
                     <a-card v-if="beritaAcara.attachment_path" title="Lampiran Pendukung" :bordered="false" class="rounded-lg shadow-sm">

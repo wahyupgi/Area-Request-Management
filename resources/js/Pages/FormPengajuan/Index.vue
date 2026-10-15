@@ -38,8 +38,8 @@ const onFilterChange = (event) => {
         </template>
 
         <a-card :bordered="false" class="memo-index-card rounded-lg shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-                <a-radio-group :value="statusFilter" @change="onFilterChange" button-style="solid">
+            <div class="memo-index-toolbar flex items-center justify-between mb-4">
+                <a-radio-group class="memo-status-filter" :value="statusFilter" @change="onFilterChange" button-style="solid">
                     <a-radio-button value="">Semua</a-radio-button>
                     <a-radio-button value="draft">Draft</a-radio-button>
                     <a-radio-button value="submitted">Submitted</a-radio-button>
@@ -47,7 +47,7 @@ const onFilterChange = (event) => {
                     <a-radio-button value="rejected">Rejected</a-radio-button>
                 </a-radio-group>
 
-                <a-button type="primary" @click="router.visit(route('form-pengajuan.create'))">
+                <a-button class="memo-create-button" type="primary" @click="router.visit(route('form-pengajuan.create'))">
                     <template #icon><plus-outlined /></template>
                     Buat Form Pengajuan
                 </a-button>

@@ -34,14 +34,15 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        $redirect = redirect()->intended(RouteServiceProvider::HOME);
 
         if ($request->header('X-Login-Flow') === 'popup') {
             return response()->json([
-                'redirect' => url(RouteServiceProvider::HOME),
+                'redirect' => $redirect->getTargetUrl(),
             ]);
         }
 
-        return redirect(RouteServiceProvider::HOME);
+        return $redirect;
     }
 
     /**

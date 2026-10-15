@@ -128,24 +128,15 @@ const submit = async () => {
             <ThemeToggle />
         </div>
         <div class="relative z-10 w-full max-w-5xl bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden flex shadow-2xl shadow-black/50">
-            <!-- Left Side / Branding -->
             <div class="hidden md:flex flex-col items-center justify-center w-1/2 p-12 bg-white/5 relative overflow-hidden">
                 <div class="relative z-10 flex flex-col items-center text-center">
-                    <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-28 h-28 mb-8 object-contain bg-transparent" />
-                    <h1 class="text-3xl font-bold text-white mb-2 leading-tight">SISTEM LAYANAN PENGAJUAN</h1>
-                    <h2 class="text-xl font-medium text-blue-400">Area Manager</h2>
-                    <p class="text-slate-400 mt-6 max-w-sm leading-relaxed text-sm">
-                       Kelola pengajuan memo cabang secara mudah, cepat, dan terintegrasi.
-                    </p>
+                    <img src="/PGI-Secondary%20Logo%202%20(1).png" alt="Logo Pusat Gadai Indonesia" class="w-72 max-w-full h-auto rounded-lg" />
                 </div>
             </div>
 
-            <!-- Right Side / Form -->
             <div class="w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center">
                 <div class="md:hidden flex flex-col items-center mb-10">
-                    <img src="/PGI-Primary Logo Flat.png" alt="Logo PGI" class="w-24 h-24 mb-4 object-contain bg-transparent" />
-                    <h1 class="text-2xl font-bold text-white text-center leading-tight">SISTEM LAYANAN<br>PENGAJUAN</h1>
-                    <h2 class="text-sm font-medium text-blue-400 text-center mt-1">Area Manager</h2>
+                    <img src="/PGI-Secondary%20Logo%202%20(1).png" alt="Logo Pusat Gadai Indonesia" class="w-56 max-w-full h-auto rounded-lg" />
                 </div>
 
                 <div class="mb-10 text-center md:text-left">
@@ -162,16 +153,16 @@ const submit = async () => {
                     class="login-custom-form"
                     :class="isLightTheme ? 'light-login-form' : ''"
                 >
-                    <a-form-item 
-                        label="Username" 
-                        :validateStatus="form.errors.username ? 'error' : ''" 
+                    <a-form-item
+                        label="Username"
+                        :validateStatus="form.errors.username ? 'error' : ''"
                         :help="form.errors.username"
                     >
-                        <a-input 
-                            v-model:value="form.username" 
-                            autofocus 
-                            autocomplete="username" 
-                            size="large" 
+                        <a-input
+                            v-model:value="form.username"
+                            autofocus
+                            autocomplete="username"
+                            size="large"
                             placeholder="Masukkan username"
                             class="login-text-input"
                             :class="isLightTheme ? 'light-login-input' : ''"
@@ -179,15 +170,15 @@ const submit = async () => {
                         />
                     </a-form-item>
 
-                    <a-form-item 
-                        label="Password" 
-                        :validateStatus="form.errors.password ? 'error' : ''" 
+                    <a-form-item
+                        label="Password"
+                        :validateStatus="form.errors.password ? 'error' : ''"
                         :help="form.errors.password"
                     >
-                        <a-input-password 
-                            v-model:value="form.password" 
-                            autocomplete="current-password" 
-                            size="large" 
+                        <a-input-password
+                            v-model:value="form.password"
+                            autocomplete="current-password"
+                            size="large"
                             placeholder="Masukkan password"
                             class="login-password-input"
                             :class="isLightTheme ? 'light-login-input' : ''"
@@ -195,12 +186,12 @@ const submit = async () => {
                         />
                     </a-form-item>
 
-                    <a-button 
-                        type="primary" 
+                    <a-button
+                        type="primary"
                         html-type="button"
                         @click="submit"
                         :disabled="isSubmitting"
-                        size="large" 
+                        size="large"
                         block
                         class="login-submit-button mt-4"
                         :class="isLightTheme ? 'light-login-button' : 'dark-login-button'"

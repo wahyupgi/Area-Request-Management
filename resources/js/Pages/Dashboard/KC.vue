@@ -95,13 +95,13 @@ const formTemplateLabels = {
 const isFormPengajuan = (record) => record._documentType === 'form_pengajuan';
 
 const documentColumns = [
-    { title: 'Nomor Dokumen', dataIndex: 'code', key: 'code' },
-    { title: 'Perihal', key: 'subject' },
-    { title: 'Jenis', key: 'type' },
-    { title: 'Tanggal Dibuat', key: 'created_at' },
-    { title: 'Status', key: 'status' },
-    { title: 'TTD Digital', key: 'signature' },
-    { title: 'Aksi', key: 'action', align: 'center' },
+    { title: 'Nomor Dokumen', dataIndex: 'code', key: 'code', width: 170 },
+    { title: 'Perihal', key: 'subject', width: 260 },
+    { title: 'Jenis', key: 'type', width: 150 },
+    { title: 'Tanggal Dibuat', key: 'created_at', width: 130 },
+    { title: 'Status', key: 'status', width: 130, align: 'center' },
+    { title: 'TTD Digital', key: 'signature', width: 170 },
+    { title: 'Aksi', key: 'action', width: 130, align: 'center' },
 ];
 
 const statusTagColor = (status) => ({
@@ -310,7 +310,7 @@ const focusDocuments = (status) => {
                 :columns="documentColumns"
                 :row-key="record => `${record._documentType}-${record.id}`"
                 :pagination="documentsPagination"
-                :scroll="{ x: 900 }"
+                :scroll="{ x: 1140 }"
             >
                 <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'code'">
@@ -402,12 +402,15 @@ const focusDocuments = (status) => {
 
 <style>
 .kc-memo-list-card {
+    min-width: 0;
+    width: 100%;
     color: #e2e8f0;
     background: rgba(30, 41, 59, 0.5) !important;
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .kc-memo-list-card .ant-card-body {
+    min-width: 0;
     padding: 24px;
 }
 
@@ -442,7 +445,12 @@ const focusDocuments = (status) => {
 }
 
 .kc-memo-table {
+    min-width: 0;
     margin-top: 20px;
+}
+
+.kc-memo-table.ant-table-wrapper {
+    max-width: 100%;
 }
 
 .kc-memo-list-card .kc-memo-status-filters .ant-btn-default {
@@ -466,6 +474,8 @@ const focusDocuments = (status) => {
     color: #ffffff !important;
     background: #203c5b !important;
     border-bottom: 1px solid #34516e !important;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .kc-memo-table .ant-table-tbody > tr > td {
@@ -473,6 +483,7 @@ const focusDocuments = (status) => {
     background: transparent !important;
     border-bottom: 1px solid #475569 !important;
     border-right: 1px solid #475569 !important;
+    vertical-align: middle;
 }
 
 .kc-memo-table .ant-table-tbody > tr > td:last-child {
@@ -537,10 +548,15 @@ const focusDocuments = (status) => {
 }
 
 .kc-memo-code {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
     color: #93c5fd;
     font-family: monospace;
     font-size: 12px;
     font-weight: 600;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
 }
 
 .kc-memo-subject,
@@ -556,6 +572,30 @@ const focusDocuments = (status) => {
     font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.kc-memo-subject small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kc-memo-type-tag {
+    max-width: 100%;
+    margin-inline-end: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+.kc-memo-date > span,
+.kc-memo-date small {
+    white-space: nowrap;
+}
+
+.kc-memo-table .ant-table-tbody > tr > td:last-child .ant-space {
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .kc-memo-subject small,
@@ -591,6 +631,10 @@ html.theme-light .kc-memo-table .kc-signature-pending {
     color: #94a3b8;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     font-size: 12px;
+}
+
+.kc-memo-list-footer > span:first-child {
+    min-width: 0;
 }
 
 html.theme-light .kc-memo-list-card {
@@ -712,16 +756,56 @@ html.theme-light .kc-memo-signature {
 
 @media (max-width: 640px) {
     .kc-memo-list-card .ant-card-body {
-        padding: 16px;
+        padding: 16px 12px;
     }
 
     .kc-memo-list-heading {
         align-items: stretch;
         flex-direction: column;
+        min-width: 0;
     }
 
     .kc-memo-search {
+        box-sizing: border-box;
         width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .kc-memo-search .ant-input-wrapper,
+    .kc-memo-search .ant-input-group {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .kc-memo-search .ant-input-affix-wrapper,
+    .kc-memo-search .ant-input-search-button {
+        box-sizing: border-box;
+        height: 48px;
+        min-height: 48px !important;
+    }
+
+    .kc-memo-search .ant-input-affix-wrapper > input.ant-input {
+        height: 100%;
+        min-height: 0 !important;
+        padding-block: 0;
+    }
+
+    .kc-memo-search .ant-input-search-button {
+        width: 48px;
+        padding: 0;
+    }
+
+    .kc-memo-list-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .kc-memo-table .ant-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        row-gap: 8px;
     }
 
     .kc-memo-footer-brand {

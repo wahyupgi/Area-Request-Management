@@ -16,6 +16,25 @@
     max-width: 100%;
 }
 
+@media screen and (min-width: 768px) {
+    .document-preview-scroll {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+    }
+
+    .document-preview-scroll > .document-preview-paper,
+    .document-preview-scroll > .memo-document,
+    .document-preview-scroll > #printable-ba,
+    .document-preview-scroll > .request-form-document {
+        width: 210mm;
+        min-width: 210mm;
+        max-width: none;
+    }
+}
+
 .sidebar-backdrop {
     display: none;
 }

@@ -9,6 +9,21 @@ const props = defineProps({
     approverName: { type: String, default: '' },
 });
 
+const cashOutFields = computed(() => props.memo.template?.field_schema || []);
+const isCurrencyField = (field) => /nominal|biaya|anggaran|harga|rupiah|\brp\b/i
+    .test(`${field.key || ''} ${field.label || ''}`);
+const formatFieldValue = (field) => {
+    const value = props.values[field.key];
+    if (value === undefined || value === null || value === '') return '-';
+
+    if (field.type === 'number' && isCurrencyField(field)) {
+        const amount = Number(String(value).replace(/[^\d-]/g, ''));
+        return Number.isFinite(amount) ? `Rp. ${amount.toLocaleString('id-ID')}` : String(value);
+    }
+
+    return String(value);
+};
+
 const signatureColumns = computed(() => {
     const configured = props.signatureSlots || [];
     const schemaAdditional = props.memo.template?.signature_schema?.slice(2, 4) || [];
@@ -37,14 +52,6 @@ const signatureColumns = computed(() => {
             role: 'Senior Executive Vice President Bisnis dan Operasional',
             signature: '',
         });
-        const signatureGridStyle = computed(() => {
-            const fractions = signatureColumnFractions(signatureColumns.value);
-            return {
-                gridTemplateColumns: fractions
-                    ? fractions.map((fraction) => `${fraction}fr`).join(' ')
-                    : `repeat(${signatureColumns.value.length}, minmax(0, 1fr))`,
-            };
-        });
     }
 
     const columns = [
@@ -68,6 +75,15 @@ const signatureColumns = computed(() => {
         : slot));
 });
 
+const signatureGridStyle = computed(() => {
+    const fractions = signatureColumnFractions(signatureColumns.value);
+    return {
+        gridTemplateColumns: fractions
+            ? fractions.map((fraction) => `${fraction}fr`).join(' ')
+            : `repeat(${signatureColumns.value.length}, minmax(0, 1fr))`,
+    };
+});
+
 const handleImgError = (event) => {
     event.target.style.display = 'none';
 };
@@ -77,14 +93,14 @@ const handleImgError = (event) => {
     <table class="w-full table-fixed border-collapse border border-black text-xs mb-5">
         <thead>
             <tr class="bg-[#1f497d] text-white">
-                <th class="border border-black px-3 py-2 text-left font-bold w-[55%] !text-white">Uraian</th>
-                <th class="border border-black px-3 py-2 text-left font-bold w-[45%] whitespace-nowrap !text-white">Nominal</th>
+                <th class="border border-black px-3 py-2 text-left font-bold w-[40%] !text-white">Uraian</th>
+                <th class="border border-black px-3 py-2 text-left font-bold w-[60%] !text-white">Keterangan</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td class="border border-black px-3 py-2 font-bold">Nominal kas keluar</td>
-                <td class="border border-black px-3 py-2 whitespace-nowrap" style="white-space: nowrap;">Rp. {{ Number(values.nominal_kas_keluar || 0).toLocaleString('id-ID') }}</td>
+            <tr v-for="field in cashOutFields" :key="field.key">
+                <td class="border border-black px-3 py-2 font-bold">{{ field.label }}</td>
+                <td class="border border-black px-3 py-2 whitespace-pre-wrap">{{ formatFieldValue(field) }}</td>
             </tr>
         </tbody>
     </table>

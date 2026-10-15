@@ -23,6 +23,7 @@ class FormPengajuanController extends Controller
                 ->with('area:id,name')
                 ->orderBy('name')
                 ->get(['branches.id', 'branches.name', 'branches.area_id']),
+            'signature' => auth()->user()->digitalSignature,
             'templates' => \App\Models\MemoTemplate::where('is_active', true)
                 ->where('type', 'form')
                 ->get(),
@@ -80,6 +81,12 @@ class FormPengajuanController extends Controller
             'submit' => 'required|boolean',
             'title' => 'required|string|max:500',
         ]);
+
+        if ($isSubmit && !$user->digitalSignature) {
+            return back()->withErrors([
+                'signature' => 'Tanda tangan digital KC wajib diisi sebelum Form Pengajuan dikirim ke Area Manager.',
+            ]);
+        }
 
         $branch = Branch::findOrFail($validated['branch_id']);
         $storedPaths = [];

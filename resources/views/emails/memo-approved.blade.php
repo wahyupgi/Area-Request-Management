@@ -66,7 +66,7 @@
             </div>
 
             <div class="cta">
-                <a href="{{ config('app.url') }}/memos/{{ $memo->id }}">Lihat Detail Memo →</a>
+                <a href="{{ route('memos.show', $memo) }}">Lihat Detail Memo →</a>
             </div>
         </div>
         <hr class="divider">

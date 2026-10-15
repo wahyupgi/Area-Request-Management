@@ -25,6 +25,7 @@ class BeritaAcaraController extends Controller
                 ->with('area:id,name')
                 ->orderBy('name')
                 ->get(['branches.id', 'branches.name', 'branches.area_id']),
+            'signature' => auth()->user()->digitalSignature,
             'templates' => \App\Models\MemoTemplate::where('is_active', true)
                 ->where('type', 'ba')
                 ->get(),
@@ -37,6 +38,12 @@ class BeritaAcaraController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
+        if ($request->boolean('submit_after_save') && !$user->digitalSignature) {
+            return back()->withErrors([
+                'signature' => 'Tanda tangan digital KC wajib diisi sebelum Berita Acara dikirim ke Area Manager.',
+            ]);
+        }
+
         $branchIds = $user->availableBranchesForDocuments()->pluck('branches.id')->all();
         $validated = $request->validate([
             'branch_id'             => ['required', 'integer', Rule::exists('branches', 'id')->whereIn('id', $branchIds)],

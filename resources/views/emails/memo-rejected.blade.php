@@ -70,7 +70,7 @@
             </div>
 
             <div class="cta">
-                <a href="{{ config('app.url') }}/memos/{{ $memo->id }}/edit">Buka & Revisi Memo →</a>
+                <a href="{{ route('memos.edit', $memo) }}">Buka & Revisi Memo →</a>
             </div>
         </div>
         <hr class="divider">

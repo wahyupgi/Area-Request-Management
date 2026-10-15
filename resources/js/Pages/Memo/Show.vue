@@ -153,8 +153,10 @@ const printMemo = () => {
                 
                 <!-- Left: Document Preview Stage -->
                 <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start print:block print:w-full print:m-0 print:p-0">
-                    <div class="w-full max-w-[210mm] print:max-w-none print:w-full shadow-md print:shadow-none bg-white">
-                        <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                    <div class="document-preview-scroll print:overflow-visible">
+                        <div class="document-preview-paper shadow-md print:shadow-none bg-white">
+                            <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                        </div>
                     </div>
                 </a-col>
 

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Area;
 use App\Models\BeritaAcara;
 use App\Models\Branch;
+use App\Models\DigitalSignature;
 use App\Models\FormPengajuan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,6 +30,10 @@ class FormPengajuanTest extends TestCase
             'role' => 'KC',
             'area_id' => $area->id,
             'branch_id' => $branch->id,
+        ]);
+        DigitalSignature::create([
+            'user_id' => $kc->id,
+            'signature_image' => 'signatures/kc.png',
         ]);
 
         $forms = [
@@ -66,6 +71,7 @@ class FormPengajuanTest extends TestCase
                 ->post(route('form-pengajuan.store'), [
                     'branch_id' => $branch->id,
                     'template' => $form['template'],
+                    'title' => $form['template'],
                     'meta' => ['request_data' => $form['request_data']],
                     'submit' => true,
                 ])
@@ -82,7 +88,7 @@ class FormPengajuanTest extends TestCase
                 $this->assertSame('Ana Fauziyah', $document->data['handover']);
                 $this->assertSame('Kepala Unit', $document->data['substitute_position']);
             }
-            $this->assertNull($document->branch_id);
+            $this->assertSame($branch->id, $document->branch_id);
             $this->assertSame($areaManager->id, $document->area_manager_id);
             $this->assertSame(0, BeritaAcara::query()->count());
 
@@ -177,6 +183,10 @@ class FormPengajuanTest extends TestCase
             'salary_deduction' => 'Bersedia',
             'loan_type' => 'pinjaman_uang',
         ];
+        DigitalSignature::create([
+            'user_id' => $kc->id,
+            'signature_image' => 'signatures/kc.png',
+        ]);
 
         $this->actingAs($kc)
             ->post(route('form-pengajuan.store'), [
@@ -192,5 +202,56 @@ class FormPengajuanTest extends TestCase
         $this->assertSame('form_permohonan_pinjaman', $document->template);
         $this->assertSame(FormPengajuan::STATUS_SUBMITTED, $document->status);
         $this->assertSame($areaManager->id, $document->area_manager_id);
+    }
+
+    public function test_kc_must_have_a_digital_signature_before_submitting_documents_to_area_manager(): void
+    {
+        $area = Area::create(['name' => 'Area Tanda Tangan']);
+        User::factory()->create([
+            'role' => 'AM',
+            'area_id' => $area->id,
+        ]);
+        $branch = Branch::create([
+            'name' => 'Cabang Tanda Tangan',
+            'area_id' => $area->id,
+        ]);
+        $kc = User::factory()->create([
+            'role' => 'KC',
+            'area_id' => $area->id,
+            'branch_id' => $branch->id,
+        ]);
+
+        $this->actingAs($kc)
+            ->from(route('berita-acara.create'))
+            ->post(route('berita-acara.store'), [
+                'branch_id' => $branch->id,
+                'title' => 'Berita Acara',
+                'meta' => ['template' => 'lainnya'],
+                'submit_after_save' => true,
+            ])
+            ->assertRedirect(route('berita-acara.create'))
+            ->assertSessionHasErrors('signature');
+
+        $this->actingAs($kc)
+            ->from(route('form-pengajuan.create'))
+            ->post(route('form-pengajuan.store'), [
+                'branch_id' => $branch->id,
+                'template' => 'form_permohonan_pinjaman',
+                'title' => 'Form Permohonan Pinjaman',
+                'meta' => ['request_data' => [
+                    'full_name' => 'Pemohon',
+                    'loan_amount' => 'Rp 1.000.000',
+                    'repayment_months' => 1,
+                    'salary_deduction' => 'Bersedia',
+                    'loan_type' => 'pinjaman_uang',
+                    'reason' => 'Keperluan keluarga',
+                ]],
+                'submit' => true,
+            ])
+            ->assertRedirect(route('form-pengajuan.create'))
+            ->assertSessionHasErrors('signature');
+
+        $this->assertDatabaseCount('berita_acaras', 0);
+        $this->assertDatabaseCount('form_pengajuans', 0);
     }
 }

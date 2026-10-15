@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
@@ -10,11 +10,17 @@ const props = defineProps({
     formPengajuanOnly: { type: Boolean, default: false },
     branches: { type: Array, default: () => [] },
     templates: { type: Array, default: () => [] },
+    signature: { type: Object, default: null },
 });
 
 const page = usePage();
 const { success } = useSweetAlert();
 const attachmentError = ref('');
+const showSignatureDialog = ref(false);
+const signatureFile = ref(null);
+const signaturePreview = ref(null);
+const signatureError = ref('');
+const savingSignature = ref(false);
 const attachmentValidationError = computed(() => Object.entries(form.errors)
     .find(([key]) => key === 'attachments' || key.startsWith('attachments.'))?.[1] || '');
 const allowedAttachmentExtensions = '.docx,.pdf';
@@ -227,7 +233,7 @@ const submit = () => {
         });
 };
 
-const submitAndSign = () => {
+const submitDocument = () => {
     if (props.formPengajuanOnly) {
         form.submit_after_save = true;
         form.transform(data => ({
@@ -244,6 +250,61 @@ const submitAndSign = () => {
     form.submit_after_save = true;
     form.transform(data => ({ ...data }))
         .post(route('berita-acara.store'), { forceFormData: true });
+};
+
+const selectSignature = (event) => {
+    const file = event.target.files?.[0];
+    signatureError.value = '';
+    signatureFile.value = file || null;
+    signaturePreview.value = null;
+    if (!file) return;
+
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+        signatureError.value = 'Tanda tangan harus berupa file PNG atau JPG.';
+        signatureFile.value = null;
+        event.target.value = '';
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        signatureError.value = 'Ukuran tanda tangan maksimal 2MB.';
+        signatureFile.value = null;
+        event.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (loadEvent) => { signaturePreview.value = loadEvent.target.result; };
+    reader.readAsDataURL(file);
+};
+
+const submitAndSign = () => {
+    if (!props.signature?.signature_image) {
+        showSignatureDialog.value = true;
+        return;
+    }
+
+    submitDocument();
+};
+
+const saveSignatureAndSubmit = () => {
+    if (!signatureFile.value) return;
+
+    savingSignature.value = true;
+    signatureError.value = '';
+    const data = new FormData();
+    data.append('signature_image', signatureFile.value);
+    router.post(route('signature.store'), data, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            showSignatureDialog.value = false;
+            submitDocument();
+        },
+        onError: (errors) => {
+            signatureError.value = errors.signature_image || 'Tanda tangan gagal disimpan. Silakan coba lagi.';
+        },
+        onFinish: () => { savingSignature.value = false; },
+    });
 };
 </script>
 
@@ -561,5 +622,33 @@ const submitAndSign = () => {
                 </a-col>
             </a-row>
         </a-form>
+
+        <a-modal
+            v-model:open="showSignatureDialog"
+            title="Tanda Tangan Digital KC"
+            :confirm-loading="savingSignature"
+            :ok-button-props="{ disabled: savingSignature || !signatureFile || !!signatureError }"
+            ok-text="Simpan Tanda Tangan & Kirim"
+            cancel-text="Batal"
+            @ok="saveSignatureAndSubmit"
+            centered
+        >
+            <p class="mb-4 text-sm text-gray-500">Tanda tangan digital wajib diisi sebelum pengajuan dikirim ke Area Manager.</p>
+            <a-form-item label="Upload tanda tangan" extra="Format PNG/JPG, maksimal 2MB.">
+                <input
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    class="block w-full text-sm text-gray-500"
+                    @change="selectSignature"
+                />
+            </a-form-item>
+            <p v-if="signatureError" class="mt-2 text-sm text-red-500">{{ signatureError }}</p>
+            <img
+                v-if="signaturePreview"
+                :src="signaturePreview"
+                alt="Pratinjau tanda tangan digital KC"
+                class="mt-4 h-16 rounded-lg border border-gray-200 p-1 object-contain"
+            />
+        </a-modal>
     </AuthenticatedLayout>
 </template>

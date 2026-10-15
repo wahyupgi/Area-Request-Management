@@ -147,7 +147,9 @@ const printBA = () => {
                             </a-button>
                         </div>
 
-                        <BeritaAcaraDocument :berita-acara="beritaAcara" />
+                        <div class="document-preview-scroll">
+                            <BeritaAcaraDocument :berita-acara="beritaAcara" />
+                        </div>
                         <!-- End BA Document -->
                     </a-card>
 

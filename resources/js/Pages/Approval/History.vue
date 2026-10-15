@@ -27,8 +27,10 @@ const props = defineProps({ memo: Object });
         <a-row :gutter="[24, 24]" class="max-w-7xl mx-auto">
             <!-- Left Column: Memo Document -->
             <a-col :xs="24" :lg="16" class="flex justify-center">
-                <div class="w-full max-w-[210mm] shadow-md bg-white">
-                    <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                <div class="document-preview-scroll">
+                    <div class="document-preview-paper shadow-md bg-white">
+                        <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                    </div>
                 </div>
             </a-col>
 

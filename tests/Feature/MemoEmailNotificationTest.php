@@ -36,6 +36,23 @@ class MemoEmailNotificationTest extends TestCase
         });
     }
 
+    public function test_login_returns_to_the_requested_memo_review_page(): void
+    {
+        [, $am, $memo] = $this->createMemo('submitted');
+
+        $this->get(route('approvals.review', $memo))
+            ->assertRedirect(route('login'));
+
+        $response = $this->withHeader('X-Login-Flow', 'popup')
+            ->postJson(route('login'), [
+                'username' => $am->username,
+                'password' => 'password',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('redirect', route('approvals.review', $memo));
+    }
+
     public function test_approving_a_memo_emails_the_cabinet_chief(): void
     {
         Mail::fake();

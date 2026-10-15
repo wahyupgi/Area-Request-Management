@@ -53,7 +53,9 @@ const reject = () => rejectForm.post(route('approvals.form-pengajuan.reject', pr
         </template>
         <div class="mx-auto grid max-w-7xl gap-6 py-6 px-4 lg:grid-cols-[minmax(0,1fr)_280px]">
             <a-card :title="templateLabels[formPengajuan.template]" :bordered="false" class="rounded-lg shadow-sm">
-                <FormPengajuanDocument :berita-acara="document" />
+                <div class="document-preview-scroll">
+                    <FormPengajuanDocument :berita-acara="document" />
+                </div>
             </a-card>
             <div class="space-y-4">
                 <a-card title="Keputusan Persetujuan" :bordered="false" class="rounded-lg shadow-sm">

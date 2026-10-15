@@ -55,7 +55,9 @@ const printDocument = () => window.print();
         </template>
         <div class="mx-auto grid max-w-7xl gap-6 py-6 px-4 lg:grid-cols-[minmax(0,1fr)_280px]">
             <a-card title="Dokumen Form Pengajuan" :bordered="false" class="rounded-lg shadow-sm">
-                <FormPengajuanDocument :berita-acara="document" />
+                <div class="document-preview-scroll">
+                    <FormPengajuanDocument :berita-acara="document" />
+                </div>
             </a-card>
             <a-card title="Informasi Pengajuan" :bordered="false" class="h-fit rounded-lg shadow-sm">
                 <a-descriptions :column="1" size="small">
