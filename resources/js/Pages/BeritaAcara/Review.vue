@@ -4,12 +4,11 @@ import BeritaAcaraDocument from '@/Components/BeritaAcaraDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 import {
     ArrowLeftOutlined,
-    CheckCircleOutlined,
-    CloseCircleOutlined,
-    PaperClipOutlined,
-    EditOutlined
+    EditOutlined,
+    SafetyCertificateOutlined
 } from '@ant-design/icons-vue';
 
 const props = defineProps({
@@ -19,6 +18,7 @@ const props = defineProps({
 
 const showRejectModal = ref(false);
 const showApproveConfirm = ref(false);
+const { success } = useSweetAlert();
 const showDocumentModal = ref(false);
 const showSignersModal = ref(false);
 
@@ -112,16 +112,14 @@ const cancelSignerEdits = () => {
 
 const handleApprove = () => {
     approveForm.post(route('approvals.ba.approve', props.beritaAcara.id), {
-        onSuccess: () => { showApproveConfirm.value = false; },
+        onSuccess: () => {
+            showApproveConfirm.value = false;
+            success('Berita Acara berhasil disetujui.');
+        },
     });
 };
 
 const requestApprove = () => {
-    if (props.signature?.signature_image) {
-        handleApprove();
-        return;
-    }
-
     showApproveConfirm.value = true;
 };
 
@@ -131,7 +129,6 @@ const handleReject = () => {
     });
 };
 
-const attachmentUrl = () => '/storage/' + props.beritaAcara.attachment_path;
 const printAttachments = [
     ...(props.beritaAcara.attachments || []),
     ...(props.beritaAcara.attachment_path ? [{
@@ -155,7 +152,7 @@ const formatDate = (dateString) => {
         <template #header>
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
-                    <Link :href="route('approvals.pending', { tab: 'ba-masuk' })">
+                    <Link :href="route('approvals.pending', { tab: 'masuk' })">
                         <a-button type="text" shape="circle" title="Kembali ke Daftar Antrean">
                             <template #icon><arrow-left-outlined /></template>
                         </a-button>
@@ -173,40 +170,18 @@ const formatDate = (dateString) => {
             </div>
         </template>
 
-        <div class="max-w-7xl mx-auto py-6 px-4">
+        <div class="max-w-7xl mx-auto py-2 px-4">
             <a-row :gutter="[24, 24]">
-                <a-col :xs="24" :lg="18">
-                    <a-card :bordered="false" class="rounded-lg shadow-sm mb-6">
-                        <h2 class="text-lg font-bold border-b pb-2 mb-4">Dokumen Berita Acara</h2>
-                        <div class="document-preview-scroll">
+                <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start">
+                    <div class="document-preview-scroll w-full">
+                        <div class="document-preview-paper shadow-md bg-white">
                             <BeritaAcaraDocument :berita-acara="beritaAcara" />
                         </div>
-                    </a-card>
-
-                    <a-card v-if="beritaAcara.attachment_path" title="Lampiran Pendukung" :bordered="false" class="rounded-lg shadow-sm">
-                        <a-list item-layout="horizontal" size="small">
-                            <a-list-item>
-                                <a-list-item-meta>
-                                    <template #title>
-                                        <a :href="attachmentUrl()" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2">
-                                            <paper-clip-outlined />
-                                            {{ beritaAcara.attachment_name || 'Lampiran Dokumen' }}
-                                        </a>
-                                    </template>
-                                </a-list-item-meta>
-                                <template #actions>
-                                    <a :href="attachmentUrl()" target="_blank">
-                                        <a-button type="link" size="small">
-                                            <template #icon><download-outlined /></template> Unduh
-                                        </a-button>
-                                    </a>
-                                </template>
-                            </a-list-item>
-                        </a-list>
-                    </a-card>
+                    </div>
+                    <MemoAttachments :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
                 </a-col>
 
-                <a-col :xs="24" :lg="6">
+                <a-col :xs="24" :lg="8">
                     <!-- Status Card -->
                     <a-card title="Keputusan Persetujuan" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
                         <template #extra>
@@ -216,24 +191,54 @@ const formatDate = (dateString) => {
                         </template>
 
                         <div v-if="beritaAcara.status === 'approved'" class="space-y-4">
-                            <a-alert type="success" show-icon message="Pengajuan ini telah disetujui." />
+                            <a-alert type="success" show-icon message="Berita Acara ini telah resmi disetujui dan tanda tangan digital telah dibubuhkan pada dokumen." />
+                            <Link :href="route('approvals.pending', { tab: 'masuk' })">
+                                <a-button block>&larr; Kembali ke Daftar Antrean</a-button>
+                            </Link>
                         </div>
                         <div v-else-if="beritaAcara.status === 'rejected'" class="space-y-4">
-                            <a-alert type="error" show-icon message="Pengajuan ini telah ditolak." />
+                            <a-alert type="error" show-icon message="Berita Acara ini telah ditolak untuk revisi cabang." />
+                            <Link :href="route('approvals.pending', { tab: 'masuk' })">
+                                <a-button block>&larr; Kembali ke Daftar Antrean</a-button>
+                            </Link>
                         </div>
                         <div v-else class="space-y-3">
                             <p class="text-sm text-gray-500 mb-4">
-                                Silakan periksa rincian Berita Acara yang diajukan. Keputusan Anda akan dicatat dalam sistem.
+                                Periksa kelayakan rincian Berita Acara. Keputusan Anda akan dibubuhkan tanda tangan digital dan tercatat pada riwayat sistem.
                             </p>
 
                             <a-button type="primary" block size="large" class="bg-green-600 hover:bg-green-500 border-green-600" @click="requestApprove">
-                                <template #icon><check-circle-outlined /></template> Setujui
+                                Setujui & Tanda Tangani Berita Acara
                             </a-button>
 
                             <a-button danger block size="large" @click="showRejectModal = true">
-                                <template #icon><close-circle-outlined /></template> Tolak
+                                Tolak / Minta Revisi Cabang
                             </a-button>
+                            <Link :href="route('approvals.pending', { tab: 'masuk' })" class="block text-center mt-2 text-sm text-gray-400 hover:text-gray-600">
+                                &larr; Kembali ke Daftar Antrean
+                            </Link>
                         </div>
+                    </a-card>
+
+                    <a-card title="Tanda Tangan Digital Anda" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
+                        <template #extra>
+                            <Link :href="route('profile.edit')" class="text-blue-500 text-xs hover:underline">Ubah</Link>
+                        </template>
+                        <div v-if="signature" class="flex items-center gap-4">
+                            <div class="h-16 w-28 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center p-2">
+                                <img :src="'/storage/' + signature.signature_image" alt="TTD Anda" class="max-h-full object-contain" />
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1 text-green-600 text-sm font-semibold mb-1">
+                                    <safety-certificate-outlined /> Siap Dibubuhkan
+                                </div>
+                                <p class="text-xs text-gray-400 m-0">Sertifikat: {{ signature.certificate_no || 'PGI-DS-AUTO' }}</p>
+                            </div>
+                        </div>
+                        <a-alert v-else type="warning" show-icon class="mt-2">
+                            <template #message><span class="font-semibold">Tanda Tangan Belum Didaftarkan</span></template>
+                            <template #description>Daftarkan tanda tangan melalui menu Profil sebelum menyetujui dokumen.</template>
+                        </a-alert>
                     </a-card>
 
                     <!-- Signatories -->
@@ -264,9 +269,16 @@ const formatDate = (dateString) => {
                             <div class="flex justify-between"><span class="text-gray-500">Lampiran</span><span class="font-medium truncate max-w-[150px]">{{ beritaAcara.meta?.lampiran || '(default)' }}</span></div>
                         </div>
                     </a-card>
+
+                    <a-card title="Informasi Permohonan" :bordered="false" class="rounded-lg shadow-sm mt-6" size="small">
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between gap-3"><span class="text-gray-500">Pemohon</span><span class="font-medium text-right">{{ beritaAcara.creator?.name || '-' }}</span></div>
+                            <div class="flex justify-between gap-3"><span class="text-gray-500">Unit Cabang</span><span class="font-medium text-right">{{ beritaAcara.branch?.name || '-' }}</span></div>
+                            <div class="flex justify-between gap-3"><span class="text-gray-500">Diajukan</span><span class="text-right">{{ formatDate(beritaAcara.submitted_at || beritaAcara.created_at) }}</span></div>
+                        </div>
+                    </a-card>
                 </a-col>
             </a-row>
-            <MemoAttachments :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
         </div>
 
         <a-modal

@@ -2,6 +2,19 @@
    Ant Design — Global Component Overrides
    ========================================================================== */
 
+:root {
+    --app-modal-motion-duration: 0.2s;
+}
+
+.ant-modal-root .ant-zoom-enter,
+.ant-modal-root .ant-zoom-appear,
+.ant-modal-root .ant-zoom-leave,
+.ant-modal-root .ant-fade-enter,
+.ant-modal-root .ant-fade-appear,
+.ant-modal-root .ant-fade-leave {
+    animation-duration: var(--app-modal-motion-duration) !important;
+}
+
 /* Keep icon-and-label controls on one consistent baseline. */
 .ant-btn {
     display: inline-flex !important;

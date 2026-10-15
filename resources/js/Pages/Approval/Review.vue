@@ -4,6 +4,7 @@ import MemoDocument from '@/Components/MemoDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 import {
     ArrowLeftOutlined,
     PrinterOutlined,
@@ -23,6 +24,7 @@ const props = defineProps({
 
 const showRejectModal = ref(false);
 const showApproveConfirm = ref(false);
+const { success } = useSweetAlert();
 
 const approveForm = useForm({
     notes: '',
@@ -68,16 +70,14 @@ const printableHtml = (element) => {
 
 const handleApprove = () => {
     approveForm.post(route('approvals.approve', props.memo.id), {
-        onSuccess: () => { showApproveConfirm.value = false; },
+        onSuccess: () => {
+            showApproveConfirm.value = false;
+            success('Memo berhasil disetujui.');
+        },
     });
 };
 
 const requestApprove = () => {
-    if (props.signature?.signature_image) {
-        handleApprove();
-        return;
-    }
-
     showApproveConfirm.value = true;
 };
 

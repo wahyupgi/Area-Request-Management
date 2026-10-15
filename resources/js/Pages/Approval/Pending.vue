@@ -162,12 +162,12 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
         </template>
 
         <a-card :bordered="false" class="am-approval-page rounded-lg shadow-sm">
-            <a-tabs v-model:activeKey="activeTab" size="large" :animated="false">
+            <a-tabs v-model:activeKey="activeTab" size="middle" :animated="false">
                 <template #rightExtra>
                     <a-button
                         type="primary"
-                        size="large"
-                        style="height: 48px; background-color: #16a34a; border-color: #16a34a;"
+                        size="middle"
+                        class="am-export-button"
                         title="Export/Download CSV"
                         @click="downloadCsv"
                     >
@@ -194,10 +194,10 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
                             v-model:value="searchText"
                             placeholder="Cari nomor dokumen, perihal, pembuat, atau cabang"
                             allow-clear
-                            size="large"
+                            size="middle"
                             class="w-full sm:flex-1 sm:min-w-0"
                         />
-                        <a-select v-model:value="selectedType" aria-label="Filter tipe dokumen" size="large" class="w-full sm:w-60 sm:flex-none">
+                        <a-select v-model:value="selectedType" aria-label="Filter tipe dokumen" size="middle" class="w-full sm:w-60 sm:flex-none">
                             <a-select-option value="all">Semua tipe dokumen</a-select-option>
                             <a-select-option value="memo">Memo</a-select-option>
                             <a-select-option value="ba">Berita Acara</a-select-option>
@@ -209,7 +209,7 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
                                 aria-label="Filter dari tanggal"
                                 placeholder="Tanggal awal"
                                 format="DD MMM YYYY"
-                                size="large"
+                                size="middle"
                                 :disabled-date="disableFutureEndDate"
                                 class="w-full min-w-0"
                             />
@@ -218,7 +218,7 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
                                 aria-label="Filter sampai tanggal"
                                 placeholder="Tanggal akhir"
                                 format="DD MMM YYYY"
-                                size="large"
+                                size="middle"
                                 :disabled-date="disableFutureEndDate"
                                 class="w-full min-w-0"
                             />
@@ -283,6 +283,38 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
 }
 .am-approval-page .ant-tabs-nav::before {
     border-bottom: 0;
+}
+.am-approval-page .ant-tabs-tab {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+.am-approval-page .ant-tabs-tab .anticon {
+    font-size: 14px;
+}
+.am-approval-page .am-export-button {
+    height: 36px;
+    background-color: #16a34a !important;
+    border-color: #16a34a !important;
+    font-size: 14px;
+}
+.am-approval-page .am-export-button:hover {
+    background-color: #15803d !important;
+    border-color: #15803d !important;
+}
+.am-approval-page .ant-input-search .ant-input-affix-wrapper,
+.am-approval-page .ant-input-search .ant-input-search-button,
+.am-approval-page .ant-select-selector,
+.am-approval-page .ant-picker {
+    box-sizing: border-box;
+    height: 36px;
+    min-height: 36px;
+    font-size: 14px;
+}
+.am-approval-page .ant-input-search .ant-input-group-addon {
+    height: 36px;
+}
+.am-approval-page .ant-input-search .ant-input {
+    height: 24px;
 }
 .am-approval-page .ant-table {
     background: transparent !important;

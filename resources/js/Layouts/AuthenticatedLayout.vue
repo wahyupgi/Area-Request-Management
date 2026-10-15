@@ -412,9 +412,9 @@ const handleLogout = () => {
                             </div>
                         <template #overlay>
                             <div class="notification-panel bg-white rounded-lg shadow-lg border border-gray-100 w-80 overflow-hidden">
-                                <div class="flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
-                                    <span class="font-medium">Notifikasi</span>
-                                    <a-button type="link" size="small" @click="markAllRead" class="text-xs">
+                                <div class="notification-panel-header flex justify-between items-center p-3 border-b border-gray-100 bg-gray-50">
+                                    <span class="notification-panel-title font-medium">Notifikasi</span>
+                                    <a-button type="link" size="small" @click="markAllRead" class="notification-mark-read text-xs">
                                         Tandai dibaca
                                     </a-button>
                                 </div>
@@ -423,7 +423,7 @@ const handleLogout = () => {
                                     <a-list v-else item-layout="horizontal" :data-source="notifications" class="px-2">
                                         <template #renderItem="{ item }">
                                             <a-list-item 
-                                                class="cursor-pointer hover:bg-gray-50 rounded px-2 transition-colors border-b-0" 
+                                                class="notification-item cursor-pointer hover:bg-gray-50 rounded px-2 transition-colors border-b-0" 
                                                 :class="{'bg-blue-50/50': !item.is_read}"
                                                 @click="markAsRead(item)"
                                             >
@@ -684,6 +684,91 @@ html.theme-light .ant-layout-header {
     box-shadow: 0 0 0 1.5px #fff;
 }
 
+html:not(.theme-light) .header-notification-dropdown .notification-panel {
+    background: #17233a !important;
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-panel-header {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-panel-title,
+html:not(.theme-light) .header-notification-dropdown .notification-item .ant-list-item-meta-title,
+html:not(.theme-light) .header-notification-dropdown .notification-item .ant-list-item-meta-title > span {
+    background: transparent !important;
+    color: #e2e8f0 !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-item {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-item.bg-blue-50\/50 {
+    background: #1e3a5f !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-item .ant-list-item-meta-description {
+    background: transparent !important;
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-mark-read {
+    background: transparent !important;
+    color: #93c5fd !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-item .text-blue-600 {
+    color: #93c5fd !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-item:hover {
+    background: #334155 !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-panel .ant-empty-description {
+    color: #cbd5e1 !important;
+}
+
+html.theme-light .header-notification-dropdown .notification-panel {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .header-notification-dropdown .notification-panel-header {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .header-notification-dropdown .notification-panel-title,
+html.theme-light .header-notification-dropdown .notification-item .ant-list-item-meta-title,
+html.theme-light .header-notification-dropdown .notification-item .ant-list-item-meta-title > span {
+    color: #1e293b !important;
+}
+
+html.theme-light .header-notification-dropdown .notification-item {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .header-notification-dropdown .notification-item.bg-blue-50\/50 {
+    background: #eff6ff !important;
+}
+
+html.theme-light .header-notification-dropdown .notification-item .ant-list-item-meta-description {
+    color: #64748b !important;
+}
+
+html.theme-light .header-notification-dropdown .notification-mark-read {
+    color: #2563eb !important;
+}
+
+html.theme-light .header-notification-dropdown .notification-item:hover {
+    background: #f8fafc !important;
+}
+
 html:not(.theme-light) .header-notification-dropdown,
 html:not(.theme-light) .header-notification-dropdown .ant-dropdown-menu,
 html:not(.theme-light) .header-notification-dropdown .ant-dropdown-menu-item,
@@ -785,6 +870,11 @@ html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown
 html:not(.theme-light) .header-user-dropdown .kc-dashboard-month-picker-dropdown .ant-picker-cell-selected .ant-picker-cell-inner {
     background: #2563eb !important;
     color: #ffffff !important;
+}
+
+html:not(.theme-light) .header-notification-dropdown .notification-mark-read {
+    background: transparent !important;
+    color: #93c5fd !important;
 }
 
 </style>

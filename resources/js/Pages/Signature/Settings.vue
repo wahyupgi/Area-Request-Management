@@ -92,7 +92,7 @@ const save = (template) => {
     <Head title="Pengaturan Tanda Tangan" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold text-white">Pengaturan Tanda Tangan</h1>
+            <h1 class="signature-settings-title text-xl font-bold">Pengaturan Tanda Tangan</h1>
         </template>
 
         <div class="am-signature-page max-w-5xl space-y-6">
@@ -184,16 +184,63 @@ const save = (template) => {
     </AuthenticatedLayout>
 </template>
 
-<style scoped>
-:deep(.custom-dark-alert.ant-alert) {
+<style>
+.signature-settings-title {
+    color: #ffffff;
+}
+
+html.theme-light .signature-settings-title {
+    color: #0f172a;
+}
+
+html:not(.theme-light) .am-signature-page .custom-dark-alert.ant-alert {
     background-color: rgba(14, 165, 233, 0.1);
     border-color: rgba(14, 165, 233, 0.2);
 }
-:deep(.custom-dark-alert .ant-alert-message),
-:deep(.custom-dark-alert .ant-alert-description) {
+
+html:not(.theme-light) .am-signature-page .custom-dark-alert .ant-alert-message,
+html:not(.theme-light) .am-signature-page .custom-dark-alert .ant-alert-description {
     color: #e0f2fe;
 }
-:deep(.custom-dark-alert .ant-alert-icon) {
+
+html:not(.theme-light) .am-signature-page .custom-dark-alert .ant-alert-icon {
     color: #38bdf8;
+}
+
+html.theme-light .am-signature-page .custom-dark-alert.ant-alert {
+    background-color: #f0f9ff;
+    border-color: #7dd3fc;
+}
+
+html.theme-light .am-signature-page .custom-dark-alert .ant-alert-message {
+    color: #075985;
+}
+
+html.theme-light .am-signature-page .custom-dark-alert .ant-alert-description {
+    color: #0c4a6e;
+}
+
+html.theme-light .am-signature-page .custom-dark-alert .ant-alert-icon {
+    color: #0284c7;
+}
+
+html:not(.theme-light) .am-signature-page .ant-tabs-tab .ant-tabs-tab-btn {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .am-signature-page .ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: #60a5fa !important;
+}
+
+html:not(.theme-light) .am-signature-page .ant-tabs-tab:hover .ant-tabs-tab-btn {
+    color: #93c5fd !important;
+}
+
+html.theme-light .am-signature-page .ant-tabs-tab .ant-tabs-tab-btn {
+    color: #475569;
+}
+
+html.theme-light .am-signature-page .ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: #0369a1;
 }
 </style>
