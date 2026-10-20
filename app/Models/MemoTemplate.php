@@ -65,7 +65,7 @@ class MemoTemplate extends Model
                 'name' => 'FIN - Pemberitahuan Kas Keluar',
                 'category' => 'Ma-Link',
                 'field_schema' => [
-                    ['key' => 'nominal_kas_keluar', 'label' => 'Nominal Kas Keluar (Rp)', 'type' => 'number', 'required' => true],
+                    ['key' => 'nominal_kas_keluar', 'label' => 'Nominal Kas Keluar', 'type' => 'number', 'required' => true],
                     ['key' => 'cabang', 'label' => 'Kode / Nama Cabang', 'type' => 'text', 'required' => true],
                     ['key' => 'alasan', 'label' => 'Alasan Pengeluaran Kas', 'type' => 'textarea', 'required' => true],
                 ],
@@ -106,7 +106,7 @@ class MemoTemplate extends Model
                         'columns' => [
                             ['key' => 'tanggal', 'label' => 'Tanggal', 'type' => 'date'],
                             ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'text'],
-                            ['key' => 'nominal', 'label' => 'Nominal (Rp)', 'type' => 'number'],
+                            ['key' => 'nominal', 'label' => 'Nominal', 'type' => 'number'],
                         ],
                     ],
                 ],
@@ -138,9 +138,9 @@ class MemoTemplate extends Model
                     ['key' => 'jenis_barang', 'label' => 'Jenis Barang', 'type' => 'text', 'required' => true],
                     ['key' => 'no_hp', 'label' => 'No. HP', 'type' => 'text', 'required' => true],
                     ['key' => 'jatuh_tempo', 'label' => 'Tanggal Jatuh Tempo', 'type' => 'date', 'required' => true],
-                    ['key' => 'nominal_pinjaman', 'label' => 'Nominal Pinjaman (Rp)', 'type' => 'number', 'required' => true],
-                    ['key' => 'nominal_pelunasan', 'label' => 'Nominal Pelunasan (Rp)', 'type' => 'number', 'required' => true],
-                    ['key' => 'nominal_keringanan', 'label' => 'Nominal Keringanan (Rp)', 'type' => 'number', 'required' => true],
+                    ['key' => 'nominal_pinjaman', 'label' => 'Nominal Pinjaman', 'type' => 'number', 'required' => true],
+                    ['key' => 'nominal_pelunasan', 'label' => 'Nominal Pelunasan', 'type' => 'number', 'required' => true],
+                    ['key' => 'nominal_keringanan', 'label' => 'Nominal Keringanan', 'type' => 'number', 'required' => true],
                 ],
                 'document_defaults' => [
                     'direktorat' => 'Regional Branch Office',
@@ -160,7 +160,6 @@ class MemoTemplate extends Model
                 'name' => 'Permohonan Keringanan Denda Reclaim',
                 'category' => 'Keringanan Jasa',
                 'field_schema' => [
-                    ['key' => 'cabang', 'label' => 'Cabang', 'type' => 'text', 'required' => true],
                     [
                         'key' => 'rincian_reclaim',
                         'label' => 'Data Nasabah dan Barang',
@@ -168,18 +167,19 @@ class MemoTemplate extends Model
                         'required' => true,
                         'columns' => [
                             ['key' => 'nama_nasabah', 'label' => 'Nama Nasabah', 'type' => 'text'],
+                            ['key' => 'cabang', 'label' => 'Cabang', 'type' => 'text'],
                             ['key' => 'tanggal_jatuh_tempo', 'label' => 'Tgl Jatuh Tempo', 'type' => 'date'],
                             ['key' => 'tanggal_pembayaran', 'label' => 'Tgl Pembayaran', 'type' => 'date'],
-                            ['key' => 'pinjaman_pokok', 'label' => 'Pinjaman Pokok (Rp)', 'type' => 'number'],
+                            ['key' => 'pinjaman_pokok', 'label' => 'Pinjaman Pokok', 'type' => 'number'],
                             ['key' => 'no_faktur', 'label' => 'No. Faktur', 'type' => 'text'],
                             ['key' => 'jenis_barang', 'label' => 'Jenis Barang', 'type' => 'text'],
                             ['key' => 'keterangan', 'label' => 'Keterangan', 'type' => 'textarea'],
+                            ['key' => 'nominal_seharusnya', 'label' => 'Nominal Sebelum Reclaim', 'type' => 'number'],
+                            ['key' => 'nominal_setelah_reclaim', 'label' => 'Nominal Setelah Reclaim', 'type' => 'number'],
+                            ['key' => 'persentase_denda', 'label' => 'Persentase Denda / Jasa', 'type' => 'number'],
+                            ['key' => 'permohonan', 'label' => 'Uraian Permohonan', 'type' => 'textarea'],
                         ],
                     ],
-                    ['key' => 'nominal_seharusnya', 'label' => 'Nominal Sebelum Reclaim (Rp)', 'type' => 'number', 'required' => true],
-                    ['key' => 'nominal_setelah_reclaim', 'label' => 'Nominal Setelah Reclaim (Rp)', 'type' => 'number', 'required' => true],
-                    ['key' => 'persentase_denda', 'label' => 'Persentase Denda / Jasa (%)', 'type' => 'number', 'required' => true],
-                    ['key' => 'permohonan', 'label' => 'Uraian Permohonan', 'type' => 'textarea', 'display' => 'paragraph', 'required' => true],
                 ],
                 'document_defaults' => [
                     'direktorat' => 'Operasional',

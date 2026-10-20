@@ -34,7 +34,10 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
-        $redirect = redirect()->intended(RouteServiceProvider::HOME);
+
+        $request->session()->forget('url.intended');
+
+        $redirect = redirect(RouteServiceProvider::HOME);
 
         if ($request->header('X-Login-Flow') === 'popup') {
             return response()->json([

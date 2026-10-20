@@ -3,7 +3,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import { useTheme } from '@/composables/useTheme';
 import { computed, ref } from 'vue';
-import { CheckCircleOutlined, LoadingOutlined, LoginOutlined } from '@ant-design/icons-vue';
+import { CheckCircleOutlined } from '@ant-design/icons-vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -127,21 +127,26 @@ const submit = async () => {
         <div class="absolute right-6 top-6 z-20">
             <ThemeToggle />
         </div>
-        <div class="relative z-10 w-full max-w-5xl bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden flex shadow-2xl shadow-black/50">
-            <div class="hidden md:flex flex-col items-center justify-center w-1/2 p-12 bg-white/5 relative overflow-hidden">
+        <div class="login-card relative z-10 w-full max-w-5xl rounded-3xl overflow-hidden flex shadow-2xl shadow-black/50" :class="isLightTheme ? 'is-light' : 'is-dark'">
+            <div class="login-brand-panel hidden md:flex flex-col items-center justify-center w-1/2 p-12 relative overflow-hidden">
                 <div class="relative z-10 flex flex-col items-center text-center">
                     <img src="/PGI-Secondary%20Logo%202%20(1).png" alt="Logo Pusat Gadai Indonesia" class="w-72 max-w-full h-auto rounded-lg" />
                 </div>
+                <svg class="login-wave hidden md:block" viewBox="40 0 60 100" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M100 0 L50 0 C44 8 58 14 74 18 C60 26 70 36 84 40 C68 48 78 58 88 62 C70 70 66 80 70 84 C50 90 44 96 40 100 L100 100 Z" fill="#6aa8ee" />
+                    <path d="M100 0 L62 0 C56 8 68 16 80 20 C68 28 78 38 90 42 C76 50 84 60 90 64 C76 72 72 84 76 88 C62 92 58 96 54 100 L100 100 Z" fill="#a6cbf4" />
+                    <path d="M100 0 L72 0 C66 6 76 14 86 18 C78 26 84 36 94 40 C84 48 92 58 96 62 C86 70 84 82 88 86 C78 92 74 96 70 100 L100 100 Z" :fill="isLightTheme ? '#ffffff' : '#0f172a'" />
+                </svg>
             </div>
 
-            <div class="w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center">
+            <div class="login-form-panel w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center">
                 <div class="md:hidden flex flex-col items-center mb-10">
                     <img src="/PGI-Secondary%20Logo%202%20(1).png" alt="Logo Pusat Gadai Indonesia" class="w-56 max-w-full h-auto rounded-lg" />
                 </div>
 
                 <div class="mb-10 text-center md:text-left">
-                    <h3 class="text-2xl font-bold text-white">Selamat Datang!</h3>
-                    <p class="text-slate-400 mt-2 text-sm">Silakan masuk menggunakan kredensial akun Anda.</p>
+                    <h3 class="text-2xl font-bold" :class="isLightTheme ? 'text-slate-900' : 'text-white'">Selamat Datang!</h3>
+                    <p class="mt-2 text-sm" :class="isLightTheme ? 'text-slate-500' : 'text-slate-400'">Silakan masuk menggunakan kredensial akun Anda.</p>
                     <p v-if="props.status" class="mt-4 rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-left text-sm text-amber-200" role="alert">
                         {{ props.status }}
                     </p>
@@ -151,7 +156,7 @@ const submit = async () => {
                     layout="vertical"
                     @finish="submit"
                     class="login-custom-form"
-                    :class="isLightTheme ? 'light-login-form' : ''"
+                    :class="isLightTheme ? 'light-login-form' : 'dark-login-form'"
                 >
                     <a-form-item
                         label="Username"
@@ -191,6 +196,7 @@ const submit = async () => {
                         html-type="button"
                         @click="submit"
                         :disabled="isSubmitting"
+                        :loading="isSubmitting"
                         size="large"
                         block
                         class="login-submit-button mt-4"
@@ -198,10 +204,6 @@ const submit = async () => {
                         style="height: 52px; border-radius: 0.75rem; font-weight: 600;"
                     >
                         Login
-                        <template #icon>
-                            <LoadingOutlined v-if="isSubmitting" spin />
-                            <LoginOutlined v-else />
-                        </template>
                     </a-button>
                 </a-form>
             </div>
@@ -210,44 +212,71 @@ const submit = async () => {
 </template>
 
 <style scoped>
-:deep(.login-custom-form .ant-form-item-label > label) {
+.login-card.is-dark { --panel-bg: #0f172a; border: 1px solid rgba(255, 255, 255, 0.1); }
+.login-card.is-light { --panel-bg: #ffffff; border: 1px solid #e2e8f0; }
+.login-form-panel { background: var(--panel-bg); }
+.login-card.is-light .login-form-panel h3 { color: #0f172a; }
+.login-card.is-light .login-form-panel p:not([role='alert']) { color: #64748b; }
+.login-brand-panel {
+    background: linear-gradient(180deg, #0f4fa8 0%, #1d77d8 100%);
+}
+.login-brand-panel img {
+    background: #ffffff;
+    padding: 0.75rem;
+}
+.login-wave {
+    position: absolute;
+    top: 0;
+    right: -1px;
+    width: 90px;
+    height: 100%;
+}
+.login-wave .wave-back { fill: rgba(147, 197, 253, 0.55); }
+.login-wave .wave-mid { fill: rgba(191, 219, 254, 0.75); }
+.login-wave .wave-front { fill: var(--panel-bg); }
+/* ---- Dark mode form (default) ---- */
+:deep(.dark-login-form .ant-form-item-label > label),
+:deep(.login-custom-form:not(.light-login-form) .ant-form-item-label > label) {
     color: #cbd5e1;
     font-size: 0.875rem;
     font-weight: 500;
 }
-:deep(.login-custom-form .ant-input),
-:deep(.login-custom-form .ant-input-affix-wrapper) {
+:deep(.dark-login-form .ant-input),
+:deep(.dark-login-form .ant-input-affix-wrapper) {
     background-color: rgba(30, 41, 59, 0.5);
     border-color: rgba(255, 255, 255, 0.1);
     color: white;
     border-radius: 0.75rem;
     box-shadow: none !important;
 }
-:deep(.login-custom-form .ant-input:focus),
-:deep(.login-custom-form .ant-input-affix-wrapper:focus),
-:deep(.login-custom-form .ant-input-affix-wrapper-focused) {
+:deep(.dark-login-form .ant-input:focus),
+:deep(.dark-login-form .ant-input-affix-wrapper:focus),
+:deep(.dark-login-form .ant-input-affix-wrapper-focused) {
     border-color: #3b82f6;
     box-shadow: 0 0 0 1px #3b82f6 !important;
 }
-:deep(.login-custom-form .ant-input-affix-wrapper .ant-input) {
+:deep(.dark-login-form .ant-input-affix-wrapper .ant-input) {
     background-color: transparent !important;
     color: white !important;
     border: 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
 }
-:deep(.login-custom-form .ant-input-affix-wrapper .ant-input::placeholder),
-:deep(.login-custom-form .ant-input::placeholder) {
+:deep(.dark-login-form .ant-input-affix-wrapper .ant-input::placeholder),
+:deep(.dark-login-form .ant-input::placeholder) {
     color: #64748b;
 }
-:deep(.login-custom-form .ant-input-password-icon) {
+:deep(.dark-login-form .ant-input-password-icon) {
     color: #94a3b8;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-:deep(.login-custom-form .ant-input-password-icon:hover) {
+:deep(.dark-login-form .ant-input-password-icon:hover) {
     color: white;
+}
+:deep(.dark-login-form .ant-form-item-explain-error) {
+    color: #f87171;
 }
 
 :deep(.light-login-form .ant-form-item-label > label) {

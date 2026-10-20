@@ -8,7 +8,6 @@ import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInp
 import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
-    formPengajuanOnly: { type: Boolean, default: false },
     branches: { type: Array, default: () => [] },
     templates: { type: Array, default: () => [] },
     signature: { type: Object, default: null },
@@ -29,20 +28,7 @@ const availableTemplates = computed(() => {
     return (props.templates || []).map(t => ({ value: t.name, label: t.name, templateData: t }));
 });
 
-const formatRupiahAmount = (value) => {
-    const digits = String(value ?? '').replace(/\D/g, '');
-    return digits ? `Rp ${digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '';
-};
-const requestAmountModel = (field) => computed({
-    get: () => formatRupiahAmount(form.meta.request_data[field]),
-    set: (value) => {
-        const digits = String(value ?? '').replace(/\D/g, '');
-        form.meta.request_data[field] = digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    },
-});
-const loanAmount = requestAmountModel('loan_amount');
-const salaryAfterApproval = requestAmountModel('salary_after_approval');
-const minimumSalary = requestAmountModel('minimum_salary');
+
 
 const form = useForm({
     branch_id: undefined,
@@ -57,7 +43,6 @@ const form = useForm({
         kepada_jabatan: '',
         penyetuju_akhir: '',
         data: { rows: [], kronologi: '' },
-        request_data: {},
     },
     pengantar: 'Sehubungan dengan adanya berita acara ini, saya ingin memberitahukan bahwa...',
     rincian_data: [
@@ -89,58 +74,32 @@ watch(() => form.meta.template, (templateName) => {
         ...(isOtherBa ? { table_columns: tableColumns } : {}),
     };
 
-    if (t.type === 'form') {
-        const requestData = {};
-        (t.field_schema || []).forEach(field => {
-            if (field.key === 'full_name') requestData[field.key] = page.props.auth.user?.name || '';
-            else requestData[field.key] = '';
-        });
-        
-        if (t.name === 'Form Permohonan Pinjaman (FPP)') {
-            requestData.salary_deduction = 'Bersedia';
-            requestData.loan_type = 'pinjaman_uang';
-        } else if (t.name === 'Form Ijin Tidak Masuk Kerja (FITMK)') {
-            requestData.leave_type = 'cuti_tahunan';
-            requestData.substitute_position = '';
-        }
-        form.meta.request_data = requestData;
-        
-        form.meta.direktorat = '';
-        form.meta.divisi = '';
-        form.meta.kepada_nama = '';
-        form.meta.kepada_jabatan = '';
-        form.pengantar = '';
+    form.meta.direktorat = t.document_defaults?.direktorat || '';
+    form.meta.divisi = t.document_defaults?.divisi || '';
+    form.meta.kepada_nama = t.document_defaults?.kepada || '';
+    form.meta.kepada_jabatan = t.document_defaults?.kepada_jabatan || '';
+    form.meta.lampiran = t.document_defaults?.lampiran || '';
+    form.pengantar = t.document_defaults?.pengantar || '';
+    form.meta.penyetuju_akhir = t.document_defaults?.penyetuju_akhir || '';
+    
+    if (t.name === 'Permintaan Revisi Absensi') {
         form.rincian_data = [];
-        form.keterangan_tambahan = '';
-        form.penutup = '';
+        form.meta.data.rows = [{ nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }];
+    } else if (t.name === 'Penghapusan Barang Sitaan') {
+        form.rincian_data = [];
+        form.meta.data.rows = [{ cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }];
+    } else if (t.name === 'Berita Acara Lainnya') {
+        form.rincian_data = [];
+        form.meta.data.rows = [
+            Object.fromEntries(tableColumns.map((column) => [column.key, ''])),
+        ];
     } else {
-        form.meta.direktorat = t.document_defaults?.direktorat || '';
-        form.meta.divisi = t.document_defaults?.divisi || '';
-        form.meta.kepada_nama = t.document_defaults?.kepada || '';
-        form.meta.kepada_jabatan = t.document_defaults?.kepada_jabatan || '';
-        form.meta.lampiran = t.document_defaults?.lampiran || '';
-        form.pengantar = t.document_defaults?.pengantar || '';
-        form.meta.penyetuju_akhir = t.document_defaults?.penyetuju_akhir || '';
-        
-        if (t.name === 'Permintaan Revisi Absensi') {
-            form.rincian_data = [];
-            form.meta.data.rows = [{ nama: '', nik: '', tanggal: '', absensi_in: '', absensi_out: '', ket: 'Revisi Absen' }];
-        } else if (t.name === 'Penghapusan Barang Sitaan') {
-            form.rincian_data = [];
-            form.meta.data.rows = [{ cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }];
-        } else if (t.name === 'Berita Acara Lainnya') {
-            form.rincian_data = [];
-            form.meta.data.rows = [
-                Object.fromEntries(tableColumns.map((column) => [column.key, ''])),
-            ];
-        } else {
-            form.rincian_data = (t.field_schema || []).map(f => ({ label: f.label, value: '' }));
-            form.meta.data.rows = [];
-        }
-
-        form.keterangan_tambahan = t.document_defaults?.keterangan_tambahan || '';
-        form.penutup = t.document_defaults?.penutup || '';
+        form.rincian_data = (t.field_schema || []).map(f => ({ label: f.label, value: '' }));
+        form.meta.data.rows = [];
     }
+
+    form.keterangan_tambahan = t.document_defaults?.keterangan_tambahan || '';
+    form.penutup = t.document_defaults?.penutup || '';
 });
 
 const selectAttachment = (event) => {
@@ -172,10 +131,7 @@ const removeRincian = (index) => {
     form.rincian_data.splice(index, 1);
 };
 
-const resetOtherLeaveType = () => {
-    form.meta.request_data.leave_type = 'cuti_tahunan';
-    form.meta.request_data.leave_type_other = '';
-};
+
 
 const addTemplateRow = () => {
     const row = form.meta.template === 'Permintaan Revisi Absensi'
@@ -225,111 +181,26 @@ const formattedDetailValue = (item) => isRupiahDetail(item.label)
     : item.value;
 
 const submit = () => {
-    form.submit_after_save = false;
-    form.transform(data => props.formPengajuanOnly
-        ? ({
-            title: data.title,
-            branch_id: data.branch_id,
-            template: data.meta.template,
-            meta: { request_data: data.meta.request_data },
-            submit: false,
-            attachments: data.attachments,
-        })
-        : ({ ...data }))
-        .post(props.formPengajuanOnly ? route('form-pengajuan.store') : route('berita-acara.store'), {
-            forceFormData: true,
-            onSuccess: () => success(props.formPengajuanOnly
-                ? 'Draft Form Pengajuan berhasil disimpan.'
-                : 'Draft Berita Acara berhasil disimpan.'),
-        });
-};
-
-const submitDocument = () => {
-    if (props.formPengajuanOnly) {
-        form.submit_after_save = true;
-        form.transform(data => ({
-            title: data.title,
-            branch_id: data.branch_id,
-            template: data.meta.template,
-            meta: { request_data: data.meta.request_data },
-            submit: true,
-            attachments: data.attachments,
-        })).post(route('form-pengajuan.store'), { forceFormData: true });
-        return;
-    }
-
-    form.submit_after_save = true;
-    form.transform(data => ({ ...data }))
-        .post(route('berita-acara.store'), { forceFormData: true });
-};
-
-const selectSignature = (event) => {
-    const file = event.target.files?.[0];
-    signatureError.value = '';
-    signatureFile.value = file || null;
-    signaturePreview.value = null;
-    if (!file) return;
-
-    if (!['image/png', 'image/jpeg'].includes(file.type)) {
-        signatureError.value = 'Tanda tangan harus berupa file PNG atau JPG.';
-        signatureFile.value = null;
-        event.target.value = '';
-        return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-        signatureError.value = 'Ukuran tanda tangan maksimal 2MB.';
-        signatureFile.value = null;
-        event.target.value = '';
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (loadEvent) => { signaturePreview.value = loadEvent.target.result; };
-    reader.readAsDataURL(file);
-};
-
-const submitAndSign = () => {
-    if (!props.signature?.signature_image) {
-        showSignatureDialog.value = true;
-        return;
-    }
-
-    submitDocument();
-};
-
-const saveSignatureAndSubmit = () => {
-    if (!signatureFile.value) return;
-
-    savingSignature.value = true;
-    signatureError.value = '';
-    const data = new FormData();
-    data.append('signature_image', signatureFile.value);
-    router.post(route('signature.store'), data, {
+    form.post(route('berita-acara.store'), {
         forceFormData: true,
-        preserveScroll: true,
-        onSuccess: () => {
-            showSignatureDialog.value = false;
-            submitDocument();
-        },
-        onError: (errors) => {
-            signatureError.value = errors.signature_image || 'Tanda tangan gagal disimpan. Silakan coba lagi.';
-        },
-        onFinish: () => { savingSignature.value = false; },
     });
 };
+
+
+
 </script>
 
 
 <template>
-    <Head :title="formPengajuanOnly ? 'Buat Form Pengajuan' : 'Buat Berita Acara'" />
+    <Head title="Buat Berita Acara Baru" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold mb-0">{{ formPengajuanOnly ? 'Buat Form Pengajuan' : 'Buat Berita Acara Baru' }}</h1>
+            <h1 class="text-xl font-bold mb-0">Buat Berita Acara Baru</h1>
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
             <a-card :bordered="false" class="mb-6 rounded-lg shadow-sm">
-                <h2 class="text-lg font-semibold mb-2">{{ formPengajuanOnly ? 'Pilih Cabang dan Jenis Form Pengajuan' : 'Pilih Cabang dan Jenis Berita Acara' }}</h2>
+                <h2 class="text-lg font-semibold mb-2">Pilih Cabang dan Jenis Berita Acara</h2>
                 <a-form-item
                     label="Cabang"
                     :validateStatus="form.errors.branch_id ? 'error' : ''"
@@ -343,7 +214,7 @@ const saveSignatureAndSubmit = () => {
                     />
                 </a-form-item>
                 <a-form-item
-                    :label="formPengajuanOnly ? 'Jenis Form Pengajuan' : 'Jenis Berita Acara'"
+                    label="Jenis Berita Acara"
                     :validateStatus="form.errors['meta.template'] ? 'error' : ''"
                     :help="form.errors['meta.template']"
                     class="mb-0"
@@ -360,7 +231,7 @@ const saveSignatureAndSubmit = () => {
             <a-row :gutter="24" v-if="form.meta.template">
                 <a-col :xs="24" :lg="10" class="mb-6">
                     <div class="flex flex-col gap-6">
-                        <a-card v-if="!formPengajuanOnly" :bordered="false" class="rounded-lg shadow-sm">
+                        <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <h2 class="text-sm font-semibold mb-1">Informasi Dokumen</h2>
                             <p class="text-xs text-gray-500 mb-4">Detail header yang tampil di dokumen cetak.</p>
 
@@ -429,54 +300,7 @@ const saveSignatureAndSubmit = () => {
                 <a-col :xs="24" :lg="14">
                     <div class="flex flex-col gap-6">
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
-                            <h2 class="text-sm font-semibold mb-4">{{ formPengajuanOnly ? 'Isi Form Pengajuan' : 'Isi Berita Acara' }}</h2>
-                            <template v-if="formPengajuanOnly && form.meta.template === 'Form Permohonan Pinjaman (FPP)'">
-                                <a-alert class="mb-4" type="info" show-icon message="Form Permohonan Pinjaman (FPP)" description="Lengkapi data pemohon dan rincian pinjaman. Lampirkan bukti pendukung bila diperlukan." />
-                                <a-row :gutter="12">
-                                    <a-col :xs="24" :md="12"><a-form-item label="Nama Lengkap" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']"><a-input v-model:value="form.meta.request_data.full_name" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Jabatan" :validateStatus="form.errors['meta.request_data.position'] ? 'error' : ''" :help="form.errors['meta.request_data.position']"><a-input v-model:value="form.meta.request_data.position" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Cabang / Lokasi Kerja" :validateStatus="form.errors['meta.request_data.work_location'] ? 'error' : ''" :help="form.errors['meta.request_data.work_location']"><a-input v-model:value="form.meta.request_data.work_location" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Tanggal Masuk Kerja" :validateStatus="form.errors['meta.request_data.employment_date'] ? 'error' : ''" :help="form.errors['meta.request_data.employment_date']"><a-input v-model:value="form.meta.request_data.employment_date" type="date" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="8"><a-form-item label="Terlambat (bulan)"><a-input-number v-model:value="form.meta.request_data.late_months" :min="0" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="8"><a-form-item label="Tidak Masuk (bulan)"><a-input-number v-model:value="form.meta.request_data.absence_months" :min="0" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="8"><a-form-item label="Permohonan ke-"><a-input v-model:value="form.meta.request_data.request_number" @keydown="restrictToDigits" @paste="preventNonDigitPaste" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Gaji setelah disetujui"><a-input v-model:value="salaryAfterApproval" placeholder="Contoh: 6.000.000" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Gaji minimal"><a-input v-model:value="minimumSalary" placeholder="Contoh: 4.500.000" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Jumlah pinjaman yang diajukan" :validateStatus="form.errors['meta.request_data.loan_amount'] ? 'error' : ''" :help="form.errors['meta.request_data.loan_amount']"><a-input v-model:value="loanAmount" placeholder="Contoh: 5.000.000" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Lama pengembalian (bulan)" :validateStatus="form.errors['meta.request_data.repayment_months'] ? 'error' : ''" :help="form.errors['meta.request_data.repayment_months']"><a-input-number v-model:value="form.meta.request_data.repayment_months" :min="1" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Bersedia potong gaji setiap bulan"><a-radio-group v-model:value="form.meta.request_data.salary_deduction"><a-radio value="Bersedia">Bersedia</a-radio><a-radio value="Tidak bersedia">Tidak bersedia</a-radio></a-radio-group></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Jenis Pinjaman"><a-radio-group v-model:value="form.meta.request_data.loan_type"><a-radio value="pinjaman_uang">Pinjaman Uang</a-radio><a-radio value="pembelian_barang">Pembelian Barang</a-radio></a-radio-group></a-form-item></a-col>
-                                    <a-col :span="24"><a-form-item label="Alasan Pinjaman" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']"><a-textarea v-model:value="form.meta.request_data.reason" :rows="4" /></a-form-item></a-col>
-                                </a-row>
-                            </template>
-                            <template v-else-if="formPengajuanOnly && form.meta.template === 'Form Ijin Tidak Masuk Kerja (FITMK)'">
-                                <a-alert class="mb-4" type="info" show-icon message="Form Ijin Tidak Masuk Kerja (FITMK)" description="Isi detail ketidakhadiran dan serah terima pekerjaan." />
-                                <a-row :gutter="12">
-                                    <a-col :xs="24" :md="12"><a-form-item label="Nama" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']"><a-input v-model:value="form.meta.request_data.full_name" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12">
-                                        <a-form-item label="Detail ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.leave_type_other'] ? 'error' : ''" :help="form.errors['meta.request_data.leave_type_other']">
-                                            <a-input v-if="form.meta.request_data.leave_type === 'lainnya'" v-model:value="form.meta.request_data.leave_type_other" placeholder="Tuliskan jenis ijin">
-                                                <template #addonAfter><a-button type="link" size="small" @click="resetOtherLeaveType">Pilih jenis lain</a-button></template>
-                                            </a-input>
-                                            <a-select v-else v-model:value="form.meta.request_data.leave_type">
-                                                <a-select-option value="cuti_tahunan">Cuti Tahunan</a-select-option>
-                                                <a-select-option value="ijin">Ijin (Belum Ada Hak Cuti)</a-select-option>
-                                                <a-select-option value="cuti_melahirkan">Cuti Melahirkan</a-select-option>
-                                                <a-select-option value="cuti_khusus">Cuti Khusus (Menikah/Kematian/Hari Raya)</a-select-option>
-                                                <a-select-option value="sakit">Sakit (Melampirkan Surat Dokter)</a-select-option>
-                                                <a-select-option value="lainnya">Lainnya</a-select-option>
-                                            </a-select>
-                                        </a-form-item>
-                                    </a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Tanggal ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.start_date'] ? 'error' : ''" :help="form.errors['meta.request_data.start_date']"><a-input v-model:value="form.meta.request_data.start_date" type="date" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Durasi (hari)" :validateStatus="form.errors['meta.request_data.duration'] ? 'error' : ''" :help="form.errors['meta.request_data.duration']"><a-input-number v-model:value="form.meta.request_data.duration" :min="1" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" /></a-form-item></a-col>
-                                    <a-col :span="24"><a-form-item label="Alasan ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']"><a-textarea v-model:value="form.meta.request_data.reason" :rows="3" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Pekerjaan selama tidak masuk dilimpahkan ke"><a-input v-model:value="form.meta.request_data.handover" /></a-form-item></a-col>
-                                    <a-col :xs="24" :md="12"><a-form-item label="Jabatan pengganti"><a-input v-model:value="form.meta.request_data.substitute_position" placeholder="Contoh: Kepala Unit" /></a-form-item></a-col>
-                                    <a-col :span="24"><a-form-item label="Kontak selama tidak masuk kerja (Telepon / HP)"><a-input v-model:value="form.meta.request_data.phone" @keydown="restrictToDigits" @paste="preventNonDigitPaste" /></a-form-item></a-col>
-                                </a-row>
-                            </template>
-                            <template v-else>
+                            <h2 class="text-sm font-semibold mb-4">Isi Berita Acara</h2>
                             <a-form-item label="Kalimat Pengantar (Sehubungan dengan...)" class="mb-4">
                                 <a-textarea v-model:value="form.pengantar" :rows="3" />
                             </a-form-item>
@@ -593,18 +417,13 @@ const saveSignatureAndSubmit = () => {
                             <a-form-item label="Kalimat Penutup" class="mb-0">
                                 <a-textarea v-model:value="form.penutup" :rows="2" />
                             </a-form-item>
-                            </template>
                         </a-card>
 
-                        <!-- Action Buttons -->
-                        <div class="pt-2 flex flex-col sm:flex-row justify-end gap-3">
-                            <a-button size="large" type="default" @click="submit">
+                        <!-- Action Button -->
+                        <div class="pt-2 flex justify-end">
+                            <a-button size="large" type="primary" html-type="submit" :loading="form.processing">
                                 <template #icon><save-outlined /></template>
                                 Simpan Draft
-                            </a-button>
-                            <a-button size="large" type="primary" @click="submitAndSign" class="bg-green-600 hover:bg-green-500 border-green-600">
-                                <template #icon><send-outlined /></template>
-                                {{ formPengajuanOnly ? 'Kirim untuk Persetujuan' : 'Tanda Tangani & Kirim' }}
                             </a-button>
                         </div>
                     </div>
@@ -612,32 +431,5 @@ const saveSignatureAndSubmit = () => {
             </a-row>
         </a-form>
 
-        <a-modal
-            v-model:open="showSignatureDialog"
-            title="Tanda Tangan Digital KC"
-            :confirm-loading="savingSignature"
-            :ok-button-props="{ disabled: savingSignature || !signatureFile || !!signatureError }"
-            ok-text="Simpan Tanda Tangan & Kirim"
-            cancel-text="Batal"
-            @ok="saveSignatureAndSubmit"
-            centered
-        >
-            <p class="mb-4 text-sm text-gray-500">Tanda tangan digital wajib diisi sebelum pengajuan dikirim ke Area Manager.</p>
-            <a-form-item label="Upload tanda tangan" extra="Format PNG/JPG, maksimal 2MB.">
-                <input
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    class="block w-full text-sm text-gray-500"
-                    @change="selectSignature"
-                />
-            </a-form-item>
-            <p v-if="signatureError" class="mt-2 text-sm text-red-500">{{ signatureError }}</p>
-            <img
-                v-if="signaturePreview"
-                :src="signaturePreview"
-                alt="Pratinjau tanda tangan digital KC"
-                class="mt-4 h-16 rounded-lg border border-gray-200 p-1 object-contain"
-            />
-        </a-modal>
     </AuthenticatedLayout>
 </template>

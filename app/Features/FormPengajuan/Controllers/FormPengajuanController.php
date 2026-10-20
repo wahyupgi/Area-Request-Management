@@ -16,14 +16,12 @@ class FormPengajuanController extends Controller
 {
     public function create()
     {
-        return Inertia::render('BeritaAcara/Create', [
-            'formPengajuanOnly' => true,
+        return Inertia::render('FormPengajuan/Create', [
             'branches' => auth()->user()
                 ->availableBranchesForDocuments()
                 ->with('area:id,name')
                 ->orderBy('name')
                 ->get(['branches.id', 'branches.name', 'branches.area_id']),
-            'signature' => auth()->user()->digitalSignature,
             'templates' => \App\Models\MemoTemplate::where('is_active', true)
                 ->where('type', 'form')
                 ->get(),
@@ -127,12 +125,120 @@ class FormPengajuanController extends Controller
             throw $exception;
         }
 
-        return redirect()->route('form-pengajuan.index')->with(
-            'success',
-            $validated['submit']
-                ? 'Form Pengajuan berhasil dikirim ke Area Manager.'
-                : 'Draft Form Pengajuan berhasil disimpan.'
+        return redirect()->route('form-pengajuan.edit', $form->id)
+            ->with('success', 'Draft Form Pengajuan berhasil disimpan.');
+    }
+
+    /**
+     * Halaman edit Form Pengajuan (hanya draft/rejected).
+     */
+    public function edit(Request $request, FormPengajuan $formPengajuan)
+    {
+        $user = auth()->user();
+        abort_unless($formPengajuan->created_by === $user->id, 403);
+
+        if (!in_array($formPengajuan->status, [FormPengajuan::STATUS_DRAFT, FormPengajuan::STATUS_REJECTED])) {
+            return redirect()->route('form-pengajuan.show', $formPengajuan->id)
+                ->with('error', 'Form Pengajuan tidak bisa diedit.');
+        }
+
+        $formPengajuan->load(['attachments', 'creator.digitalSignature']);
+
+        return Inertia::render('FormPengajuan/Edit', [
+            'formPengajuan' => $formPengajuan,
+            'signature'     => $user->digitalSignature,
+            'branches'      => $user->availableBranchesForDocuments()
+                ->with('area:id,name')
+                ->orderBy('name')
+                ->get(['branches.id', 'branches.name', 'branches.area_id']),
+            'templates'     => \App\Models\MemoTemplate::where('is_active', true)
+                ->where('type', 'form')
+                ->get(),
+        ]);
+    }
+
+    /**
+     * Simpan perubahan draft Form Pengajuan.
+     */
+    public function update(Request $request, FormPengajuan $formPengajuan)
+    {
+        $user = auth()->user();
+        abort_unless($formPengajuan->created_by === $user->id, 403);
+
+        if (!in_array($formPengajuan->status, [FormPengajuan::STATUS_DRAFT, FormPengajuan::STATUS_REJECTED])) {
+            return back()->withErrors(['status' => 'Form Pengajuan tidak bisa diedit.']);
+        }
+
+        $validated = $request->validate([
+            'meta.request_data' => 'nullable|array',
+            'title'             => 'required|string|max:500',
+        ]);
+
+        $formPengajuan->update([
+            'title' => $validated['title'],
+            'data'  => $validated['meta']['request_data'] ?? $formPengajuan->data,
+        ]);
+
+        return redirect()->route('form-pengajuan.edit', $formPengajuan->id)
+            ->with('success', 'Form Pengajuan berhasil diperbarui.');
+    }
+
+    /**
+     * Kirim Form Pengajuan ke Area Manager.
+     */
+    public function submit(Request $request, FormPengajuan $formPengajuan)
+    {
+        $user = auth()->user();
+        abort_unless($formPengajuan->created_by === $user->id, 403);
+
+        if (!in_array($formPengajuan->status, [FormPengajuan::STATUS_DRAFT, FormPengajuan::STATUS_REJECTED])) {
+            return back()->withErrors(['status' => 'Form Pengajuan tidak bisa disubmit.']);
+        }
+
+        // Validasi / simpan TTD KC
+        $signature = $user->digitalSignature;
+        if (!$signature && $request->hasFile('signature_image')) {
+            $path = $request->file('signature_image')->store('signatures', 'public');
+            $user->digitalSignature()->updateOrCreate([], ['signature_image' => $path]);
+            $signature = $user->fresh()->digitalSignature;
+        }
+
+        if (!$signature) {
+            return back()->withErrors(['signature' => 'Tanda tangan digital KC wajib diunggah sebelum Form Pengajuan dikirim ke Area Manager.']);
+        }
+
+        if (!$formPengajuan->area_manager_id && $formPengajuan->branch) {
+            $formPengajuan->update(['area_manager_id' => $user->areaManagerForBranch($formPengajuan->branch)?->id]);
+        }
+
+        if (!$formPengajuan->area_manager_id) {
+            return back()->withErrors(['area_manager' => 'Area Manager belum tersedia untuk area ini.']);
+        }
+
+        $formPengajuan->update([
+            'status'       => FormPengajuan::STATUS_SUBMITTED,
+            'submitted_at' => now(),
+        ]);
+
+        return redirect()->route('form-pengajuan.show', $formPengajuan->id)
+            ->with('success', 'Form Pengajuan berhasil dikirim ke Area Manager.');
+    }
+
+    public function show(FormPengajuan $formPengajuan)
+    {
+        $user = auth()->user();
+        abort_unless(
+            $user->isAdmin()
+                || ($user->isKC() && $formPengajuan->created_by === $user->id)
+                || ($user->isAM() && $formPengajuan->area_manager_id === $user->id),
+            403
         );
+
+        $formPengajuan->load(['branch.area', 'creator.digitalSignature', 'areaManager.digitalSignature', 'attachments']);
+
+        return Inertia::render('FormPengajuan/Show', [
+            'formPengajuan' => $formPengajuan,
+        ]);
     }
 
     public function index()
@@ -157,7 +263,7 @@ class FormPengajuanController extends Controller
 
         $formPengajuan->load(['branch.area', 'creator.area', 'creator.digitalSignature', 'areaManager.area', 'areaManager.digitalSignature', 'approver.digitalSignature', 'attachments']);
 
-        return Inertia::render('FormPengajuan/History', ['formPengajuan' => $formPengajuan]);
+        return Inertia::render('FormPengajuan/Show', ['formPengajuan' => $formPengajuan]);
     }
 
     public function review(FormPengajuan $formPengajuan)
@@ -166,7 +272,7 @@ class FormPengajuanController extends Controller
         abort_unless($formPengajuan->area_manager_id === $user->id, 403);
         $formPengajuan->load(['branch.area', 'creator.area', 'creator.digitalSignature', 'areaManager.area', 'areaManager.digitalSignature', 'attachments']);
 
-        return Inertia::render('FormPengajuan/Review', [
+        return Inertia::render('Approval/ReviewFormPengajuan', [
             'formPengajuan' => $formPengajuan,
             'signature' => $user->digitalSignature,
         ]);

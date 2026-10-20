@@ -23,7 +23,7 @@ class BeritaAcaraApprovalController extends Controller
 
         $beritaAcara->load(['branch', 'creator.digitalSignature', 'areaManager.digitalSignature', 'attachments']);
 
-        return Inertia::render('BeritaAcara/Review', [
+        return Inertia::render('Approval/ReviewBeritaAcara', [
             'beritaAcara' => $beritaAcara,
             'signature' => $user->digitalSignature,
         ]);
@@ -179,7 +179,7 @@ class BeritaAcaraApprovalController extends Controller
             $beritaAcara->setRelation('areaManager', $branchAreaManager);
         }
 
-        return Inertia::render('BeritaAcara/History', [
+        return Inertia::render('BeritaAcara/Show', [
             'beritaAcara' => $beritaAcara,
         ]);
     }

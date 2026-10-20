@@ -17,10 +17,10 @@ const props = defineProps({ memo: Object });
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-3">
-                <a-button type="text" shape="circle" onclick="history.back()">
+                <a-button type="text" shape="circle" onclick="history.back()" class="text-slate-700 dark:text-slate-200 dark:hover:text-white dark:hover:bg-slate-700/50">
                     <template #icon><arrow-left-outlined /></template>
                 </a-button>
-                <h1 class="text-xl font-bold text-gray-800 mb-0">Riwayat Approval</h1>
+                <h1 class="memo-page-title text-xl font-bold text-gray-800 dark:text-white mb-0">Riwayat Approval</h1>
             </div>
         </template>
 

@@ -118,10 +118,17 @@ const submitWithSignature = (signatureToUpload = signatureFile.value) => {
             if (signatureToUpload) formData.append('signature_image', signatureToUpload);
             router.post(route('memos.submit', props.memo.id), formData, {
                 forceFormData: true,
+                onSuccess: () => {
+                    showSignatureDialog.value = false;
+                    success('Internal Memo berhasil dikirim ke Area Manager.');
+                    router.visit(route('memos.show', props.memo.id));
+                },
                 onError: (errors) => {
+                    submittingMemo.value = false;
+                    showSignatureDialog.value = false;
                     if (!errors.signature) message.error(Object.values(errors).join(' '));
                 },
-                onFinish: () => { submittingMemo.value = false; showSignatureDialog.value = false; },
+                onFinish: () => { submittingMemo.value = false; },
             });
         },
         onError: () => { submittingMemo.value = false; showSignatureDialog.value = false; },

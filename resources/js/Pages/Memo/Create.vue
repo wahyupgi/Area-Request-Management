@@ -155,11 +155,56 @@ const parseIntegerInput = (value) => {
     return digits ? Number(digits) : null;
 };
 
+// ── Client-side validation ────────────────────────────────────────────────
+const fieldErrors = ref({});
+
+const validateForm = () => {
+    const errors = {};
+    if (!selectedTemplate.value) return true;
+
+    form.field_values.items.forEach((item, itemIndex) => {
+        selectedTemplate.value.field_schema?.forEach((field) => {
+            if (field.type === 'table') {
+                const rows = item[field.key] || [];
+                rows.forEach((row, rowIndex) => {
+                    field.columns?.forEach((col) => {
+                        const val = row[col.key];
+                        const isEmpty = val === undefined || val === null || String(val).trim() === '';
+                        if (isEmpty) {
+                            const key = `${itemIndex}.${field.key}.${rowIndex}.${col.key}`;
+                            errors[key] = `${col.label} wajib diisi`;
+                        }
+                    });
+                });
+            } else if (field.required) {
+                const val = item[field.key];
+                const isEmpty = val === undefined || val === null || String(val).trim() === '';
+                if (isEmpty) {
+                    const key = `${itemIndex}.${field.key}`;
+                    errors[key] = `${field.label} wajib diisi`;
+                }
+            }
+        });
+    });
+
+    fieldErrors.value = errors;
+    return Object.keys(errors).length === 0;
+};
+
+const clearError = (key) => {
+    if (fieldErrors.value[key]) {
+        const updated = { ...fieldErrors.value };
+        delete updated[key];
+        fieldErrors.value = updated;
+    }
+};
+
 const selectAttachment = (event) => {
     attachment.value = event.target.files[0] || null;
 };
 
 const submit = () => {
+    if (!validateForm()) return;
     form.submit_after_save = false;
     form.transform((data) => ({
         ...data,
@@ -171,6 +216,7 @@ const submit = () => {
 };
 
 const submitAndSign = () => {
+    if (!validateForm()) return;
     form.submit_after_save = true;
     form.transform((data) => ({
         ...data,
@@ -326,14 +372,45 @@ const submitAndSign = () => {
                                     
                                     <!-- Table field: multiple sub-rows (e.g. area + qty) -->
                                     <div v-else-if="field.type === 'table'" class="mt-2 space-y-3">
-                                        <div v-for="(subRow, subIndex) in ensureTableRows(item, field.key, field.columns)" :key="'sub-' + subIndex" class="flex gap-2 items-start bg-gray-50 p-3 rounded border border-gray-200">
-                                            <a-row :gutter="12" class="flex-1">
-                                                <a-col :span="col.type === 'textarea' ? 24 : 24 / Math.min(field.columns.length, 3)" v-for="col in field.columns" :key="col.key" class="mb-3">
-                                                    <div class="text-sm text-gray-600 mb-1">{{ col.label }}</div>
-                                                    <a-input-number v-if="col.type === 'number'" v-model:value="subRow[col.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(col))" :parser="parseIntegerInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" />
-                                                    <a-input v-else-if="col.type === 'date'" v-model:value="subRow[col.key]" type="date" />
-                                                    <a-textarea v-else-if="col.type === 'textarea'" v-model:value="subRow[col.key]" :rows="3" />
-                                                    <a-input v-else v-model:value="subRow[col.key]" />
+                                        <div v-for="(subRow, subIndex) in ensureTableRows(item, field.key, field.columns)" :key="'sub-' + subIndex" class="flex gap-2 items-start bg-gray-50 dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600">
+                                            <a-row :gutter="12" align="bottom" class="flex-1">
+                                                <a-col :span="col.type === 'textarea' ? 24 : 24 / Math.min(field.columns.length, 3)" v-for="col in field.columns" :key="col.key" class="mb-3 flex flex-col">
+                                                    <div class="text-sm text-gray-600 dark:text-gray-300 mb-1 flex-1">{{ col.label }}</div>
+                                                    <a-input-number
+                                                        v-if="col.type === 'number'"
+                                                        v-model:value="subRow[col.key]"
+                                                        :precision="0"
+                                                        :formatter="value => formatNumberInput(value, isCurrencyField(col))"
+                                                        :parser="parseIntegerInput"
+                                                        :status="fieldErrors[`${itemIndex}.${field.key}.${subIndex}.${col.key}`] ? 'error' : ''"
+                                                        @keydown="restrictToDigits"
+                                                        @paste="preventNonDigitPaste"
+                                                        @change="clearError(`${itemIndex}.${field.key}.${subIndex}.${col.key}`)"
+                                                        class="w-full"
+                                                    />
+                                                    <a-input
+                                                        v-else-if="col.type === 'date'"
+                                                        v-model:value="subRow[col.key]"
+                                                        type="date"
+                                                        :status="fieldErrors[`${itemIndex}.${field.key}.${subIndex}.${col.key}`] ? 'error' : ''"
+                                                        @change="clearError(`${itemIndex}.${field.key}.${subIndex}.${col.key}`)"
+                                                    />
+                                                    <a-textarea
+                                                        v-else-if="col.type === 'textarea'"
+                                                        v-model:value="subRow[col.key]"
+                                                        :rows="3"
+                                                        :status="fieldErrors[`${itemIndex}.${field.key}.${subIndex}.${col.key}`] ? 'error' : ''"
+                                                        @change="clearError(`${itemIndex}.${field.key}.${subIndex}.${col.key}`)"
+                                                    />
+                                                    <a-input
+                                                        v-else
+                                                        v-model:value="subRow[col.key]"
+                                                        :status="fieldErrors[`${itemIndex}.${field.key}.${subIndex}.${col.key}`] ? 'error' : ''"
+                                                        @change="clearError(`${itemIndex}.${field.key}.${subIndex}.${col.key}`)"
+                                                    />
+                                                    <div v-if="fieldErrors[`${itemIndex}.${field.key}.${subIndex}.${col.key}`]" class="text-red-500 text-xs mt-1">
+                                                        {{ fieldErrors[`${itemIndex}.${field.key}.${subIndex}.${col.key}`] }}
+                                                    </div>
                                                 </a-col>
                                             </a-row>
                                             <a-button v-if="item[field.key].length > 1" type="text" danger class="mt-5" @click="removeTableRow(item, field.key, subIndex)">
@@ -349,7 +426,7 @@ const submitAndSign = () => {
                             </div>
                         </div>
 
-                        <a-button type="dashed" block class="mt-2" @click="addItem">
+                        <a-button v-if="selectedTemplate?.category !== 'Keringanan Jasa'" type="dashed" block class="mt-2" @click="addItem">
                             <template #icon><plus-outlined /></template>
                             Tambah Item
                         </a-button>

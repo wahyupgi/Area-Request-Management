@@ -179,8 +179,8 @@ const handleImgError = (event) => {
 </script>
 
 <template>
-    <div id="printable-memo" class="memo-document bg-white text-black pt-[3cm] pl-[2.54cm] pr-[2cm] pb-[2cm] print:p-0 rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] mx-auto print:max-w-full print:min-h-0 text-xs leading-normal border border-slate-200 print:border-none transition-all">
-        <div class="flex items-start justify-between mb-3">
+    <div id="printable-memo" class="memo-document bg-white text-black pt-[3cm] pl-[2.54cm] pr-[2cm] pb-[1.5cm] print:p-0 rounded-xl print:rounded-none shadow-xl print:shadow-none font-sans w-full max-w-[210mm] mx-auto print:max-w-full print:min-h-0 text-xs leading-normal border border-slate-200 print:border-none transition-all">
+        <div class="flex items-start justify-between mb-2">
             <div class="flex items-center gap-3">
                 <img src="/PGI-Document-Logo.png" alt="Logo PGI" class="h-14 w-auto max-w-[8rem] object-contain" />
             </div>
@@ -189,37 +189,37 @@ const handleImgError = (event) => {
             </div>
         </div>
 
-        <div class="text-center mb-5">
-            <h1 class="text-[21px] font-extrabold uppercase underline tracking-widest mb-0.5">INTERNAL MEMO</h1>
+        <div class="text-center mb-3">
+            <h1 class="text-[20px] font-extrabold uppercase underline tracking-widest mb-0.5">INTERNAL MEMO</h1>
             <p class="text-[11px] tracking-wider text-gray-800">{{ memo.code }}</p>
         </div>
 
-        <div class="text-right mb-4 text-xs text-gray-900">
+        <div class="text-right mb-2 text-xs text-gray-900">
             {{ formatDate(memo.submitted_at || memo.created_at) }}
         </div>
 
-        <div class="grid grid-cols-[120px_12px_1fr] text-xs gap-y-1 mb-3">
+        <div class="grid grid-cols-[120px_12px_1fr] text-xs gap-y-0.5 mb-2">
             <div class="font-bold text-gray-900">Direktorat</div><div>:</div><div class="font-bold text-gray-900">{{ memoMeta.direktorat || 'Operasional' }}</div>
             <div class="text-gray-900">Divisi</div><div>:</div><div>{{ memoMeta.divisi || (memo.template?.category || 'Support') }}</div>
             <div class="text-gray-900">Perihal</div><div>:</div><div>{{ memoMeta.perihal || memo.title }}</div>
             <div class="text-gray-900">Lampiran</div><div>:</div><div>{{ memoMeta.lampiran || (memo.attachments?.length ? memo.attachments.length + ' Berkas' : '-') }}</div>
         </div>
 
-        <hr class="border-t-2 border-black my-3" />
+        <hr class="border-t-2 border-black my-2" />
 
-        <div class="text-xs mb-4 leading-tight">
+        <div class="text-xs mb-2.5 leading-tight">
             <p class="m-0">Kepada Yth :</p>
             <p class="m-0">{{ memoMeta.kepada || (isCashOut ? cashOutValues.penerima : memo.area_manager?.name) || 'Bpk. / Ibu.' }}</p>
             <p class="m-0 font-medium">{{ memoMeta.kepada_jabatan || (isCashOut ? cashOutValues.penerima_jabatan : 'Area Manager') || 'Area Manager' }}</p>
             <p class="m-0 font-medium">Di tempat,</p>
         </div>
 
-        <div class="text-xs mb-3 leading-normal text-justify">
+        <div class="text-xs mb-2.5 leading-normal text-justify">
             <p>{{ introText }}</p>
             <p v-if="isCashOut" class="mt-2">Dengan data sebagai berikut :</p>
         </div>
 
-        <div class="mb-10">
+        <div class="mb-2">
             <KipasMemo v-if="isKipas" :memo="memo" :items="memoItems" :document-signatures="documentSignatures" />
             <CashOutMemo v-else-if="isCashOut" :memo="memo" :values="cashOutValues" :signature-slots="configuredSignatures" :approver-name="memoMeta.penyetuju_akhir" />
             <template v-else-if="!memo.template || isOtherMemo">
@@ -260,7 +260,7 @@ const handleImgError = (event) => {
             <StandardMemo v-else :memo="memo" :items="memoItems" :is-item-based="isItemBased" :document-signatures="documentSignatures" :show-am-signature="showAmSignature" />
         </div>
 
-        <div class="flex justify-end gap-2 mt-4 pt-2 mb-1">
+        <div class="flex justify-end gap-2 mt-2 mb-1 [break-inside:avoid]">
             <template v-if="parafSignatures.length">
                 <div v-for="slot in parafSignatures" :key="'paraf-' + slot.name + slot.role" class="w-10 h-10">
                     <div class="w-10 h-10 border border-black flex items-center justify-center">
@@ -279,7 +279,7 @@ const handleImgError = (event) => {
             </template>
         </div>
 
-        <div class="flex justify-between text-[10px] font-medium pt-1 text-gray-800">
+        <div class="flex justify-between text-[10px] font-medium pt-1 text-gray-800 [break-inside:avoid]">
             <span>{{ memo.code }}</span>
             <span>PT. PUSAT GADAI INDONESIA</span>
         </div>

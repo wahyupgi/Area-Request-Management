@@ -53,3 +53,26 @@ select,
     line-height: 1.25 !important;
     letter-spacing: 0 !important;
 }
+
+html:not(.theme-light) .header-left h1,
+html:not(.theme-light) .header-left h2,
+html:not(.theme-light) .header-left h3,
+html:not(.theme-light) .header-left .page-header-title,
+html.dark .header-left h1,
+html.dark .header-left h2,
+html.dark .header-left h3,
+html.dark .header-left .page-header-title {
+    color: #f8fafc !important;
+}
+
+html:not(.theme-light) .header-left .ant-btn-text,
+html.dark .header-left .ant-btn-text {
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .header-left .ant-btn-text:hover,
+html.dark .header-left .ant-btn-text:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+

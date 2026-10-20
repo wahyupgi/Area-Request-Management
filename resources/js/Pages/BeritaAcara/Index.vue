@@ -79,9 +79,13 @@ const columns = [
                         {{ new Date(record.created_at).toLocaleDateString('id-ID') }}
                     </template>
                     <template v-else-if="column.key === 'action'">
-                        <a-button size="small" @click="router.visit(route('approvals.ba.history', record.id))">
+                        <a-button
+                            size="small"
+                            :type="['draft', 'rejected'].includes(record.status) ? 'primary' : 'default'"
+                            @click="router.visit(['draft', 'rejected'].includes(record.status) ? route('berita-acara.edit', record.id) : route('berita-acara.show', record.id))"
+                        >
                             <template #icon><eye-outlined /></template>
-                            Detail
+                            {{ ['draft', 'rejected'].includes(record.status) ? 'Edit' : 'Detail' }}
                         </a-button>
                     </template>
                 </template>

@@ -48,6 +48,12 @@ const formatFieldValue = (field, value) => {
     return String(value);
 };
 
+const cleanLabel = (label) => {
+    return String(label || '')
+        .replace(/\s*\((?:Rp|%)\)/gi, '')
+        .trim();
+};
+
 const formatValue = (value) => {
     if (value === undefined || value === null || value === '') return '-';
     if (!isNaN(value) && String(value).length >= 4 && !isNaN(Number(value))) {
@@ -119,41 +125,28 @@ const signatureGridStyle = computed(() => {
     </table>
 
     <template v-else-if="isKeringananJasa">
-        <table class="w-full text-xs border-collapse border border-black">
+        <table class="w-full text-xs border-collapse border border-black mb-2.5">
             <thead>
                 <tr class="bg-[#1f497d] text-white">
-                    <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Informasi Nasabah</th>
-                    <th class="border border-black px-3 py-1.5 text-left font-bold !text-white">Keterangan</th>
+                    <th class="border border-black px-3 py-1 text-left font-bold whitespace-nowrap w-[32%] !text-white">Informasi Nasabah</th>
+                    <th class="border border-black px-3 py-1 text-left font-bold !text-white">Keterangan</th>
                 </tr>
             </thead>
             <tbody>
                 <template v-for="(item, itemIndex) in items" :key="'customer-' + itemIndex">
-                    <tr v-for="field in memo.template?.field_schema?.filter((field) => field.type !== 'table')" :key="field.key">
-                        <td class="border border-black px-3 py-1.5 font-bold">{{ field.label }}</td>
-                        <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ formatFieldValue(field, item?.[field.key]) }}</td>
+                    <!-- Field non-table: tampil sebagai baris label | value -->
+                    <tr v-for="field in memo.template?.field_schema?.filter((f) => f.type !== 'table')" :key="field.key">
+                        <td class="border border-black px-3 py-1 font-bold whitespace-nowrap">{{ cleanLabel(field.label) }}</td>
+                        <td class="border border-black px-3 py-1 whitespace-pre-wrap">{{ formatFieldValue(field, item?.[field.key]) }}</td>
                     </tr>
-                </template>
-            </tbody>
-        </table>
-
-        <table class="mt-3 w-full text-xs border-collapse border border-black mb-5">
-            <thead>
-                <tr class="bg-[#1f497d] text-white">
-                    <template v-for="field in memo.template?.field_schema?.filter((field) => field.type === 'table')" :key="field.key + '-columns'">
-                        <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold !text-white">
-                            {{ column.label }}
-                        </th>
-                    </template>
-                </tr>
-            </thead>
-            <tbody>
-                <template v-for="(item, itemIndex) in items" :key="'detail-' + itemIndex">
-                    <template v-for="field in memo.template?.field_schema?.filter((field) => field.type === 'table')" :key="field.key">
-                        <tr v-for="(row, rowIndex) in item?.[field.key] || []" :key="field.key + '-' + rowIndex">
-                            <td v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center whitespace-pre-wrap">
-                                {{ formatFieldValue(column, row?.[column.key]) }}
-                            </td>
-                        </tr>
+                    <!-- Field bertipe table: tiap kolom jadi baris label | value -->
+                    <template v-for="field in memo.template?.field_schema?.filter((f) => f.type === 'table')" :key="'tbl-' + field.key">
+                        <template v-for="(row, rowIndex) in item?.[field.key] || []" :key="field.key + '-' + rowIndex">
+                            <tr v-for="column in field.columns" :key="field.key + '-' + rowIndex + '-' + column.key">
+                                <td class="border border-black px-3 py-1 font-bold whitespace-nowrap">{{ cleanLabel(column.label) }}</td>
+                                <td class="border border-black px-3 py-1 whitespace-pre-wrap">{{ formatFieldValue(column, row?.[column.key]) }}</td>
+                            </tr>
+                        </template>
                     </template>
                 </template>
             </tbody>
@@ -184,11 +177,11 @@ const signatureGridStyle = computed(() => {
                 <template v-for="(item, itemIndex) in items" :key="itemIndex">
                     <tr>
                         <td v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 text-center font-medium" :rowspan="memo.template?.field_schema?.length">{{ itemIndex + 1 }}.</td>
-                        <td class="border border-black px-3 py-1.5 font-bold">{{ memo.template?.field_schema?.[0]?.label }}</td>
+                        <td class="border border-black px-3 py-1.5 font-bold whitespace-nowrap">{{ cleanLabel(memo.template?.field_schema?.[0]?.label) }}</td>
                         <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ formatFieldValue(memo.template?.field_schema?.[0], item?.[memo.template?.field_schema?.[0]?.key]) }}</td>
                     </tr>
                     <tr v-for="field in memo.template?.field_schema?.slice(1)" :key="itemIndex + '-' + field.key">
-                        <td class="border border-black px-3 py-1.5 font-bold">{{ field.label }}</td>
+                        <td class="border border-black px-3 py-1.5 font-bold whitespace-nowrap">{{ cleanLabel(field.label) }}</td>
                         <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ formatFieldValue(field, item?.[field.key]) }}</td>
                     </tr>
                 </template>
@@ -201,18 +194,18 @@ const signatureGridStyle = computed(() => {
                         </tr>
                         <tr v-else-if="field.type !== 'table'">
                             <td v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 text-center font-medium">{{ fieldIndex === 0 ? `${itemIndex + 1}.` : '' }}</td>
-                            <td class="border border-black px-3 py-1.5 font-bold">{{ field.label }}</td>
+                            <td class="border border-black px-3 py-1.5 font-bold whitespace-nowrap">{{ cleanLabel(field.label) }}</td>
                             <td class="border border-black px-3 py-1.5 whitespace-pre-wrap">{{ formatFieldValue(field, item?.[field.key]) }}</td>
                         </tr>
                         <tr v-else>
                             <td v-if="!isKeringananJasa" class="border border-black px-2.5 py-1.5 text-center font-medium">{{ fieldIndex === 0 ? `${itemIndex + 1}.` : '' }}</td>
                             <td colspan="2" :class="isKeringananJasa ? 'border-0 px-0 py-2' : 'border border-black p-0'">
-                                <div v-if="!isKeringananJasa" class="px-3 py-1.5 font-bold">{{ field.label }}</div>
+                                <div v-if="!isKeringananJasa" class="px-3 py-1.5 font-bold">{{ cleanLabel(field.label) }}</div>
                                 <table :class="['w-full border-collapse', isKeringananJasa ? 'mt-2' : '']">
                                     <thead>
                                         <tr class="bg-[#1f497d] text-white">
                                             <th v-for="column in field.columns" :key="column.key" class="border border-black px-2 py-1.5 text-center font-bold !text-white">
-                                                {{ column.label }}
+                                                {{ cleanLabel(column.label) }}
                                             </th>
                                         </tr>
                                     </thead>
@@ -240,19 +233,19 @@ const signatureGridStyle = computed(() => {
         </template>
     </div>
 
-    <div v-if="documentSignatures.length" class="relative -left-1 mt-4 grid justify-start gap-6 items-start text-xs w-full max-w-none mx-0 px-0 mb-4 [break-inside:avoid]" :style="signatureGridStyle">
+    <div v-if="documentSignatures.length" class="relative -left-1 mt-2 grid justify-start gap-6 items-start text-xs w-full max-w-none mx-0 px-0 mb-1 [break-inside:avoid]" :style="signatureGridStyle">
         <div
             v-for="(slot, index) in documentSignatures"
             :key="slot.name + slot.role"
             class="flex min-w-0 flex-col items-center text-center"
             :style="isPhoneDeathReliefMemo && documentSignatures.length === 3 && index > 0 ? { transform: `translateX(-${index * 8}px)` } : undefined"
         >
-            <p class="mb-1">{{ slot.label || (slot.location === 'bottom_right' ? 'Paraf' : 'Disetujui Oleh,') }}</p>
-            <div class="h-16 w-full flex items-end justify-center relative">
-                <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-14 object-contain absolute bottom-0" />
+            <p class="mb-0.5">{{ slot.label || (slot.location === 'bottom_right' ? 'Paraf' : 'Disetujui Oleh,') }}</p>
+            <div class="h-14 w-full flex items-end justify-center relative">
+                <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-12 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-2 w-full whitespace-nowrap text-[10px] mt-2 text-black leading-none">{{ displayName(slot) }}</p>
-            <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
+            <p class="relative top-1 w-full whitespace-nowrap text-[10px] mt-1 text-black leading-none">{{ displayName(slot) }}</p>
+            <p class="relative -top-0.5 w-full font-bold text-gray-800 leading-tight">
                 <span v-for="(line, roleIndex) in roleLines(slot.role === 'Area Manager' ? 'Manager' : slot.role)" :key="roleIndex" class="block whitespace-nowrap">{{ line }}</span>
             </p>
         </div>

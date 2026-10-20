@@ -13,10 +13,7 @@ class KcMappingSeeder extends Seeder
 {
     public function run(): void
     {
-        // =====================================================================
-        // Data dari file "Daftar Mapping KC dan wilayah.xlsx"
-        // Struktur: KC Name => [ City => [ Branch codes ] ]
-        // Semua berada di Provinsi "Jawa Tengah"
+        
         // =====================================================================
 
         $mappingData = [

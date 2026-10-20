@@ -37,7 +37,7 @@ const pendingDocuments = computed(() => [
     ...(props.pendingMemos || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
     ...(props.pendingBA || []).map((ba) => ({ ...ba, _documentType: 'ba' })),
     ...(props.pendingFormPengajuans || []).map((form) => ({ ...form, _documentType: 'form_pengajuan' })),
-].sort((a, b) => new Date(b.submitted_at || b.created_at) - new Date(a.submitted_at || a.created_at)));
+].sort((a, b) => new Date(b.submitted_at || b.created_at) - new Date(a.submitted_at || a.created_at)).slice(0, 5));
 
 const recentDecisions = computed(() => [
     ...(props.recentActions || []).map((memo) => ({ ...memo, _documentType: 'memo' })),
@@ -419,7 +419,7 @@ const pagination = computed(() => {
             <a-col :xs="24" :lg="15">
                 <a-card title="Menunggu Persetujuan" :bordered="false" class="am-section-card">
                     <template #extra>
-                        <Link v-if="pendingMemos.length > 0" :href="route('approvals.pending')">
+                        <Link v-if="pendingDocuments.length > 0 || combinedStats.pending > 0" :href="route('approvals.pending')">
                             <a-button type="link">Lihat Semua</a-button>
                         </Link>
                     </template>
@@ -473,7 +473,7 @@ const pagination = computed(() => {
             <a-col :xs="24" :lg="9">
                 <a-card title="Riwayat Keputusan" :bordered="false" class="am-section-card">
                     <template #extra>
-                        <span class="am-item-text" style="font-size: 11px;">10 terbaru</span>
+                        <span class="am-item-text" style="font-size: 11px;">6 terbaru</span>
                     </template>
 
                     <a-empty

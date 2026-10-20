@@ -19,15 +19,23 @@
     animation: navigation-feedback-progress 1.1s ease-in-out infinite;
 }
 
-.main-layout.is-navigating > .ant-layout-content {
+.main-layout.is-navigating>.ant-layout-content {
     opacity: 0.72;
     transition: opacity 0.12s ease;
 }
 
 @keyframes navigation-feedback-progress {
-    0% { transform: translateX(-100%); }
-    55% { transform: translateX(180%); }
-    100% { transform: translateX(300%); }
+    0% {
+        transform: translateX(-100%);
+    }
+
+    55% {
+        transform: translateX(180%);
+    }
+
+    100% {
+        transform: translateX(300%);
+    }
 }
 
 .header-right .notification-badge {
@@ -40,12 +48,12 @@
     vertical-align: middle;
 }
 
-.header-right .notification-badge > .ant-badge-count {
+.header-right .notification-badge>.ant-badge-count {
     top: 2px;
     right: 1px;
 }
 
-.header-right .notification-badge > .header-icon-slot {
+.header-right .notification-badge>.header-icon-slot {
     transform: translateY(-2px);
 }
 
@@ -55,6 +63,7 @@
     justify-content: center;
     line-height: 1;
 }
+
 /* ==========================================================================
    Components — Shared: Animations, SweetAlert, Profile, Table PGI, Print
    ========================================================================== */
@@ -162,7 +171,9 @@
     color: #ffffff;
 }
 
-.swal-confirm-button:hover { background: #18598f; }
+.swal-confirm-button:hover {
+    background: #18598f;
+}
 
 .swal-cancel-button {
     background: #e2e8f0;
@@ -170,7 +181,9 @@
     margin-right: 8px;
 }
 
-.swal-cancel-button:hover { background: #cbd5e1; }
+.swal-cancel-button:hover {
+    background: #cbd5e1;
+}
 
 .swal2-icon.swal2-success {
     border-color: #1f69a8 !important;
@@ -525,7 +538,7 @@ html:not(.theme-light) .bg-slate-800\/50:has(> div > .table-head-pgi) {
         margin: 0 !important;
     }
 
-    .memo-print-root > .ant-row,
+    .memo-print-root>.ant-row,
     .memo-print-root .ant-row,
     .memo-print-root .ant-col {
         display: block !important;
@@ -568,11 +581,11 @@ html:not(.theme-light) .bg-slate-800\/50:has(> div > .table-head-pgi) {
         padding-top: 3cm !important;
         padding-left: 2.54cm !important;
         padding-right: 2cm !important;
-        padding-bottom: 2cm !important;
+        padding-bottom: 1.5cm !important;
         margin: 0 auto !important;
         width: 210mm !important;
         max-width: 210mm !important;
-        min-height: 297mm !important;
+        min-height: auto !important;
         height: auto !important;
         box-sizing: border-box !important;
         background: #ffffff !important;

@@ -184,3 +184,76 @@ html:not(.theme-light) .main-layout {
 html.theme-light .main-layout {
     background: #f8fafc !important;
 }
+
+/* Dark mode: Ant Design Tags */
+html:not(.theme-light) .ant-tag,
+html.dark .ant-tag {
+    font-weight: 500;
+}
+
+html:not(.theme-light) .ant-tag:not([class*="ant-tag-"]),
+html:not(.theme-light) .ant-tag-default,
+html.dark .ant-tag:not([class*="ant-tag-"]),
+html.dark .ant-tag-default {
+    background: rgba(148, 163, 184, 0.16) !important;
+    border-color: rgba(148, 163, 184, 0.3) !important;
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .ant-tag-processing,
+html:not(.theme-light) .ant-tag-blue,
+html.dark .ant-tag-processing,
+html.dark .ant-tag-blue {
+    background: rgba(59, 130, 246, 0.18) !important;
+    border-color: rgba(96, 165, 250, 0.4) !important;
+    color: #93c5fd !important;
+}
+
+html:not(.theme-light) .ant-tag-success,
+html:not(.theme-light) .ant-tag-green,
+html.dark .ant-tag-success,
+html.dark .ant-tag-green {
+    background: rgba(34, 197, 94, 0.16) !important;
+    border-color: rgba(74, 222, 128, 0.35) !important;
+    color: #86efac !important;
+}
+
+html:not(.theme-light) .ant-tag-error,
+html:not(.theme-light) .ant-tag-red,
+html.dark .ant-tag-error,
+html.dark .ant-tag-red {
+    background: rgba(239, 68, 68, 0.16) !important;
+    border-color: rgba(248, 113, 113, 0.35) !important;
+    color: #fca5a5 !important;
+}
+
+html:not(.theme-light) .ant-tag-warning,
+html:not(.theme-light) .ant-tag-gold,
+html.dark .ant-tag-warning,
+html.dark .ant-tag-gold {
+    background: rgba(245, 158, 11, 0.16) !important;
+    border-color: rgba(251, 191, 36, 0.35) !important;
+    color: #fcd34d !important;
+}
+
+html:not(.theme-light) .ant-tag-cyan,
+html.dark .ant-tag-cyan {
+    background: rgba(6, 182, 212, 0.16) !important;
+    border-color: rgba(34, 211, 238, 0.35) !important;
+    color: #a5f3fc !important;
+}
+
+html:not(.theme-light) .ant-tag-purple,
+html.dark .ant-tag-purple {
+    background: rgba(168, 85, 247, 0.16) !important;
+    border-color: rgba(192, 132, 252, 0.35) !important;
+    color: #d8b4fe !important;
+}
+
+html:not(.theme-light) .ant-tag-geekblue,
+html.dark .ant-tag-geekblue {
+    background: rgba(99, 102, 241, 0.18) !important;
+    border-color: rgba(129, 140, 248, 0.35) !important;
+    color: #c7d2fe !important;
+}
+

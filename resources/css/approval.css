@@ -20,7 +20,7 @@ html:not(.theme-light) .am-signature-page .text-gray-400 {
     color: #94a3b8 !important;
 }
 
-html:not(.theme-light) .am-signature-page .ant-form-item-label > label,
+html:not(.theme-light) .am-signature-page .ant-form-item-label>label,
 html:not(.theme-light) .am-signature-page .ant-card-head-title {
     color: #f8fafc !important;
 }
@@ -55,7 +55,7 @@ html.theme-light .am-signature-page .text-gray-400 {
     color: #64748b !important;
 }
 
-html.theme-light .am-signature-page .ant-form-item-label > label,
+html.theme-light .am-signature-page .ant-form-item-label>label,
 html.theme-light .am-signature-page .ant-card-head-title {
     color: #0f172a !important;
 }
@@ -161,7 +161,7 @@ html:not(.theme-light) .am-approval-page .ant-list-item-extra {
     margin-top: 24px !important;
 }
 
-.am-inbox-table .ant-table-thead > tr > th {
+.am-inbox-table .ant-table-thead>tr>th {
     background: #344f82 !important;
     color: #ffffff !important;
     border-color: #c8ced8 !important;
@@ -196,27 +196,27 @@ html:not(.theme-light) .am-approval-page .ant-list-item-extra {
     transform: translateY(-3px);
 }
 
-.am-inbox-table .ant-table-tbody > tr > td {
+.am-inbox-table .ant-table-tbody>tr>td {
     border-color: #c8ced8 !important;
     padding: 12px !important;
     vertical-align: middle !important;
     border-right: 1px solid #c8ced8 !important;
 }
 
-.am-inbox-table .ant-table-tbody > tr > td:last-child {
+.am-inbox-table .ant-table-tbody>tr>td:last-child {
     border-right: 0 !important;
 }
 
-.am-inbox-table .ant-table-tbody > tr:hover > td {
+.am-inbox-table .ant-table-tbody>tr:hover>td {
     background: #f3f6fb !important;
 }
 
-html:not(.theme-light) .am-inbox-table .ant-table-thead > tr > th {
+html:not(.theme-light) .am-inbox-table .ant-table-thead>tr>th {
     background: #123762 !important;
     border-color: #334155 !important;
 }
 
-html:not(.theme-light) .am-inbox-table .ant-table-tbody > tr > td {
+html:not(.theme-light) .am-inbox-table .ant-table-tbody>tr>td {
     background: #1e293b !important;
     color: #e2e8f0 !important;
     border-color: #334155 !important;
@@ -226,11 +226,11 @@ html:not(.theme-light) .am-inbox-table .ant-table-container {
     border-color: #334155 !important;
 }
 
-html:not(.theme-light) .am-inbox-table .ant-table-tbody > tr > td {
+html:not(.theme-light) .am-inbox-table .ant-table-tbody>tr>td {
     border-right-color: #334155 !important;
 }
 
-html:not(.theme-light) .am-inbox-table .ant-table-tbody > tr:hover > td {
+html:not(.theme-light) .am-inbox-table .ant-table-tbody>tr:hover>td {
     background: #26364d !important;
 }
 

@@ -58,14 +58,14 @@ const formatDate = (dateString) => {
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
                     <Link :href="route('approvals.pending', { tab: 'masuk' })">
-                        <a-button type="text" shape="circle" title="Kembali ke Daftar Antrean">
+                        <a-button type="text" shape="circle" title="Kembali ke Daftar Antrean" class="text-slate-700 dark:text-slate-200 dark:hover:text-white dark:hover:bg-slate-700/50">
                             <template #icon><arrow-left-outlined /></template>
                         </a-button>
                     </Link>
                     <div>
-                        <h1 class="text-base font-bold text-gray-800 mb-0 tracking-tight">Review Form Pengajuan</h1>
-                        <div class="flex items-center gap-2 text-xs text-gray-500">
-                            <span class="font-mono font-semibold text-blue-600">{{ formPengajuan.code || 'Form Baru' }}</span>
+                        <h1 class="memo-page-title text-base font-bold text-gray-800 dark:text-white mb-0 tracking-tight">Review Form Pengajuan</h1>
+                        <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400">
+                            <span class="font-mono font-semibold text-blue-600 dark:text-blue-400">{{ formPengajuan.code || 'Form Baru' }}</span>
                             <span>•</span>
                             <span>{{ formPengajuan.branch?.name || 'Cabang' }}</span>
                         </div>

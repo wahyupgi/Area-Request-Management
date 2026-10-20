@@ -71,7 +71,7 @@ class ApprovalController extends Controller
 
         $signature = $this->service->getUserSignature($user->id);
 
-        return Inertia::render('Approval/Review', [
+        return Inertia::render('Approval/ReviewMemo', [
             'memo' => $memo,
             'signature' => $signature,
         ]);

@@ -187,8 +187,8 @@ class MemoController extends Controller
 
         $this->service->submitMemo($memo);
 
-        return redirect()->route('memos.index')
-            ->with('success', 'Memo berhasil disubmit ke Area Manager.');
+        return redirect()->route('memos.show', $memo->id)
+            ->with('success', 'Internal Memo berhasil dikirim ke Area Manager.');
     }
 
     /**
