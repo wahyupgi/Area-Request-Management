@@ -111,14 +111,7 @@ const formatRelative = (d) => {
     return `${Math.floor(diff / 1440)} hari lalu`;
 };
 
-// Urgency level for pending memos
-const getUrgency = (submittedAt) => {
-    if (!submittedAt) return 'normal';
-    const hours = (Date.now() - new Date(submittedAt)) / 3600000;
-    if (hours > 48) return 'critical';
-    if (hours > 24) return 'high';
-    return 'normal';
-};
+
 
 // ─── GA Report ────────────────────────────────────────────────────────────
 const showReport = ref(props.reportMode);
@@ -445,9 +438,6 @@ const pagination = computed(() => {
                                                     <a-tag v-if="document._documentType === 'memo'" color="blue">{{ document.template?.name || 'Memo' }}</a-tag>
                                                     <a-tag v-else :color="isFormPengajuan(document) ? 'green' : 'purple'">{{ isFormPengajuan(document) ? 'Form Pengajuan' : 'Berita Acara' }}</a-tag>
                                                     <a-tag>{{ document.branch?.name || '-' }}</a-tag>
-                                                    <a-tag v-if="document._documentType === 'memo' && getUrgency(document.submitted_at) === 'critical'" color="error">Mendesak</a-tag>
-                                                    <a-tag v-else-if="document._documentType === 'memo' && getUrgency(document.submitted_at) === 'high'" color="warning">Segera</a-tag>
-                                                    <a-tag v-else color="processing">Baru Masuk</a-tag>
                                                 </a-space>
                                             </a-col>
                                             <a-col :span="6" style="text-align: right;">
