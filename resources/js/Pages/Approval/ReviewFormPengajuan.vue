@@ -5,7 +5,7 @@ import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
-import { ArrowLeftOutlined, SafetyCertificateOutlined } from '@ant-design/icons-vue';
+import { LeftOutlined, SafetyCertificateOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     formPengajuan: { type: Object, required: true },
@@ -56,11 +56,9 @@ const formatDate = (dateString) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between w-full">
-                <div class="flex items-center gap-3">
-                    <Link :href="route('approvals.pending', { tab: 'masuk' })">
-                        <a-button type="text" shape="circle" title="Kembali ke Daftar Antrean" class="text-slate-700 dark:text-slate-200 dark:hover:text-white dark:hover:bg-slate-700/50">
-                            <template #icon><arrow-left-outlined /></template>
-                        </a-button>
+                <div class="flex items-center gap-2.5">
+                    <Link :href="route('approvals.pending', { tab: 'masuk' })" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center" title="Kembali ke Daftar Antrean">
+                        <left-outlined class="text-base" />
                     </Link>
                     <div>
                         <h1 class="memo-page-title text-base font-bold text-gray-800 dark:text-white mb-0 tracking-tight">Review Form Pengajuan</h1>

@@ -5,7 +5,7 @@ import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { escapeHtml } from '@/utils/sanitize';
 import {
-    ArrowLeftOutlined,
+    LeftOutlined,
     PrinterOutlined,
     EditOutlined,
     PaperClipOutlined,
@@ -119,11 +119,9 @@ const printMemo = () => {
     <Head :title="'Detail Memo: ' + memo.code" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center gap-3">
-                <Link :href="user.role === 'AM' ? route('approvals.pending') : user.role === 'ADMIN' ? route('dashboard') : route('memos.index')">
-                    <a-button type="text" shape="circle" class="text-slate-700 dark:text-slate-200 dark:hover:text-white dark:hover:bg-slate-700/50">
-                        <template #icon><arrow-left-outlined /></template>
-                    </a-button>
+            <div class="flex items-center gap-2.5">
+                <Link :href="user.role === 'AM' ? route('approvals.pending') : user.role === 'ADMIN' ? route('dashboard') : route('memos.index')" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center">
+                    <left-outlined class="text-base" />
                 </Link>
                 <div>
                     <h1 class="memo-page-title text-base font-bold text-gray-800 dark:text-white mb-0">Detail Dokumen Memo</h1>

@@ -7,7 +7,7 @@ import { escapeHtml } from '@/utils/sanitize';
 import { ref } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import {
-    ArrowLeftOutlined,
+    LeftOutlined,
     PrinterOutlined,
     DownloadOutlined,
     CheckCircleOutlined,
@@ -233,11 +233,9 @@ const formatDate = (dateString) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between w-full">
-                <div class="flex items-center gap-3">
-                    <Link :href="route('approvals.pending')">
-                        <a-button type="text" shape="circle" title="Kembali ke Daftar Antrean" class="text-slate-700 dark:text-slate-200 dark:hover:text-white dark:hover:bg-slate-700/50">
-                            <template #icon><arrow-left-outlined /></template>
-                        </a-button>
+                <div class="flex items-center gap-2.5">
+                    <Link :href="route('approvals.pending')" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center" title="Kembali ke Daftar Antrean">
+                        <left-outlined class="text-base" />
                     </Link>
                     <div>
                         <h1 class="memo-page-title text-base font-bold text-gray-800 dark:text-white mb-0 tracking-tight">Review Memo Pengajuan</h1>

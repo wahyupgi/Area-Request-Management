@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { ref, watch, computed } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
@@ -9,7 +9,8 @@ import {
     PlusOutlined, 
     DeleteOutlined, 
     SaveOutlined, 
-    SendOutlined
+    SendOutlined,
+    LeftOutlined,
 } from '@ant-design/icons-vue';
 
 const props = defineProps({ templates: Array, branches: Array });
@@ -229,7 +230,12 @@ const submitAndSign = () => {
     <Head title="Buat Memo Baru" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="memo-page-title text-xl font-bold mb-0">Buat Memo Baru</h1>
+            <div class="flex items-center gap-2.5">
+                <Link :href="route('memos.index')" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center">
+                    <left-outlined class="text-base" />
+                </Link>
+                <h1 class="memo-page-title text-xl font-bold mb-0">Buat Memo Baru</h1>
+            </div>
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">

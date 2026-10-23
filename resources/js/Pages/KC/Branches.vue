@@ -60,8 +60,6 @@ const columns = [
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-3">
-                <Link :href="route('dashboard')" class="text-sm text-slate-500 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">Dashboard</Link>
-                <span class="text-slate-400">/</span>
                 <h1 class="text-xl font-bold text-slate-900 dark:text-white">Cabang Saya</h1>
             </div>
         </template>

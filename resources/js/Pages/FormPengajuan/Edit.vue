@@ -6,7 +6,7 @@ import { message } from 'ant-design-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import {
-    ArrowLeftOutlined,
+    LeftOutlined,
     SaveOutlined,
     SendOutlined,
     PaperClipOutlined,
@@ -133,12 +133,10 @@ const deleteAttachment = async (attachment) => {
     <Head :title="'Edit Form Pengajuan: ' + formPengajuan.title" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center gap-2">
-                <Link :href="route('form-pengajuan.index')" class="memo-breadcrumb-back inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm transition-colors">
-                    <ArrowLeftOutlined />
-                    <span>Kembali</span>
+            <div class="flex items-center gap-2.5">
+                <Link :href="route('form-pengajuan.index')" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center">
+                    <LeftOutlined class="text-base" />
                 </Link>
-                <span class="text-gray-400">/</span>
                 <h1 class="memo-page-title text-xl font-bold mb-0">Edit Form Pengajuan</h1>
             </div>
         </template>

@@ -6,7 +6,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { escapeHtml } from '@/utils/sanitize';
 import { computed } from 'vue';
 import {
-    ArrowLeftOutlined,
+    LeftOutlined,
     PrinterOutlined,
     PaperClipOutlined,
     CheckCircleOutlined,
@@ -123,11 +123,9 @@ const attachments = [
     <Head :title="'Detail Form Pengajuan: ' + (formPengajuan.code || formPengajuan.title)" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center gap-3">
-                <Link :href="backRoute">
-                    <a-button type="text" shape="circle" class="text-slate-700 dark:text-slate-200 dark:hover:text-white dark:hover:bg-slate-700/50">
-                        <template #icon><arrow-left-outlined /></template>
-                    </a-button>
+            <div class="flex items-center gap-2.5">
+                <Link :href="backRoute" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center">
+                    <left-outlined class="text-base" />
                 </Link>
                 <div>
                     <h1 class="memo-page-title text-base font-bold text-gray-800 dark:text-white mb-0">Detail Form Pengajuan</h1>

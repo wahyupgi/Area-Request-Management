@@ -4,7 +4,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
-import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons-vue';
+import { SaveOutlined, LeftOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     branches:  { type: Array, default: () => [] },
@@ -127,9 +127,9 @@ const submit = () => {
     <Head title="Buat Form Pengajuan Baru" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center gap-3">
-                <Link :href="route('form-pengajuan.index')" class="text-gray-500 hover:text-gray-800">
-                    <arrow-left-outlined class="text-lg" />
+            <div class="flex items-center gap-2.5">
+                <Link :href="route('form-pengajuan.index')" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center">
+                    <left-outlined class="text-base" />
                 </Link>
                 <h1 class="text-xl font-bold mb-0">Buat Form Pengajuan Baru</h1>
             </div>

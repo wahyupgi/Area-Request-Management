@@ -4,7 +4,7 @@ import MemoDocument from '@/Components/MemoDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head } from '@inertiajs/vue3';
 import { 
-    ArrowLeftOutlined,
+    LeftOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined
 } from '@ant-design/icons-vue';
@@ -16,10 +16,10 @@ const props = defineProps({ memo: Object });
     <Head :title="'Riwayat: ' + memo.title" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center gap-3">
-                <a-button type="text" shape="circle" onclick="history.back()" class="text-slate-700 dark:text-slate-200 dark:hover:text-white dark:hover:bg-slate-700/50">
-                    <template #icon><arrow-left-outlined /></template>
-                </a-button>
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="history.back()" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center bg-transparent border-0 cursor-pointer">
+                    <left-outlined class="text-base" />
+                </button>
                 <h1 class="memo-page-title text-xl font-bold text-gray-800 dark:text-white mb-0">Riwayat Approval</h1>
             </div>
         </template>

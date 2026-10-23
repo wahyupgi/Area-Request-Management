@@ -7,7 +7,7 @@ import { message } from 'ant-design-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import {
-    ArrowLeftOutlined,
+    LeftOutlined,
     SaveOutlined,
     SendOutlined,
     PlusOutlined,
@@ -184,12 +184,10 @@ const deleteDraft = async () => {
     <Head :title="'Edit Berita Acara: ' + beritaAcara.title" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center gap-2">
-                <Link :href="route('berita-acara.index')" class="memo-breadcrumb-back inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm transition-colors">
-                    <ArrowLeftOutlined />
-                    <span>Kembali</span>
+            <div class="flex items-center gap-2.5">
+                <Link :href="route('berita-acara.index')" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center">
+                    <LeftOutlined class="text-base" />
                 </Link>
-                <span class="text-gray-400">/</span>
                 <h1 class="memo-page-title text-xl font-bold mb-0">Edit Berita Acara</h1>
             </div>
         </template>

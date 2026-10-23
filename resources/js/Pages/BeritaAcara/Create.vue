@@ -1,11 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, usePage, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
 import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { computed, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
-import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue';
+import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined, LeftOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     branches: { type: Array, default: () => [] },
@@ -195,7 +195,12 @@ const submit = () => {
     <Head title="Buat Berita Acara Baru" />
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="text-xl font-bold mb-0">Buat Berita Acara Baru</h1>
+            <div class="flex items-center gap-2.5">
+                <Link :href="route('berita-acara.index')" class="text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors p-1 -ml-1 flex items-center">
+                    <left-outlined class="text-base" />
+                </Link>
+                <h1 class="text-xl font-bold mb-0">Buat Berita Acara Baru</h1>
+            </div>
         </template>
 
         <a-form layout="vertical" @finish="submit" class="memo-create-page">
