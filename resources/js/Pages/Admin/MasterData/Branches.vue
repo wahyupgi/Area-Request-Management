@@ -3,8 +3,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
-import { Modal } from 'ant-design-vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 import { createTablePagination } from '@/utils/tablePagination';
+
+const { confirm } = useSweetAlert();
 
 const props = defineProps({
     branches: Array,
@@ -34,17 +36,9 @@ const save = () => {
     }
 };
 
-const deleteBranch = (branch) => {
-    Modal.confirm({
-        title: `Hapus cabang ${branch.name}?`,
-        content: 'Cabang yang dihapus tidak dapat dipulihkan.',
-        okText: 'Hapus',
-        okType: 'danger',
-        cancelText: 'Batal',
-        onOk() {
-            router.delete(route('admin.branches.destroy', branch.id));
-        }
-    });
+const deleteBranch = async (branch) => {
+    if (!await confirm(`Hapus cabang ${branch.name}?`, 'Cabang yang dihapus tidak dapat dipulihkan.', 'Hapus')) return;
+    router.delete(route('admin.branches.destroy', branch.id));
 };
 
 const columns = [

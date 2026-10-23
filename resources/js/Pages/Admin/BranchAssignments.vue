@@ -3,9 +3,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { DeleteOutlined, EditOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons-vue';
-import { Modal } from 'ant-design-vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 import { createTablePagination } from '@/utils/tablePagination';
 import { useDebouncedRef } from '@/composables/useDebounce';
+
+const { confirm } = useSweetAlert();
 
 const props = defineProps({
     areas: { type: Array, default: () => [] },
@@ -142,16 +144,9 @@ const saveArea = () => {
     areaForm.post(route('admin.areas.store'), options);
 };
 
-const deleteArea = (area) => {
-    Modal.confirm({
-        centered: true,
-        title: `Hapus wilayah ${area.name}?`,
-        content: 'Wilayah yang dihapus tidak dapat dipulihkan.',
-        okText: 'Hapus',
-        okType: 'danger',
-        cancelText: 'Batal',
-        onOk: () => router.delete(route('admin.areas.destroy', area.id)),
-    });
+const deleteArea = async (area) => {
+    if (!await confirm(`Hapus wilayah ${area.name}?`, 'Wilayah yang dihapus tidak dapat dipulihkan.', 'Hapus')) return;
+    router.delete(route('admin.areas.destroy', area.id));
 };
 
 const columns = [

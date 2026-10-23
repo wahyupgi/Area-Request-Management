@@ -3,7 +3,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
-import { message } from 'ant-design-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import {
@@ -20,7 +19,7 @@ const props = defineProps({
     signature:   { type: Object, default: null },
 });
 
-const { confirm, success } = useSweetAlert();
+const { confirm, success, error: showError } = useSweetAlert();
 
 // ── Form state ────────────────────────────────────────────────────
 const form = useForm({
@@ -120,7 +119,7 @@ const doSubmit = (signatureToUpload = signatureFile.value) => {
                 onError: (errors) => {
                     submittingMemo.value = false;
                     showSignatureDialog.value = false;
-                    if (!errors.signature) message.error(Object.values(errors).join(' '));
+                    if (!errors.signature) showError(Object.values(errors).join(' '));
                 },
                 onFinish: () => { submittingMemo.value = false; },
             });

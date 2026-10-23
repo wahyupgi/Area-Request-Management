@@ -2,7 +2,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { message } from 'ant-design-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import {
@@ -17,7 +16,7 @@ const props = defineProps({
     signature:     { type: Object, default: null },
 });
 
-const { success, confirm } = useSweetAlert();
+const { success, confirm, error: showError } = useSweetAlert();
 
 const templateName = props.formPengajuan.template;
 const isFPP  = templateName === 'form_permohonan_pinjaman';
@@ -87,7 +86,7 @@ const doSubmit = (signatureToUpload = signatureFile.value) => {
                 onError: (errors) => {
                     submitting.value = false;
                     showSignatureDialog.value = false;
-                    if (!errors.signature) message.error(Object.values(errors).join(' '));
+                    if (!errors.signature) showError(Object.values(errors).join(' '));
                 },
                 onFinish: () => { submitting.value = false; },
             });

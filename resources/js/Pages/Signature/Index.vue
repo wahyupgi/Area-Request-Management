@@ -3,7 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { UploadOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons-vue';
-import { Modal, message } from 'ant-design-vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
+
+const { success, error, confirm } = useSweetAlert();
 
 const props = defineProps({ signature: Object });
 
@@ -25,13 +27,13 @@ const assignSignatureFile = (file) => {
 
     const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
     if (!isJpgOrPng) {
-        message.error('Hanya bisa mengunggah file JPG/PNG!');
+        error('Hanya bisa mengunggah file JPG/PNG!');
         return;
     }
 
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
-        message.error('Gambar harus lebih kecil dari 2MB!');
+        error('Gambar harus lebih kecil dari 2MB!');
         return;
     }
 
@@ -58,7 +60,7 @@ const handleRemoveImage = () => {
 
 const save = () => {
     if (!selectedFile.value && !form.signature_image) {
-        message.error('Silakan unggah gambar tanda tangan terlebih dahulu.');
+        error('Silakan unggah gambar tanda tangan terlebih dahulu.');
         return;
     }
 
@@ -71,7 +73,7 @@ const save = () => {
     router.post(route('signature.store'), payload, {
         forceFormData: true,
         onSuccess: () => {
-            message.success('Tanda tangan berhasil disimpan.');
+            success('Tanda tangan berhasil disimpan.');
             preview.value = null;
             selectedFile.value = null;
             form.reset();
@@ -79,24 +81,16 @@ const save = () => {
         onError: (errors) => {
             const firstError = Array.isArray(errors?.signature_image) ? errors.signature_image[0] : null;
             if (firstError) {
-                message.error(firstError);
+                error(firstError);
             }
         },
     });
 };
 
-const remove = () => {
-    Modal.confirm({
-        title: 'Hapus tanda tangan digital Anda?',
-        content: 'Tanda tangan digital akan dihapus dari akun Anda secara permanen.',
-        okText: 'Hapus',
-        okType: 'danger',
-        cancelText: 'Batal',
-        onOk() {
-            router.delete(route('signature.destroy'), {
-                onSuccess: () => message.success('Tanda tangan berhasil dihapus.')
-            });
-        }
+const remove = async () => {
+    if (!await confirm('Hapus tanda tangan digital Anda?', 'Tanda tangan digital akan dihapus dari akun Anda secara permanen.', 'Hapus')) return;
+    router.delete(route('signature.destroy'), {
+        onSuccess: () => success('Tanda tangan berhasil dihapus.'),
     });
 };
 </script>

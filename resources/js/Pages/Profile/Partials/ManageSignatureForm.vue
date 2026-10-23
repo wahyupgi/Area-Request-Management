@@ -2,7 +2,9 @@
 import { useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { DeleteOutlined, SaveOutlined, UploadOutlined } from '@ant-design/icons-vue';
-import { message, Modal } from 'ant-design-vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
+
+const { error, confirm } = useSweetAlert();
 
 const props = defineProps({
     signature: {
@@ -20,12 +22,12 @@ const preview = ref(null);
 const beforeUpload = (file) => {
     const image = file.originFileObj || file;
     if (!['image/jpeg', 'image/png'].includes(image.type)) {
-        message.error('Hanya bisa mengunggah file JPG atau PNG.');
+        error('Hanya bisa mengunggah file JPG atau PNG.');
         return false;
     }
 
     if (image.size / 1024 / 1024 >= 2) {
-        message.error('Ukuran gambar harus lebih kecil dari 2MB.');
+        error('Ukuran gambar harus lebih kecil dari 2MB.');
         return false;
     }
 
@@ -43,7 +45,7 @@ const clearPreview = () => {
 
 const save = () => {
     if (!form.signature_image) {
-        message.error('Silakan pilih gambar tanda tangan terlebih dahulu.');
+        error('Silakan pilih gambar tanda tangan terlebih dahulu.');
         return;
     }
 
@@ -54,15 +56,9 @@ const save = () => {
     });
 };
 
-const remove = () => {
-    Modal.confirm({
-        title: 'Hapus tanda tangan digital?',
-        content: 'Tanda tangan ini akan dihapus dari akun Anda.',
-        okText: 'Hapus',
-        okType: 'danger',
-        cancelText: 'Batal',
-        onOk: () => router.delete(route('signature.destroy'), { preserveScroll: true }),
-    });
+const remove = async () => {
+    if (!await confirm('Hapus tanda tangan digital?', 'Tanda tangan ini akan dihapus dari akun Anda.', 'Hapus')) return;
+    router.delete(route('signature.destroy'), { preserveScroll: true });
 };
 </script>
 

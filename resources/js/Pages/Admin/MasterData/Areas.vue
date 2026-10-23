@@ -3,8 +3,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined, RightOutlined } from '@ant-design/icons-vue';
-import { Modal } from 'ant-design-vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 import { createTablePagination } from '@/utils/tablePagination';
+
+const { confirm } = useSweetAlert();
 
 const props = defineProps({ areas: Array, kcUsers: Array });
 const pagination = createTablePagination({ pageSize: 10, getTotal: () => props.areas?.length ?? 0 });
@@ -62,17 +64,9 @@ const save = () => {
     }
 };
 
-const deleteArea = (area) => {
-    Modal.confirm({
-        title: `Hapus area ${area.name}?`,
-        content: 'Area yang dihapus tidak dapat dipulihkan.',
-        okText: 'Hapus',
-        okType: 'danger',
-        cancelText: 'Batal',
-        onOk() {
-            router.delete(route('admin.areas.destroy', area.id));
-        }
-    });
+const deleteArea = async (area) => {
+    if (!await confirm(`Hapus area ${area.name}?`, 'Area yang dihapus tidak dapat dipulihkan.', 'Hapus')) return;
+    router.delete(route('admin.areas.destroy', area.id));
 };
 
 const columns = [

@@ -131,7 +131,7 @@ const columns = [
                         <div><span>KC Anda</span><strong>{{ user?.name || '-' }}</strong></div>
                         <div><span>Wilayah</span><strong>{{ area?.name || '-' }}</strong></div>
                         <div><span>Jumlah cabang dipilih</span><strong>{{ selectedCount }} dari {{ branches.length }}</strong></div>
-                        <a-alert type="info" show-icon message="Perubahan akan tersimpan setelah Anda klik tombol Simpan Perubahan." />
+
                     </aside>
                 </div>
             </a-card>

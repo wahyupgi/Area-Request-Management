@@ -3,7 +3,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { onMounted, ref, watch } from 'vue';
-import { message } from 'ant-design-vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import {
@@ -62,7 +61,7 @@ const signatureFile = ref(null);
 const signaturePreview = ref(null);
 const submittingMemo = ref(false);
 const autoPerihal = ref(props.memo.field_values?.meta?.perihal || props.memo.title || '');
-const { confirm, success } = useSweetAlert();
+const { confirm, success, error: showError } = useSweetAlert();
 
 watch(() => form.title, (title) => {
     if (!form.field_values.meta.perihal || form.field_values.meta.perihal === autoPerihal.value) {
@@ -126,7 +125,7 @@ const submitWithSignature = (signatureToUpload = signatureFile.value) => {
                 onError: (errors) => {
                     submittingMemo.value = false;
                     showSignatureDialog.value = false;
-                    if (!errors.signature) message.error(Object.values(errors).join(' '));
+                    if (!errors.signature) showError(Object.values(errors).join(' '));
                 },
                 onFinish: () => { submittingMemo.value = false; },
             });

@@ -433,9 +433,7 @@ const statusChartData = computed(() => [
                             </template>
                             <template v-else-if="column.key === 'subject'">
                                 <div class="flex min-w-36 flex-col">
-                                    <span class="line-clamp-1 text-sm font-medium text-white">{{ record.title }}</span>
-                                    <span v-if="record.template?.name" class="mt-0.5 line-clamp-1 text-[11px] text-slate-400">{{ record.template.name }}</span>
-                                    <span v-else-if="isFormPengajuan(record)" class="mt-0.5 line-clamp-1 text-[11px] text-slate-400">{{ formPengajuanTemplateLabels[record.template] }}</span>
+                                    <span class="line-clamp-3 break-words text-sm font-medium text-white">{{ record.title }}</span>
                                 </div>
                             </template>
                             <template v-else-if="column.key === 'type'">

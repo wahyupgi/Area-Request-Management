@@ -1,6 +1,9 @@
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { useSweetAlert } from '@/composables/useSweetAlert';
+
+const { confirm } = useSweetAlert();
 
 // Lazy loading: library PDF/DOCX berukuran besar hanya diunduh saat dibutuhkan.
 let pdfjsPromise = null;
@@ -48,9 +51,9 @@ const docxErrors = reactive({});
 const pdfLoading = reactive({});
 const pdfErrors = reactive({});
 const attachmentUrl = (attachment) => '/storage/' + attachment.file_path;
-const deleteAttachment = (attachment) => {
+const deleteAttachment = async (attachment) => {
     if (!props.canDelete || attachment.legacy || !props.deleteRouteName) return;
-    if (!window.confirm(`Hapus lampiran "${attachment.original_name || attachment.file_path}"?`)) return;
+    if (!await confirm(`Hapus lampiran "${attachment.original_name || attachment.file_path}"?`, 'Lampiran akan dihapus dari dokumen.', 'Hapus')) return;
 
     router.delete(route(props.deleteRouteName, [props.documentId, attachment.id]), {
         preserveScroll: true,

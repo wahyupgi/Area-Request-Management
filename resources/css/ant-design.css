@@ -285,3 +285,96 @@ html.dark .ant-table-wrapper .ant-table-tbody > tr > td,
 }
 
 
+
+/* Dark mode: solid (non-transparent) status tags.
+   Selector specificity is intentionally high so it wins over page-level tag overrides. */
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-success,
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-green {
+    background: #166534 !important;
+    border-color: #166534 !important;
+    color: #dcfce7 !important;
+}
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-error,
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-red {
+    background: #991b1b !important;
+    border-color: #991b1b !important;
+    color: #fee2e2 !important;
+}
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-warning,
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-gold {
+    background: #92400e !important;
+    border-color: #92400e !important;
+    color: #fef3c7 !important;
+}
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-processing,
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-blue {
+    background: #1e40af !important;
+    border-color: #1e40af !important;
+    color: #dbeafe !important;
+}
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-cyan {
+    background: #155e75 !important;
+    border-color: #155e75 !important;
+    color: #cffafe !important;
+}
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-purple {
+    background: #6b21a8 !important;
+    border-color: #6b21a8 !important;
+    color: #f3e8ff !important;
+}
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-geekblue {
+    background: #3730a3 !important;
+    border-color: #3730a3 !important;
+    color: #e0e7ff !important;
+}
+html:not(.theme-light) body .ant-tag.ant-tag.ant-tag.ant-tag-default {
+    background: #334155 !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Light mode: solid status tags (consistent with dark mode). */
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-success,
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-green {
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+    color: #ffffff !important;
+}
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-error,
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-red {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-warning,
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-gold {
+    background: #d97706 !important;
+    border-color: #d97706 !important;
+    color: #ffffff !important;
+}
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-processing,
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-blue {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-cyan {
+    background: #0891b2 !important;
+    border-color: #0891b2 !important;
+    color: #ffffff !important;
+}
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-purple {
+    background: #9333ea !important;
+    border-color: #9333ea !important;
+    color: #ffffff !important;
+}
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-geekblue {
+    background: #4f46e5 !important;
+    border-color: #4f46e5 !important;
+    color: #ffffff !important;
+}
+html.theme-light body .ant-tag.ant-tag.ant-tag.ant-tag-default {
+    background: #64748b !important;
+    border-color: #64748b !important;
+    color: #ffffff !important;
+}

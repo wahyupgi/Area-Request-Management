@@ -3,8 +3,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
-import { Modal } from 'ant-design-vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
 import { createTablePagination } from '@/utils/tablePagination';
+
+const { confirm } = useSweetAlert();
 
 const props = defineProps({
     users: Array,
@@ -96,18 +98,10 @@ const save = () => {
     }
 };
 
-const remove = (user) => {
-    Modal.confirm({
-        title: `Hapus user ${user.username}?`,
-        content: 'User yang dihapus tidak dapat dipulihkan.',
-        okText: 'Hapus',
-        okType: 'danger',
-        cancelText: 'Batal',
-        onOk() {
-            form.delete(route('admin.users.destroy', user.id), {
-                preserveScroll: true,
-            });
-        }
+const remove = async (user) => {
+    if (!await confirm(`Hapus user ${user.username}?`, 'User yang dihapus tidak dapat dipulihkan.', 'Hapus')) return;
+    form.delete(route('admin.users.destroy', user.id), {
+        preserveScroll: true,
     });
 };
 

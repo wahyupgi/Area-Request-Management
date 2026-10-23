@@ -36,14 +36,14 @@ export function useSweetAlert() {
     const error = (title) => toast('error', title);
     const info = (title) => toast('info', title);
 
-    const confirm = async (title, text = 'Tindakan ini tidak dapat dibatalkan.') => {
+    const confirm = async (title, text = 'Tindakan ini tidak dapat dibatalkan.', confirmText = 'Ya, lanjutkan') => {
         const result = await fire({
             ...baseOptions,
             icon: 'warning',
             title,
             text,
             showCancelButton: true,
-            confirmButtonText: 'Ya, lanjutkan',
+            confirmButtonText: confirmText,
             cancelButtonText: 'Batal',
             reverseButtons: true,
             focusCancel: true,

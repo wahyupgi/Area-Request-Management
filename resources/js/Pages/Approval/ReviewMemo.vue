@@ -89,53 +89,79 @@ const handleReject = () => {
 };
 
 const printMemo = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    const docEl = printableHtml(document.querySelector('#printable-memo'));
+    if (!docEl) {
+        window.print();
+        return;
+    }
+    const attachments = printableHtml(document.querySelector('.memo-print-attachments'));
+
+    const oldIframe = document.getElementById('print-iframe');
+    if (oldIframe) {
+        oldIframe.remove();
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'print-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.width = '210mm';
+    iframe.style.height = '297mm';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.zIndex = '-9999';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
 
     const originalTitle = document.title;
-    const memo = printableHtml(document.querySelector('#printable-memo'));
-    const attachments = printableHtml(document.querySelector('.memo-print-attachments'));
-    const stylesheetUrls = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.href);
-    const activeStyles = Array.from(document.querySelectorAll('style')).map((style) => style.textContent).join('\n');
+    const headStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+        .map(el => el.outerHTML)
+        .join('\n');
 
-    const waitForDocx = new Promise((resolve) => {
-        const startedAt = Date.now();
-        const check = () => {
-            const isReady = !document.querySelector('[data-attachment-loading]');
-            if (isReady || Date.now() - startedAt > 30000) {
-                resolve();
-                return;
-            }
-            window.setTimeout(check, 100);
-        };
-        check();
-    });
+    const html = `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${escapeHtml(originalTitle)}</title>
+    ${headStyles}
+    <style>
+        @page { size: A4 portrait; margin: 0; }
+        html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; width: 210mm !important; min-height: 0 !important; height: auto !important; }
+        body * { visibility: visible !important; }
+        .memo-print-page { width: 210mm !important; box-sizing: border-box !important; }
+        #printable-memo { position: relative !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; margin: 0 auto !important; page-break-after: avoid !important; break-after: avoid !important; }
+        .memo-print-attachments { display: block !important; width: 210mm !important; margin: 0 !important; page-break-before: auto !important; break-before: auto !important; }
+        .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; }
+        .memo-print-attachment:first-child { page-break-before: always !important; break-before: page !important; }
+        .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
+        .memo-pdf-page-list { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 0 !important; }
+        .memo-pdf-page { width: auto !important; height: auto !important; max-width: 100% !important; max-height: 295mm !important; margin: 0 auto !important; object-fit: contain !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+        .memo-pdf-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
+        .memo-attachment-docx .docx-wrapper > section.docx:last-of-type { page-break-after: auto !important; break-after: auto !important; margin-bottom: 0 !important; }
+        .memo-print-attachment:last-child { page-break-after: avoid !important; break-after: avoid !important; }
+    </style>
+</head>
+<body>
+    <div class="memo-print-page">${docEl}</div>
+    ${attachments}
+</body>
+</html>`;
 
-    waitForDocx.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
-        printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(originalTitle)}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
-            @page { size: A4 portrait; margin: 0; }
-            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; min-height: 0 !important; height: auto !important; }
-            body * { visibility: visible !important; }
-            .memo-print-page { width: 210mm !important; box-sizing: border-box !important; }
-            #printable-memo { position: relative !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; page-break-after: avoid !important; break-after: avoid !important; }
-            .memo-print-attachments { display: block !important; width: 210mm !important; margin: 0 !important; page-break-before: auto !important; break-before: auto !important; }
-            .memo-print-attachment { display: block !important; width: 210mm !important; min-height: 0 !important; box-sizing: border-box !important; }
-            .memo-print-attachment:first-child { page-break-before: always !important; break-before: page !important; }
-            .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
-            .memo-pdf-page-list { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 0 !important; }
-            .memo-pdf-page { width: auto !important; height: auto !important; max-width: 100% !important; max-height: 295mm !important; margin: 0 auto !important; object-fit: contain !important; break-inside: avoid !important; page-break-inside: avoid !important; }
-            .memo-pdf-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
-            .memo-attachment-docx .docx-wrapper > section.docx:last-of-type { page-break-after: auto !important; break-after: auto !important; margin-bottom: 0 !important; }
-            .memo-print-attachment:last-child { page-break-after: avoid !important; break-after: avoid !important; }
-        </style></head><body><div class="memo-print-page">${memo}</div>${attachments}</body></html>`);
-        printWindow.onload = () => {
-            printWindow.document.title = printFileName();
-            printWindow.onafterprint = () => printWindow.close();
-            printWindow.focus();
-            printWindow.print();
-        };
-        printWindow.document.close();
-    });
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        } catch (err) {
+            console.error('Print iframe failed, fallback to window.print', err);
+            window.print();
+        }
+    }, 250);
 };
 
 const showSignerModal = ref(false);
@@ -247,7 +273,6 @@ const formatDate = (dateString) => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3"></div>
             </div>
         </template>
 
@@ -256,11 +281,27 @@ const formatDate = (dateString) => {
                 
                 <!-- Left: Document Preview Stage -->
                 <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start print:block print:w-full print:m-0 print:p-0">
-                    <div class="document-preview-scroll print:overflow-visible">
-                        <div class="document-preview-paper shadow-md print:shadow-none bg-white">
-                            <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                    <a-card :title="memo.title || 'Internal Memo'" :bordered="false" class="w-full rounded-lg shadow-sm">
+                        <template #extra>
+                            <div class="flex items-center gap-1.5">
+                                <a-tooltip title="Cetak Dokumen">
+                                    <a-button size="small" @click="printMemo" class="flex items-center justify-center">
+                                        <template #icon><printer-outlined /></template>
+                                    </a-button>
+                                </a-tooltip>
+                                <a-tooltip title="Unduh PDF">
+                                    <a-button type="primary" size="small" @click="printMemo" class="flex items-center justify-center">
+                                        <template #icon><download-outlined /></template>
+                                    </a-button>
+                                </a-tooltip>
+                            </div>
+                        </template>
+                        <div class="document-preview-scroll print:overflow-visible">
+                            <div class="document-preview-paper shadow-md print:shadow-none bg-white">
+                                <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                            </div>
                         </div>
-                    </div>
+                    </a-card>
                     <MemoAttachments :attachments="memo.attachments" :subject="memo.field_values?.meta?.perihal || memo.title" />
                 </a-col>
 
@@ -378,14 +419,6 @@ const formatDate = (dateString) => {
                                     <template #icon><close-circle-outlined /></template> Ditolak
                                 </a-tag>
                                 <a-tag v-else color="warning" class="font-semibold m-0">Menunggu Persetujuan</a-tag>
-                            </div>
-                            <div v-if="memo.status === 'approved'" class="flex gap-2 pb-1">
-                                <a-button size="small" class="flex-1" @click="printMemo">
-                                    <template #icon><printer-outlined /></template> Cetak
-                                </a-button>
-                                <a-button size="small" class="flex-1" @click="printMemo">
-                                    <template #icon><download-outlined /></template> Simpan PDF
-                                </a-button>
                             </div>
                             <div class="flex justify-between"><span class="text-gray-500">Direktorat</span><span class="font-medium truncate max-w-[150px]">{{ metaForm.direktorat || '(default)' }}</span></div>
                             <div class="flex justify-between"><span class="text-gray-500">Divisi</span><span class="font-medium truncate max-w-[150px]">{{ metaForm.divisi || '(default)' }}</span></div>

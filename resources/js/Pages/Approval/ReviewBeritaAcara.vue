@@ -5,10 +5,13 @@ import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
+import { escapeHtml } from '@/utils/sanitize';
 import {
     LeftOutlined,
     EditOutlined,
-    SafetyCertificateOutlined
+    SafetyCertificateOutlined,
+    PrinterOutlined,
+    DownloadOutlined
 } from '@ant-design/icons-vue';
 
 const props = defineProps({
@@ -139,6 +142,102 @@ const printAttachments = [
     }] : []),
 ];
 
+const printFileName = () => `Berita Acara - ${[props.beritaAcara.title, props.beritaAcara.code].filter(Boolean).join(' - ') || 'Dokumen'}`
+    .replace(/[<>:"|?*]/g, '-')
+    .replaceAll('/', '-')
+    .replaceAll('\\', '-')
+    .replace(/[\u0000-\u001F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const printableHtml = (element) => {
+    if (!element) return '';
+    const clone = element.cloneNode(true);
+    const sourceCanvases = element.querySelectorAll('canvas');
+    clone.querySelectorAll('canvas').forEach((canvas, index) => {
+        const source = sourceCanvases[index];
+        if (!source) return;
+        try {
+            const image = document.createElement('img');
+            image.src = source.toDataURL('image/png');
+            image.className = source.className;
+            image.style.cssText = source.style.cssText;
+            canvas.replaceWith(image);
+        } catch {}
+    });
+    return clone.outerHTML;
+};
+
+const printDocument = () => {
+    const docEl = printableHtml(document.querySelector('#printable-ba'));
+    if (!docEl) {
+        window.print();
+        return;
+    }
+    const attachEl = printableHtml(document.querySelector('.memo-print-attachments'));
+
+    const oldIframe = document.getElementById('print-iframe');
+    if (oldIframe) {
+        oldIframe.remove();
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'print-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.width = '210mm';
+    iframe.style.height = '297mm';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.zIndex = '-9999';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
+
+    const headStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+        .map(el => el.outerHTML)
+        .join('\n');
+
+    const fileName = printFileName();
+
+    const html = `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${escapeHtml(fileName)}</title>
+    ${headStyles}
+    <style>
+        @page { size: A4 portrait; margin: 0; }
+        html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; width: 210mm !important; }
+        .ba-print-page { width: 210mm !important; box-sizing: border-box !important; margin: 0 auto !important; }
+        #printable-ba { position: relative !important; width: 210mm !important; box-sizing: border-box !important; margin: 0 auto !important; }
+        .memo-print-attachments { display: block !important; width: 210mm !important; }
+        .memo-print-attachment:first-child { page-break-before: always !important; break-before: page !important; }
+        .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
+    </style>
+</head>
+<body>
+    <div class="ba-print-page">${docEl}</div>
+    ${attachEl}
+</body>
+</html>`;
+
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        } catch (err) {
+            console.error('Print iframe failed, fallback to window.print', err);
+            window.print();
+        }
+    }, 250);
+};
+
 const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -171,11 +270,29 @@ const formatDate = (dateString) => {
         <div class="max-w-7xl mx-auto py-2 px-4">
             <a-row :gutter="[24, 24]">
                 <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start">
-                    <div class="document-preview-scroll w-full">
-                        <div class="document-preview-paper shadow-md bg-white">
-                            <BeritaAcaraDocument :berita-acara="beritaAcara" />
+                    <a-card :title="beritaAcara.title || 'Berita Acara'" :bordered="false" class="w-full rounded-lg shadow-sm">
+                        <template #extra>
+                            <div class="flex items-center gap-1.5">
+                                <a-tooltip title="Cetak Dokumen">
+                                    <a-button size="small" @click="printDocument" class="flex items-center justify-center">
+                                        <template #icon><printer-outlined /></template>
+                                    </a-button>
+                                </a-tooltip>
+                                <a-tooltip title="Unduh PDF">
+                                    <a-button type="primary" size="small" @click="printDocument" class="flex items-center justify-center">
+                                        <template #icon><download-outlined /></template>
+                                    </a-button>
+                                </a-tooltip>
+                            </div>
+                        </template>
+                        <div class="document-preview-scroll w-full">
+                            <div class="document-preview-paper shadow-md bg-white">
+                                <div id="printable-ba">
+                                    <BeritaAcaraDocument :berita-acara="beritaAcara" />
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </a-card>
                     <MemoAttachments :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
                 </a-col>
 

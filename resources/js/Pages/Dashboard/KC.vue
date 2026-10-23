@@ -364,15 +364,6 @@ const focusDocuments = (status) => {
                     <template v-else-if="column.key === 'subject'">
                         <div class="kc-memo-subject">
                             <span>{{ record.title }}</span>
-                            <small v-if="record._documentType === 'memo' && record.template">
-                                {{ record.template.name }}
-                            </small>
-                            <small v-else-if="record._documentType === 'ba'">
-                                {{ baTemplateLabels[record.meta?.template] || 'Berita Acara' }}
-                            </small>
-                            <small v-else-if="isFormPengajuan(record)">
-                                {{ formTemplateLabels[record.template] || 'Form Pengajuan' }}
-                            </small>
                         </div>
                     </template>
                     <template v-else-if="column.key === 'type'">
@@ -612,11 +603,17 @@ const focusDocuments = (status) => {
 }
 
 .kc-memo-subject > span {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     overflow: hidden;
     color: #f8fafc;
     font-weight: 500;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .kc-memo-subject small {
