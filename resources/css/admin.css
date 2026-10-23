@@ -294,8 +294,12 @@ html:not(.theme-light) .admin-master-page .ant-card {
     border-color: #334155 !important;
 }
 
-html:not(.theme-light) .admin-master-page .ant-table {
-    border: 1px solid #0e7490 !important;
+html:not(.theme-light) .admin-master-page .ant-table,
+html.dark .admin-master-page .ant-table,
+[data-theme="dark"] .admin-master-page .ant-table {
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 html:not(.theme-light) .admin-master-page .ant-card-head,
@@ -304,8 +308,10 @@ html:not(.theme-light) .admin-master-page .ant-table-thead>tr>th {
     color: #f8fafc !important;
 }
 
-html:not(.theme-light) .admin-master-page .ant-card-head {
-    border-color: #334f7d !important;
+html:not(.theme-light) .admin-master-page .ant-card-head,
+html.dark .admin-master-page .ant-card-head,
+[data-theme="dark"] .admin-master-page .ant-card-head {
+    border-color: #334155 !important;
 }
 
 html:not(.theme-light) .admin-master-page .ant-table-tbody>tr>td {
@@ -318,8 +324,16 @@ html:not(.theme-light) .admin-master-page .ant-table-tbody>tr>td {
     border-right: 1px solid #334155 !important;
 }
 
-html:not(.theme-light) .admin-master-page .ant-table-tbody>tr>td:last-child {
+html:not(.theme-light) .admin-master-page .ant-table-tbody>tr>td:last-child,
+html.dark .admin-master-page .ant-table-tbody>tr>td:last-child,
+[data-theme="dark"] .admin-master-page .ant-table-tbody>tr>td:last-child {
     border-right: 0 !important;
+}
+
+html:not(.theme-light) .admin-master-page .ant-table-tbody>tr:last-child>td,
+html.dark .admin-master-page .ant-table-tbody>tr:last-child>td,
+[data-theme="dark"] .admin-master-page .ant-table-tbody>tr:last-child>td {
+    border-bottom: 0 !important;
 }
 
 html:not(.theme-light) .admin-master-page .ant-table-tbody>tr:hover>td {
@@ -344,7 +358,9 @@ html.theme-light .admin-master-page .ant-card {
 }
 
 html.theme-light .admin-master-page .ant-table {
-    border: 1px solid #7dd3fc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 html.theme-light .admin-master-page .ant-card-head {
@@ -372,6 +388,10 @@ html.theme-light .admin-master-page .ant-table-tbody>tr>td {
 
 html.theme-light .admin-master-page .ant-table-tbody>tr>td:last-child {
     border-right: 0 !important;
+}
+
+html.theme-light .admin-master-page .ant-table-tbody>tr:last-child>td {
+    border-bottom: 0 !important;
 }
 
 html.theme-light .admin-master-page .ant-table-tbody>tr:hover>td {

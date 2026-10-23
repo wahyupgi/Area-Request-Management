@@ -257,3 +257,31 @@ html.dark .ant-tag-geekblue {
     color: #c7d2fe !important;
 }
 
+
+/* Dark mode: Table header vertical dividers (column splitters) */
+html:not(.theme-light) .ant-table-wrapper .ant-table-thead > tr > th::before,
+html:not(.theme-light) .ant-table-thead > tr > th::before,
+html.dark .ant-table-wrapper .ant-table-thead > tr > th::before,
+html.dark .ant-table-thead > tr > th::before,
+[data-theme="dark"] .ant-table-wrapper .ant-table-thead > tr > th::before,
+[data-theme="dark"] .ant-table-thead > tr > th::before {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Dark mode: Table header bottom divider */
+html:not(.theme-light) .ant-table-wrapper .ant-table-thead > tr > th,
+html.dark .ant-table-wrapper .ant-table-thead > tr > th,
+[data-theme="dark"] .ant-table-wrapper .ant-table-thead > tr > th {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Dark mode: Table body row and column dividers */
+html:not(.theme-light) .ant-table-wrapper .ant-table-tbody > tr > td,
+html.dark .ant-table-wrapper .ant-table-tbody > tr > td,
+[data-theme="dark"] .ant-table-wrapper .ant-table-tbody > tr > td {
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    border-top-color: rgba(255, 255, 255, 0.05) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+
