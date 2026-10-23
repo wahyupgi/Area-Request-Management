@@ -116,7 +116,7 @@ const remove = () => {
                 </template>
                 <div class="flex flex-col sm:flex-row items-center gap-6">
                     <div class="bg-white/10 rounded-2xl p-6 flex items-center justify-center min-w-[200px]">
-                        <img :src="'/storage/' + signature.signature_image" alt="Signature" class="h-24 object-contain" />
+                        <img :src="'/storage/' + signature.signature_image" alt="Signature" loading="lazy" decoding="async" class="h-24 object-contain" />
                     </div>
                     <div class="flex-1 w-full">
                         <a-tag color="success" class="mb-2">Terdaftar</a-tag>

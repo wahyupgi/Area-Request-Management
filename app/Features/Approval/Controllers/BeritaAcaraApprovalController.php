@@ -139,16 +139,17 @@ class BeritaAcaraApprovalController extends Controller
             return back()->withErrors(['status' => 'Berita Acara ini tidak dalam status submitted.']);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'notes' => 'required|string|max:1000',
         ]);
 
+        $meta = $beritaAcara->meta ?? [];
+        $meta['rejection_notes'] = $validated['notes'];
+
         $beritaAcara->update([
             'status' => BeritaAcara::STATUS_REJECTED,
+            'meta'   => $meta,
         ]);
-
-        // We can add notes saving logic if there's a table for it, or just to memo if we add a column.
-        // Since BA might not have approval notes history yet, we just update status for now.
 
         return redirect()->route('approvals.pending')
             ->with('success', 'Berita Acara berhasil ditolak.');

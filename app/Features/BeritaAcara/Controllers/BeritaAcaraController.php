@@ -47,7 +47,7 @@ class BeritaAcaraController extends Controller
             'meta.data.rows'        => 'nullable|array',
             'meta.data.rows.*'      => 'array',
             'meta.data.rows.*.*'    => 'nullable|string|max:1000',
-            'meta.data.kronologi'   => 'nullable|string',
+            'meta.data.kronologi'   => 'nullable|string|max:10000',
             'meta.direktorat'       => 'nullable|string|max:255',
             'meta.divisi'           => 'nullable|string|max:255',
             'meta.perihal'          => 'nullable|string|max:500',
@@ -56,12 +56,12 @@ class BeritaAcaraController extends Controller
             'meta.kepada_jabatan'   => 'nullable|string|max:255',
             'meta.penyetuju_akhir'  => 'nullable|string|max:255',
             'title'                 => 'required|string|max:500',
-            'pengantar'             => 'nullable|string',
+            'pengantar'             => 'nullable|string|max:10000',
             'rincian_data'          => 'nullable|array',
             'rincian_data.*.label'  => 'nullable|string|max:255',
             'rincian_data.*.value'  => 'nullable|string|max:500',
-            'keterangan_tambahan'   => 'nullable|string',
-            'penutup'               => 'nullable|string',
+            'keterangan_tambahan'   => 'nullable|string|max:10000',
+            'penutup'               => 'nullable|string|max:10000',
             'attachments'           => 'nullable|array|max:3',
             'attachments.*'         => 'file|mimes:docx,pdf|max:10240',
         ]);
@@ -150,12 +150,25 @@ class BeritaAcaraController extends Controller
         $validated = $request->validate([
             'title'                 => 'required|string|max:500',
             'meta'                  => 'nullable|array',
-            'pengantar'             => 'nullable|string',
+            'meta.template'         => 'nullable|string|max:255',
+            'meta.data'             => 'nullable|array',
+            'meta.data.rows'        => 'nullable|array',
+            'meta.data.rows.*'      => 'array',
+            'meta.data.rows.*.*'    => 'nullable|string|max:1000',
+            'meta.data.kronologi'   => 'nullable|string|max:10000',
+            'meta.direktorat'       => 'nullable|string|max:255',
+            'meta.divisi'           => 'nullable|string|max:255',
+            'meta.perihal'          => 'nullable|string|max:500',
+            'meta.lampiran'         => 'nullable|string|max:255',
+            'meta.kepada_nama'      => 'nullable|string|max:255',
+            'meta.kepada_jabatan'   => 'nullable|string|max:255',
+            'meta.penyetuju_akhir'  => 'nullable|string|max:255',
+            'pengantar'             => 'nullable|string|max:10000',
             'rincian_data'          => 'nullable|array',
             'rincian_data.*.label'  => 'nullable|string|max:255',
             'rincian_data.*.value'  => 'nullable|string|max:500',
-            'keterangan_tambahan'   => 'nullable|string',
-            'penutup'               => 'nullable|string',
+            'keterangan_tambahan'   => 'nullable|string|max:10000',
+            'penutup'               => 'nullable|string|max:10000',
         ]);
 
         $beritaAcara->update([
@@ -186,6 +199,9 @@ class BeritaAcaraController extends Controller
         // Validasi TTD
         $signature = $user->digitalSignature;
         if (!$signature && $request->hasFile('signature_image')) {
+            $request->validate([
+                'signature_image' => ['required', 'file', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            ]);
             $path = $request->file('signature_image')->store('signatures', 'public');
             $user->digitalSignature()->updateOrCreate([], ['signature_image' => $path]);
             $signature = $user->fresh()->digitalSignature;

@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import MemoDocument from '@/Components/MemoDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { escapeHtml } from '@/utils/sanitize';
 import {
     ArrowLeftOutlined,
     PrinterOutlined,
@@ -87,7 +88,7 @@ const printMemo = () => {
     });
 
     waitForAttachments.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
-        printWindow.document.write(`<!doctype html><html><head><title>Memo-${props.memo.code || 'Dokumen'}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
+        printWindow.document.write(`<!doctype html><html><head><title>Memo-${escapeHtml(props.memo.code || 'Dokumen')}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
             @page { size: A4 portrait; margin: 0; }
             html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; min-height: 0 !important; height: auto !important; }
             body * { visibility: visible !important; }

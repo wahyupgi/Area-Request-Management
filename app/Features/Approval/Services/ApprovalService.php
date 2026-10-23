@@ -56,6 +56,9 @@ class ApprovalService
         $signature = DigitalSignature::where('user_id', $user->id)->first();
 
         if (!$signature && $request->hasFile('signature_image')) {
+            $request->validate([
+                'signature_image' => ['required', 'file', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            ]);
             $path = $request->file('signature_image')->store('signatures', 'public');
             $signature = DigitalSignature::create([
                 'user_id' => $user->id,

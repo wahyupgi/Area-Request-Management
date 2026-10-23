@@ -3,6 +3,7 @@
 namespace App\Features\Approval\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateMemoMetaRequest extends FormRequest
 {
@@ -13,8 +14,10 @@ class UpdateMemoMetaRequest extends FormRequest
 
     public function rules(): array
     {
+        $memoId = $this->route('memo')?->id;
+
         return [
-            'code' => ['nullable', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:255', Rule::unique('memos', 'code')->ignore($memoId)],
             'direktorat' => ['nullable', 'string', 'max:255'],
             'divisi' => ['nullable', 'string', 'max:255'],
             'kepada' => ['nullable', 'string', 'max:255'],

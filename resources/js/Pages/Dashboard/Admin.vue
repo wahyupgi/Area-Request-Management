@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { createTablePagination } from '@/utils/tablePagination';
+import { useDebouncedRef } from '@/composables/useDebounce';
 import {
     AppstoreOutlined,
     BankOutlined,
@@ -63,6 +64,7 @@ const userDisplayName = computed(() => {
     }) + ' WIB');
 
     const searchQuery = ref('');
+    const debouncedSearch = useDebouncedRef(searchQuery, 300);
     const statusFilter = ref('all');
     const documentTypeFilter = ref('all');
     const chartPeriod = ref('year');
@@ -137,8 +139,8 @@ if (documentTypeFilter.value === 'form_pengajuan') {
         list = list.filter((document) => document.status === statusFilter.value);
     }
     
-    if (searchQuery.value.trim()) {
-        const q = searchQuery.value.toLowerCase().trim();
+    if (debouncedSearch.value.trim()) {
+        const q = debouncedSearch.value.toLowerCase().trim();
         list = list.filter((document) =>
             (document.code && document.code.toLowerCase().includes(q)) ||
             (document.title && document.title.toLowerCase().includes(q)) ||

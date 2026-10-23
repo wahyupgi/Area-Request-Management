@@ -22,38 +22,11 @@ Route::middleware('guest')->group(function () {
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
     Route::get('register', function () {
-        return Inertia::render('Auth/Login', [
-            'canResetPassword' => Route::has('password.request'),
-            'status' => session('status'),
-        ]);
+        return redirect()->route('login');
     })->name('register');
 
-    Route::post('register', function (Request $request) {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'username' => ['nullable', 'string', 'max:255', 'unique:users,username'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
-
-        $username = $request->username ?? Str::slug($request->name) . '_' . random_int(1000, 9999);
-
-        while (User::where('username', $username)->exists()) {
-            $username = Str::slug($request->name) . '_' . random_int(1000, 9999);
-        }
-
-        $user = User::create([
-            'name' => $request->name,
-            'username' => $username,
-            'email' => $request->email,
-            'password' => $request->password,
-            'role' => 'KC',
-            'email_verified_at' => now(),
-        ]);
-
-        Auth::login($user);
-
-        return redirect(RouteServiceProvider::HOME);
+    Route::post('register', function () {
+        abort(404);
     });
 
     Route::get('forgot-password', function () {

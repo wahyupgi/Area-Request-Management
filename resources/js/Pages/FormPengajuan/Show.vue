@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FormPengajuanDocument from '@/Components/FormPengajuanDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { escapeHtml } from '@/utils/sanitize';
 import { computed } from 'vue';
 import {
     ArrowLeftOutlined,
@@ -89,7 +90,7 @@ const printDocument = () => {
     const activeStyles   = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
 
     Promise.all(stylesheetUrls.map(url => fetch(url).then(r => r.text()).catch(() => ''))).then(styles => {
-        printWindow.document.write(`<!doctype html><html><head><title>${printFileName()}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
+        printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(printFileName())}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
             @page { size: A4 portrait; margin: 0; }
             html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
             #printable-fp { width: 210mm !important; box-sizing: border-box !important; }

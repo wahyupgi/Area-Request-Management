@@ -1,11 +1,35 @@
 <script setup>
 import { onBeforeUnmount, onMounted, reactive } from 'vue';
-import { renderAsync } from 'docx-preview';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { router } from '@inertiajs/vue3';
 
-GlobalWorkerOptions.workerSrc = pdfWorker;
+// Lazy loading: library PDF/DOCX berukuran besar hanya diunduh saat dibutuhkan.
+let pdfjsPromise = null;
+const loadPdfjs = () => {
+    if (!pdfjsPromise) {
+        pdfjsPromise = Promise.all([
+            import('pdfjs-dist'),
+            import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+        ]).then(([pdfjs, worker]) => {
+            pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+            return pdfjs;
+        }).catch((error) => {
+            pdfjsPromise = null;
+            throw error;
+        });
+    }
+    return pdfjsPromise;
+};
+
+let docxPromise = null;
+const loadDocxPreview = () => {
+    if (!docxPromise) {
+        docxPromise = import('docx-preview').catch((error) => {
+            docxPromise = null;
+            throw error;
+        });
+    }
+    return docxPromise;
+};
 
 const props = defineProps({
     attachments: { type: Array, default: () => [] },
@@ -59,7 +83,10 @@ const renderPdf = async (attachment) => {
     container.replaceChildren();
 
     try {
-        const response = await fetch(pdfUrl(attachment), { credentials: 'same-origin' });
+        const [response, { getDocument }] = await Promise.all([
+            fetch(pdfUrl(attachment), { credentials: 'same-origin' }),
+            loadPdfjs(),
+        ]);
         if (!response.ok) throw new Error(`File PDF tidak dapat dimuat (${response.status}).`);
 
         const data = new Uint8Array(await response.arrayBuffer());
@@ -129,7 +156,10 @@ const keepAnchoredImagesOnPage = (container) => {
 
 const renderDocx = async (attachment) => {
     try {
-        const response = await fetch(attachmentUrl(attachment));
+        const [response, { renderAsync }] = await Promise.all([
+            fetch(attachmentUrl(attachment)),
+            loadDocxPreview(),
+        ]);
         if (!response.ok) throw new Error('DOCX fetch failed');
         const arrayBuffer = await response.arrayBuffer();
         const container = docxContainers[attachment.id];

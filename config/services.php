@@ -35,4 +35,6 @@ return [
         'binary' => env('LIBREOFFICE_BINARY', 'soffice'),
     ],
 
+    'csv_export_token' => env('CSV_EXPORT_TOKEN'),
+
 ];

@@ -29,9 +29,11 @@ class ApprovalController extends Controller
     {
         $user = auth()->user();
 
+        $perPage = min(max((int) $request->input('per_page', 12), 1), 100);
+
         $allMemos = $this->memoRepository->listForApprovalInbox(
             $user,
-            $request->input('per_page', 12),
+            $perPage,
         );
 
         // Ambil Berita Acara yang masuk ke AM ini
@@ -173,6 +175,10 @@ class ApprovalController extends Controller
 
         if ($memo->created_by !== $user->id && $memo->area_manager_id !== $user->id) {
             abort(403);
+        }
+
+        if ($memo->status === 'approved') {
+            return back()->withErrors(['status' => 'Dokumen yang sudah disetujui tidak dapat diubah informasinya.']);
         }
 
         $validated = $request->validated();

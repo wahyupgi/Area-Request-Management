@@ -35,14 +35,25 @@ class SyncMemoToCsv implements ShouldQueue
         // CSV Headers
         $csvData[] = ['No Memo', 'Cabang', 'Perihal', 'Tanggal', 'Status'];
         
+        $sanitizeCell = function ($value): string {
+            if ($value === null || $value === '' || $value === '-') {
+                return '-';
+            }
+            $str = (string) $value;
+            if (strlen($str) > 1 && in_array($str[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+                return "'" . $str;
+            }
+            return $str;
+        };
+
         // CSV Rows
         foreach ($memos as $memo) {
             $csvData[] = [
-                $memo->code ?? '-',
-                $memo->branch ? $memo->branch->name : '-',
-                $memo->title ?? '-',
+                $sanitizeCell($memo->code),
+                $sanitizeCell($memo->branch ? $memo->branch->name : null),
+                $sanitizeCell($memo->title),
                 $memo->created_at ? $memo->created_at->format('Y-m-d H:i:s') : '-',
-                $memo->status ?? '-'
+                $sanitizeCell($memo->status)
             ];
         }
 

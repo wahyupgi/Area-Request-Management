@@ -29,10 +29,12 @@ class MemoController extends Controller
     {
         $user = auth()->user();
 
+        $perPage = min(max((int) $request->input('per_page', 15), 1), 100);
+
         $memos = $this->memoRepository->listForUser(
             $user,
             $request->input('status'),
-            $request->input('per_page', 15),
+            $perPage,
         );
 
         return Inertia::render('Memo/Index', [
@@ -265,6 +267,8 @@ class MemoController extends Controller
      */
     public function exportCsv()
     {
+        abort_unless(auth()->user()->isAdmin(), 403, 'Akses khusus Administrator.');
+
         $path = storage_path('app/exports/rekap_memo.csv');
 
         if (!file_exists($path)) {
@@ -280,9 +284,9 @@ class MemoController extends Controller
     public function exportCsvPublic(Request $request)
     {
         $token = $request->query('token');
-        $secret = env('CSV_EXPORT_TOKEN', 'secret-pgi-2026');
+        $secret = config('services.csv_export_token');
 
-        if ($token !== $secret) {
+        if (empty($secret) || !is_string($token) || !hash_equals((string) $secret, (string) $token)) {
             abort(403, 'Unauthorized access.');
         }
 

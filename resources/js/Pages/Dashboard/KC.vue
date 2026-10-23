@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { createTablePagination } from '@/utils/tablePagination';
+import { useDebouncedRef } from '@/composables/useDebounce';
 
 const props = defineProps({
     month: { type: String, required: true },
@@ -19,6 +20,7 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 
 const searchQuery = ref('');
+const debouncedSearch = useDebouncedRef(searchQuery, 300);
 const statusFilter = ref('all');
 const selectedMonth = ref(props.month);
 watch(() => props.month, (month) => {
@@ -164,8 +166,8 @@ const filteredDocuments = computed(() => {
         list = list.filter(m => m.status === statusFilter.value);
     }
 
-    if (searchQuery.value.trim()) {
-        const q = searchQuery.value.toLowerCase().trim();
+    if (debouncedSearch.value.trim()) {
+        const q = debouncedSearch.value.toLowerCase().trim();
         list = list.filter(m =>
             (m.code && m.code.toLowerCase().includes(q)) ||
             (m.title && m.title.toLowerCase().includes(q)) ||

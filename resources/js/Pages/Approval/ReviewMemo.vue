@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import MemoDocument from '@/Components/MemoDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { escapeHtml } from '@/utils/sanitize';
 import { ref } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import {
@@ -111,7 +112,7 @@ const printMemo = () => {
     });
 
     waitForDocx.then(() => Promise.all(stylesheetUrls.map((url) => fetch(url).then((response) => response.text()).catch(() => '')))).then((styles) => {
-        printWindow.document.write(`<!doctype html><html><head><title>${originalTitle}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
+        printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(originalTitle)}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
             @page { size: A4 portrait; margin: 0; }
             html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; min-height: 0 !important; height: auto !important; }
             body * { visibility: visible !important; }

@@ -170,7 +170,29 @@ class FormPengajuanController extends Controller
         }
 
         $validated = $request->validate([
-            'meta.request_data' => 'nullable|array',
+            'meta.request_data' => 'nullable|array:full_name,position,work_location,employment_date,late_months,absence_months,request_number,salary_after_approval,minimum_salary,loan_amount,repayment_months,salary_deduction,loan_type,leave_type,leave_type_other,start_date,duration,reason,handover,substitute,substitute_position,phone',
+            'meta.request_data.full_name' => ['nullable', 'string', 'max:255'],
+            'meta.request_data.position' => 'nullable|string|max:255',
+            'meta.request_data.work_location' => 'nullable|string|max:255',
+            'meta.request_data.employment_date' => 'nullable|date',
+            'meta.request_data.late_months' => 'nullable|integer|min:0|max:1200',
+            'meta.request_data.absence_months' => 'nullable|integer|min:0|max:1200',
+            'meta.request_data.request_number' => 'nullable|string|max:100',
+            'meta.request_data.salary_after_approval' => 'nullable|string|max:100',
+            'meta.request_data.minimum_salary' => 'nullable|string|max:100',
+            'meta.request_data.loan_amount' => ['nullable', 'string', 'max:100'],
+            'meta.request_data.repayment_months' => ['nullable', 'integer', 'min:1', 'max:1200'],
+            'meta.request_data.salary_deduction' => ['nullable', 'in:Bersedia,Tidak bersedia'],
+            'meta.request_data.loan_type' => ['nullable', 'in:pinjaman_uang,pembelian_barang'],
+            'meta.request_data.leave_type' => ['nullable', 'in:cuti_tahunan,ijin,cuti_melahirkan,cuti_khusus,sakit,lainnya'],
+            'meta.request_data.leave_type_other' => ['nullable', 'string', 'max:255'],
+            'meta.request_data.start_date' => ['nullable', 'date'],
+            'meta.request_data.duration' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'meta.request_data.reason' => ['nullable', 'string', 'max:5000'],
+            'meta.request_data.handover' => 'nullable|string|max:255',
+            'meta.request_data.substitute' => 'nullable|string|max:255',
+            'meta.request_data.substitute_position' => 'nullable|string|max:255',
+            'meta.request_data.phone' => 'nullable|string|max:100',
             'title'             => 'required|string|max:500',
         ]);
 
@@ -198,6 +220,9 @@ class FormPengajuanController extends Controller
         // Validasi / simpan TTD KC
         $signature = $user->digitalSignature;
         if (!$signature && $request->hasFile('signature_image')) {
+            $request->validate([
+                'signature_image' => ['required', 'file', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            ]);
             $path = $request->file('signature_image')->store('signatures', 'public');
             $user->digitalSignature()->updateOrCreate([], ['signature_image' => $path]);
             $signature = $user->fresh()->digitalSignature;

@@ -5,6 +5,7 @@ import { computed, ref, watch } from 'vue';
 import { DeleteOutlined, EditOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons-vue';
 import { Modal } from 'ant-design-vue';
 import { createTablePagination } from '@/utils/tablePagination';
+import { useDebouncedRef } from '@/composables/useDebounce';
 
 const props = defineProps({
     areas: { type: Array, default: () => [] },
@@ -14,6 +15,7 @@ const props = defineProps({
 });
 
 const searchQuery = ref('');
+const debouncedSearch = useDebouncedRef(searchQuery, 300);
 const kcPage = ref(1);
 const areaPage = ref(1);
 const KC_PAGE_SIZE = 8;
@@ -28,7 +30,7 @@ const areaPagination = createTablePagination({
     getTotal: () => props.areas.length,
     onChange: (page) => { areaPage.value = page; },
 });
-watch(searchQuery, () => {
+watch(debouncedSearch, () => {
     kcPage.value = 1;
     kcPagination.current = 1;
 });
@@ -39,7 +41,7 @@ const form = useForm({ area_id: null, branch_ids: [] });
 const areaForm = useForm({ name: '', parent_id: null, existing_branches: [], branch_names: [''] });
 
 const filteredKcUsers = computed(() => {
-    const query = searchQuery.value.trim().toLowerCase();
+    const query = debouncedSearch.value.trim().toLowerCase();
     if (!query) return props.kcUsers;
 
     return props.kcUsers.filter((kc) =>
