@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const isKeringananJasa = computed(() => props.memo.template?.category === 'Keringanan Jasa');
-const isPhoneDeathReliefMemo = computed(() => props.memo.template?.name === 'Pengajuan Keringanan Pelunasan Nasabah Handphone Meninggal Dunia');
+const isPhoneDeathReliefMemo = computed(() => props.memo.template?.name === 'Pengajuan Keringanan Pelunasan Nasabah Meninggal Dunia');
 const isSdmRequest = computed(() => props.memo.template?.name === 'HRD - Permohonan Permintaan SDM');
 const sdmField = computed(() => props.memo.template?.field_schema?.find((field) => field.type === 'table'));
 

@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
 import {
@@ -14,6 +14,7 @@ import {
 const props = defineProps({
     formPengajuan: Object,
     signature:     { type: Object, default: null },
+    openSubmit:    { type: Boolean, default: false },
 });
 
 const { success, confirm, error: showError } = useSweetAlert();
@@ -119,6 +120,10 @@ const selectSignature = (event) => {
     reader.readAsDataURL(file);
 };
 const confirmSubmit = () => doSubmit(signatureFile.value);
+
+onMounted(() => {
+    if (props.openSubmit) submitForm();
+});
 
 // ── Attachment ────────────────────────────────────────────────────
 const deleteAttachment = async (attachment) => {

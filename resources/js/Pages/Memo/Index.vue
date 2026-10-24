@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { PlusOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, EditOutlined, FileTextOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     memos: Object,
@@ -18,7 +18,7 @@ const columns = [
     { title: 'Cabang', dataIndex: ['branch', 'name'], key: 'branch' },
     { title: 'Status', dataIndex: 'status', key: 'status' },
     { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at' },
-    { title: 'Aksi', key: 'action', align: 'center' }
+    { title: 'Aksi', key: 'action', align: 'center', width: 85 }
 ];
 
 const getStatusColor = (status) => {
@@ -99,25 +99,30 @@ const onFilterChange = (e) => {
                         {{ new Date(record.created_at).toLocaleDateString('id-ID') }}
                     </template>
                     <template v-else-if="column.key === 'action'">
-                        <a-space>
-                            <a-button 
-                                v-if="['draft','rejected'].includes(record.status)" 
-                                type="primary" 
-                                ghost 
-                                size="small"
-                                @click="router.visit(route('memos.edit', record.id))"
-                            >
-                                <template #icon><edit-outlined /></template>
-                                Edit
-                            </a-button>
-                            <a-button 
-                                size="small"
-                                @click="router.visit(route('memos.show', record.id))"
-                            >
-                                <template #icon><eye-outlined /></template>
-                                Detail
-                            </a-button>
-                        </a-space>
+                        <div class="flex items-center justify-center gap-1">
+                            <a-tooltip v-if="['draft', 'rejected'].includes(record.status)" title="Edit Dokumen" placement="top">
+                                <Link :href="route('memos.edit', record.id)">
+                                    <button 
+                                        type="button" 
+                                        class="table-btn-action table-btn-edit" 
+                                        aria-label="Edit Dokumen"
+                                    >
+                                        <EditOutlined />
+                                    </button>
+                                </Link>
+                            </a-tooltip>
+                            <a-tooltip title="Lihat Detail" placement="top">
+                                <Link :href="route('memos.show', record.id)">
+                                    <button 
+                                        type="button" 
+                                        class="table-btn-action table-btn-detail" 
+                                        aria-label="Lihat Detail Dokumen"
+                                    >
+                                        <FileTextOutlined />
+                                    </button>
+                                </Link>
+                            </a-tooltip>
+                        </div>
                     </template>
                 </template>
             </a-table>

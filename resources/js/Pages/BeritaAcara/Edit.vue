@@ -1,6 +1,5 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
@@ -17,6 +16,7 @@ import {
 const props = defineProps({
     beritaAcara: Object,
     signature:   { type: Object, default: null },
+    openSubmit:  { type: Boolean, default: false },
 });
 
 const { confirm, success, error: showError } = useSweetAlert();
@@ -57,7 +57,7 @@ const templateName = props.beritaAcara.meta?.template || '';
 const isRevisiAbsensi      = templateName === 'Permintaan Revisi Absensi';
 const isPenghapusanBarang  = templateName === 'Penghapusan Barang Sitaan';
 const isLainnya            = templateName === 'Berita Acara Lainnya';
-const isTableTemplate      = isRevisiAbsensi || isPenghapusanBarang || isLainnya;
+const isTableTemplate      = isRevisiAbsensi || isPenghapusanBarang;
 
 const formatNominalInput = (value) => {
     if (value === undefined || value === null || value === '') return '';
@@ -153,6 +153,10 @@ const selectSignature = (event) => {
 };
 const confirmSubmit = () => doSubmit(signatureFile.value);
 
+onMounted(() => {
+    if (props.openSubmit) submitMemo();
+});
+
 // ── Attachment upload ─────────────────────────────────────────────
 const uploadFile = () => {
     const file = fileInput.value?.files[0];
@@ -212,7 +216,49 @@ const deleteDraft = async () => {
             </a-alert>
 
             <a-form layout="vertical" @finish="save">
-                <a-row :gutter="24">
+                <!-- Khusus Berita Acara Lainnya: Hanya 1 Field Upload File PDF/Word & Tombol Kirim -->
+                <a-card v-if="isLainnya" :bordered="false" class="rounded-lg shadow-sm">
+                    <h2 class="text-base font-semibold mb-1">Berkas Dokumen Berita Acara</h2>
+                    <p class="text-xs text-gray-500 mb-4">Dokumen Berita Acara dalam format PDF atau Word (maksimal 10 MB).</p>
+
+                    <div v-if="beritaAcara.attachments?.length > 0" class="mb-4">
+                        <a-list item-layout="horizontal" :data-source="beritaAcara.attachments" size="small" class="border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-slate-900">
+                            <template #renderItem="{ item }">
+                                <a-list-item>
+                                    <a-list-item-meta :title="item.original_name || item.file_path">
+                                        <template #avatar><paper-clip-outlined class="text-blue-600 text-lg" /></template>
+                                    </a-list-item-meta>
+                                    <template #actions>
+                                        <a-button type="link" danger size="small" @click="deleteAttachment(item)">Hapus</a-button>
+                                    </template>
+                                </a-list-item>
+                            </template>
+                        </a-list>
+                    </div>
+
+                    <p class="mb-2 text-xs text-gray-400">Unggah berkas dokumen baru jika ingin mengganti/menambah lampiran (maksimal 3 file, 10 MB per file):</p>
+                    <div class="flex items-center gap-3">
+                        <input
+                            ref="fileInput"
+                            type="file"
+                            @change="uploadFile"
+                            accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                            :disabled="(beritaAcara.attachments?.length || 0) >= 3 || uploading"
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        />
+                        <span v-if="uploading" class="text-sm text-gray-500">Mengupload...</span>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t flex justify-end gap-3">
+                        <a-button size="large" type="primary" @click="submitMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
+                            <template #icon><send-outlined /></template>
+                            Kirim ke AM
+                        </a-button>
+                    </div>
+                </a-card>
+
+                <!-- Template BA selain Berita Acara Lainnya -->
+                <a-row :gutter="24" v-else>
                     <!-- Kolom kiri: Info dokumen + lampiran -->
                     <a-col :xs="24" :lg="10" class="mb-6">
                         <div class="flex flex-col gap-6">
@@ -281,7 +327,6 @@ const deleteDraft = async () => {
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <h2 class="text-sm font-semibold mb-4">Isi Berita Acara</h2>
 
-                            <!-- Non-table BA templates -->
                             <template v-if="!isTableTemplate">
                                 <a-form-item label="Kalimat Pengantar" class="mb-4">
                                     <a-textarea v-model:value="form.pengantar" :rows="3" />
@@ -328,19 +373,16 @@ const deleteDraft = async () => {
                                 </a-form-item>
                             </template>
 
-                            <!-- Table BA templates: Revisi Absensi, Penghapusan Barang Sitaan, Lainnya -->
+                            <!-- Table BA templates: Revisi Absensi, Penghapusan Barang Sitaan -->
                             <template v-else>
                                 <a-form-item label="Kalimat Pengantar" class="mb-4">
                                     <a-textarea v-model:value="form.pengantar" :rows="3" />
                                 </a-form-item>
 
                                 <div class="border border-gray-200 rounded p-4 mb-4 overflow-x-auto">
-                                    <h3 class="font-semibold text-sm mb-3">{{ isRevisiAbsensi ? 'Data Absensi' : isPenghapusanBarang ? 'Data Barang Sitaan' : 'Daftar Item' }}</h3>
+                                    <h3 class="font-semibold text-sm mb-3">{{ isRevisiAbsensi ? 'Data Absensi' : 'Data Barang Sitaan' }}</h3>
 
-                                    <template v-if="isLainnya">
-                                        <DocumentTableEditor v-model:columns="form.meta.data.table_columns" v-model:rows="form.meta.data.rows" />
-                                    </template>
-                                    <template v-else>
+                                    <template>
                                         <div v-for="(row, index) in form.meta.data.rows" :key="index" class="border border-gray-200 rounded p-3 mb-3">
                                             <div class="flex justify-between items-center mb-2">
                                                 <strong class="text-xs">Baris {{ index + 1 }}</strong>

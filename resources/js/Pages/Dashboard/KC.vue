@@ -4,6 +4,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { createTablePagination } from '@/utils/tablePagination';
 import { useDebouncedRef } from '@/composables/useDebounce';
+import { EditOutlined, FileTextOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     month: { type: String, required: true },
@@ -115,6 +116,19 @@ const formTemplateLabels = {
     form_ijin_tidak_masuk_kerja: 'Form Ijin Tidak Masuk Kerja (FITMK)',
 };
 const isFormPengajuan = (record) => record._documentType === 'form_pengajuan';
+const canEdit = (record) => ['draft', 'rejected'].includes(record.status);
+
+const getEditRoute = (record) => {
+    if (record._documentType === 'memo') return route('memos.edit', record.id);
+    if (isFormPengajuan(record)) return route('form-pengajuan.edit', record.id);
+    return route('berita-acara.edit', record.id);
+};
+
+const getDetailRoute = (record) => {
+    if (record._documentType === 'memo') return route('memos.show', record.id);
+    if (isFormPengajuan(record)) return route('approvals.form-pengajuan.history', record.id);
+    return route('approvals.ba.history', record.id);
+};
 
 const documentColumns = [
     { title: 'Nomor Dokumen', dataIndex: 'code', key: 'code', width: 170 },
@@ -123,7 +137,7 @@ const documentColumns = [
     { title: 'Tanggal Dibuat', key: 'created_at', width: 130 },
     { title: 'Status', key: 'status', width: 130, align: 'center' },
     { title: 'TTD Digital', key: 'signature', width: 170 },
-    { title: 'Aksi', key: 'action', width: 130, align: 'center' },
+    { title: 'Aksi', key: 'action', width: 85, align: 'center' },
 ];
 
 const statusTagColor = (status) => ({
@@ -355,7 +369,7 @@ const focusDocuments = (status) => {
                 :columns="documentColumns"
                 :row-key="record => `${record._documentType}-${record.id}`"
                 :pagination="documentsPagination"
-                :scroll="{ x: 1140 }"
+                :scroll="{ x: 1090 }"
             >
                 <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'code'">
@@ -409,14 +423,30 @@ const focusDocuments = (status) => {
                     </template>
                     <template v-else-if="column.key === 'signature'">-</template>
                     <template v-else-if="column.key === 'action'">
-                        <a-space>
-                            <Link v-if="record._documentType === 'memo' && (record.status === 'draft' || record.status === 'rejected')" :href="route('memos.edit', record.id)">
-                                <a-button type="primary" ghost size="small">Edit</a-button>
-                            </Link>
-                            <Link :href="record._documentType === 'memo' ? route('memos.show', record.id) : isFormPengajuan(record) ? route('approvals.form-pengajuan.history', record.id) : route('approvals.ba.history', record.id)">
-                                <a-button type="primary" ghost size="small">Detail</a-button>
-                            </Link>
-                        </a-space>
+                        <div class="flex items-center justify-center gap-1">
+                            <a-tooltip v-if="canEdit(record)" title="Edit Dokumen" placement="top">
+                                <Link :href="getEditRoute(record)">
+                                    <button 
+                                        type="button" 
+                                        class="table-btn-action table-btn-edit" 
+                                        aria-label="Edit Dokumen"
+                                    >
+                                        <EditOutlined />
+                                    </button>
+                                </Link>
+                            </a-tooltip>
+                            <a-tooltip title="Lihat Detail" placement="top">
+                                <Link :href="getDetailRoute(record)">
+                                    <button 
+                                        type="button" 
+                                        class="table-btn-action table-btn-detail" 
+                                        aria-label="Lihat Detail Dokumen"
+                                    >
+                                        <FileTextOutlined />
+                                    </button>
+                                </Link>
+                            </a-tooltip>
+                        </div>
                     </template>
                 </template>
 
@@ -854,4 +884,12 @@ html.theme-light .kc-memo-signature {
         display: none;
     }
 }
+
+/* ── Clean Compact 3D Action Buttons in KC Table ── */
+.kc-memo-table td:last-child,
+.kc-memo-table th:last-child {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+}
+
 </style>

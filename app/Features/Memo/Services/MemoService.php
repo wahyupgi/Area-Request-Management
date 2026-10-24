@@ -151,7 +151,26 @@ class MemoService
 
         foreach ($items as $itemIndex => $item) {
             foreach ($template?->field_schema ?? [] as $field) {
-                if ($field['required'] && empty($item[$field['key']])) {
+                if (($field['type'] ?? null) === 'table') {
+                    $rows = $item[$field['key']] ?? [];
+                    $hasContent = false;
+                    if (is_array($rows)) {
+                        foreach ($rows as $row) {
+                            if (is_array($row)) {
+                                foreach ($row as $val) {
+                                    if ($val !== null && trim((string) $val) !== '') {
+                                        $hasContent = true;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (!empty($field['required']) && !$hasContent) {
+                        $errors['field_values.items.' . $itemIndex . '.' . $field['key']] =
+                            $field['label'] . ' pada item ' . ($itemIndex + 1) . ' wajib diisi.';
+                    }
+                } elseif (!empty($field['required']) && (!isset($item[$field['key']]) || trim((string) $item[$field['key']]) === '')) {
                     $errors['field_values.items.' . $itemIndex . '.' . $field['key']] =
                         $field['label'] . ' pada item ' . ($itemIndex + 1) . ' wajib diisi.';
                 }

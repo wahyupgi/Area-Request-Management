@@ -103,7 +103,12 @@ class BeritaAcaraController extends Controller
             throw $exception;
         }
 
-        return redirect()->route('berita-acara.edit', $ba->id)
+        $routeParameters = ['beritaAcara' => $ba->id];
+        if ($request->boolean('submit_after_save')) {
+            $routeParameters['submit'] = 1;
+        }
+
+        return redirect()->route('berita-acara.edit', $routeParameters)
             ->with('success', 'Draft Berita Acara berhasil disimpan.');
     }
 
@@ -124,6 +129,7 @@ class BeritaAcaraController extends Controller
 
         return Inertia::render('BeritaAcara/Edit', [
             'beritaAcara' => $beritaAcara,
+            'openSubmit'  => $request->boolean('submit'),
             'signature'   => $user->digitalSignature,
             'branches'    => $user->availableBranchesForDocuments()
                 ->with('area:id,name')

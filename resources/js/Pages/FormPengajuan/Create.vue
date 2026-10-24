@@ -4,7 +4,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
-import { SaveOutlined, LeftOutlined } from '@ant-design/icons-vue';
+import { SaveOutlined, SendOutlined, LeftOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     branches:  { type: Array, default: () => [] },
@@ -109,18 +109,26 @@ const resetOtherLeaveType = () => {
     form.meta.request_data.leave_type_other = '';
 };
 
-const submit = () => {
+const saving = ref('');
+
+const persist = (sendAfterSave) => {
+    saving.value = sendAfterSave ? 'send' : 'draft';
     form.transform(data => ({
         title: data.title || data.template,
         branch_id: data.branch_id,
         template: data.template,
         meta: { request_data: data.meta.request_data },
         submit: false,
+        submit_after_save: sendAfterSave,
         attachments: data.attachments,
     })).post(route('form-pengajuan.store'), {
         forceFormData: true,
+        onFinish: () => { saving.value = ''; },
     });
 };
+
+const submit = () => persist(false);
+const submitAndSend = () => persist(true);
 </script>
 
 <template>
@@ -374,9 +382,13 @@ const submit = () => {
 
                         <!-- Action Button -->
                         <div class="pt-2 flex justify-end">
-                            <a-button size="large" type="primary" html-type="submit" :loading="form.processing">
+                            <a-button size="large" class="mr-3" @click="submit" :loading="form.processing && saving === 'draft'">
                                 <template #icon><save-outlined /></template>
                                 Simpan Draft
+                            </a-button>
+                            <a-button size="large" type="primary" @click="submitAndSend" :loading="form.processing && saving === 'send'" class="bg-green-600 hover:bg-green-500 border-green-600">
+                                <template #icon><send-outlined /></template>
+                                Kirim ke AM
                             </a-button>
                         </div>
                     </div>

@@ -242,6 +242,9 @@ const handleImgError = (event) => {
                     </tbody>
                 </table>
                 <div v-else-if="memo.field_values?.body" class="whitespace-pre-wrap text-justify">{{ memo.field_values.body }}</div>
+                <div v-else-if="isOtherMemo" class="my-3 p-3 bg-gray-50 border border-gray-300 rounded text-center text-xs text-gray-700 italic">
+                    (Rincian isi Memo terlampir pada dokumen lampiran Word/PDF)
+                </div>
                 <p class="mt-2 whitespace-pre-wrap">{{ memo.field_values?.penutup || 'Demikian Internal Memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.' }}</p>
 
                 <div v-if="documentSignatures.length" class="mt-4 grid gap-3 items-start text-xs w-full mb-4 [break-inside:avoid]" :style="blankSignatureGridStyle">

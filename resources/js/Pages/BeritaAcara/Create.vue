@@ -1,11 +1,10 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
-import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { computed, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
-import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined, LeftOutlined } from '@ant-design/icons-vue';
+import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined, LeftOutlined, PaperClipOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
     branches: { type: Array, default: () => [] },
@@ -64,14 +63,9 @@ watch(() => form.meta.template, (templateName) => {
     const t = selected.templateData;
     form.title = t.name;
     form.meta.perihal = t.document_defaults?.perihal || t.name;
-    const isOtherBa = t.name === 'Berita Acara Lainnya';
-    const tableColumns = isOtherBa
-        ? (t.field_schema || []).map(({ key, label, type, required }) => ({ key, label, type, required }))
-        : [];
     form.meta.data = {
-        rows: isOtherBa ? [Object.fromEntries(tableColumns.map((column) => [column.key, '']))] : [],
+        rows: [],
         kronologi: '',
-        ...(isOtherBa ? { table_columns: tableColumns } : {}),
     };
 
     form.meta.direktorat = t.document_defaults?.direktorat || '';
@@ -90,9 +84,7 @@ watch(() => form.meta.template, (templateName) => {
         form.meta.data.rows = [{ cabang: '', nama_nasabah: '', no_faktur: '', barang: '', nominal_pinjaman: '' }];
     } else if (t.name === 'Berita Acara Lainnya') {
         form.rincian_data = [];
-        form.meta.data.rows = [
-            Object.fromEntries(tableColumns.map((column) => [column.key, ''])),
-        ];
+        form.meta.data.rows = [];
     } else {
         form.rincian_data = (t.field_schema || []).map(f => ({ label: f.label, value: '' }));
         form.meta.data.rows = [];
@@ -170,6 +162,10 @@ const preventNonDigitDetailPaste = (event, label) => {
     }
 };
 
+const formatRupiahAmount = (value) => {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    return digits ? `Rp ${digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '';
+};
 const isRupiahDetail = (label) => /biaya kost|nominal|rupiah|pinjaman|harga/i.test(label || '');
 const updateDetailValue = (item, value) => {
     item.value = isRupiahDetail(item.label)
@@ -180,7 +176,25 @@ const formattedDetailValue = (item) => isRupiahDetail(item.label)
     ? formatRupiahAmount(item.value)
     : item.value;
 
+const validateBaForm = () => {
+    if (form.meta.template === 'Berita Acara Lainnya' && (!form.attachments || form.attachments.length === 0)) {
+        attachmentError.value = 'Lampiran dokumen Berita Acara (Word/PDF) wajib diunggah.';
+        return false;
+    }
+    return true;
+};
+
 const submit = () => {
+    if (!validateBaForm()) return;
+    form.submit_after_save = false;
+    form.post(route('berita-acara.store'), {
+        forceFormData: true,
+    });
+};
+
+const submitAndSend = () => {
+    if (!validateBaForm()) return;
+    form.submit_after_save = true;
     form.post(route('berita-acara.store'), {
         forceFormData: true,
     });
@@ -233,7 +247,50 @@ const submit = () => {
                 </a-form-item>
             </a-card>
 
-            <a-row :gutter="24" v-if="form.meta.template">
+            <!-- Khusus Berita Acara Lainnya: Hanya 1 Field Upload File PDF/Word & Tombol Kirim -->
+            <a-card v-if="form.meta.template === 'Berita Acara Lainnya'" :bordered="false" class="mb-6 rounded-lg shadow-sm">
+                <h2 class="text-base font-semibold mb-1">Upload Berkas Berita Acara</h2>
+                <p class="text-xs text-gray-500 mb-4">Unggah dokumen Berita Acara Anda dalam format file PDF atau Word (maksimal 10 MB).</p>
+
+                <a-form-item
+                    label="File Dokumen (PDF / Word)"
+                    :validateStatus="attachmentError || attachmentValidationError ? 'error' : ''"
+                    :help="attachmentError || attachmentValidationError"
+                    class="mb-4"
+                >
+                    <input
+                        type="file"
+                        @change="selectAttachment"
+                        multiple
+                        :accept="allowedAttachmentExtensions"
+                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    <a-list v-if="form.attachments.length" size="small" :data-source="form.attachments" class="mt-3 border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-slate-900">
+                        <template #renderItem="{ item, index }">
+                            <a-list-item>
+                                <span class="truncate text-xs">{{ item.name }}</span>
+                                <template #actions>
+                                    <a-button type="link" danger size="small" @click="removeAttachment(index)">Hapus</a-button>
+                                </template>
+                            </a-list-item>
+                        </template>
+                    </a-list>
+                </a-form-item>
+
+                <div class="mt-6 pt-4 border-t flex justify-end gap-3">
+                    <a-button size="large" @click="submit" :loading="form.processing && !form.submit_after_save">
+                        <template #icon><save-outlined /></template>
+                        Simpan Draft
+                    </a-button>
+                    <a-button size="large" type="primary" @click="submitAndSend" :loading="form.processing && form.submit_after_save" class="bg-green-600 hover:bg-green-500 border-green-600">
+                        <template #icon><send-outlined /></template>
+                        Kirim ke AM
+                    </a-button>
+                </div>
+            </a-card>
+
+            <!-- Template BA lainnya (dengan informasi dokumen & isian) -->
+            <a-row :gutter="24" v-else-if="form.meta.template">
                 <a-col :xs="24" :lg="10" class="mb-6">
                     <div class="flex flex-col gap-6">
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
@@ -310,7 +367,7 @@ const submit = () => {
                                 <a-textarea v-model:value="form.pengantar" :rows="3" />
                             </a-form-item>
 
-                            <div v-if="!['Permintaan Revisi Absensi', 'Penghapusan Barang Sitaan', 'Berita Acara Lainnya'].includes(form.meta.template)" class="border border-gray-200 rounded p-4 mb-4">
+                            <div v-if="!['Permintaan Revisi Absensi', 'Penghapusan Barang Sitaan'].includes(form.meta.template)" class="border border-gray-200 rounded p-4 mb-4">
                                 <h3 class="font-semibold text-sm mb-3">Data Rincian</h3>
                                 <template v-if="form.meta.template === 'template_1'">
                                     <div v-for="(label, index) in ['Cabang', 'Faktur', 'Tujuan', 'Nominal']" :key="label" class="flex gap-3 mb-2 items-center">
@@ -343,14 +400,8 @@ const submit = () => {
                             </div>
 
                             <div v-else class="border border-gray-200 rounded p-4 mb-4 overflow-x-auto">
-                                <h3 class="font-semibold text-sm mb-3">{{ form.meta.template === 'Permintaan Revisi Absensi' ? 'Data Absensi' : form.meta.template === 'Penghapusan Barang Sitaan' ? 'Data Barang Sitaan' : 'Daftar Item' }}</h3>
-                                <template v-if="form.meta.template === 'Berita Acara Lainnya'">
-                                    <DocumentTableEditor
-                                        v-model:columns="form.meta.data.table_columns"
-                                        v-model:rows="form.meta.data.rows"
-                                    />
-                                </template>
-                                <template v-else>
+                                <h3 class="font-semibold text-sm mb-3">{{ form.meta.template === 'Permintaan Revisi Absensi' ? 'Data Absensi' : 'Data Barang Sitaan' }}</h3>
+                                <template>
                                 <div v-for="(row, index) in form.meta.data.rows" :key="index" class="border border-gray-200 rounded p-3 mb-3">
                                     <div class="flex justify-between items-center mb-2">
                                         <strong class="text-xs">Baris {{ index + 1 }}</strong>
@@ -426,9 +477,13 @@ const submit = () => {
 
                         <!-- Action Button -->
                         <div class="pt-2 flex justify-end">
-                            <a-button size="large" type="primary" html-type="submit" :loading="form.processing">
+                            <a-button size="large" class="mr-3" @click="submit" :loading="form.processing && !form.submit_after_save">
                                 <template #icon><save-outlined /></template>
                                 Simpan Draft
+                            </a-button>
+                            <a-button size="large" type="primary" @click="submitAndSend" :loading="form.processing && form.submit_after_save" class="bg-green-600 hover:bg-green-500 border-green-600">
+                                <template #icon><send-outlined /></template>
+                                Kirim ke AM
                             </a-button>
                         </div>
                     </div>

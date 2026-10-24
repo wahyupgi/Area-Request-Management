@@ -128,7 +128,7 @@ class MemoTemplate extends Model
                 ],
             ],
             [
-                'name' => 'Pengajuan Keringanan Pelunasan Nasabah Handphone Meninggal Dunia',
+                'name' => 'Pengajuan Keringanan Pelunasan Nasabah Meninggal Dunia',
                 'category' => 'Keringanan Jasa',
                 'field_schema' => [
                     ['key' => 'nama_nasabah', 'label' => 'Nama Nasabah', 'type' => 'text', 'required' => true],
@@ -145,9 +145,9 @@ class MemoTemplate extends Model
                 'document_defaults' => [
                     'direktorat' => 'Regional Branch Office',
                     'divisi' => 'Branch Leader',
-                    'perihal' => 'Pengajuan Keringanan Pelunasan Nasabah Handphone yang Meninggal Dunia',
+                    'perihal' => 'Pengajuan Keringanan Pelunasan Nasabah yang Meninggal Dunia',
                     'lampiran' => '-',
-                    'pengantar' => 'Sehubungan dengan adanya berita acara dari cabang perihal pengajuan keringanan pelunasan nasabah handphone yang meninggal dunia, bersama ini kami mengajukan permohonan berdasarkan data berikut:',
+                    'pengantar' => 'Sehubungan dengan adanya berita acara dari cabang perihal pengajuan keringanan pelunasan nasabah yang meninggal dunia, bersama ini kami mengajukan permohonan berdasarkan data berikut:',
                     'penutup' => $keringananClosing,
                 ],
                 'signature_schema' => [

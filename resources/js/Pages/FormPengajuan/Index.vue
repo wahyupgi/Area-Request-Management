@@ -1,8 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { PlusOutlined, EyeOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, EditOutlined, FileTextOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({ items: { type: Array, default: () => [] } });
 const statusFilter = ref('');
@@ -22,7 +22,7 @@ const columns = [
     { title: 'Cabang', key: 'branch' },
     { title: 'Status', dataIndex: 'status', key: 'status' },
     { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at' },
-    { title: 'Aksi', key: 'action', align: 'center' },
+    { title: 'Aksi', key: 'action', align: 'center', width: 85 },
 ];
 
 const onFilterChange = (event) => {
@@ -76,14 +76,30 @@ const onFilterChange = (event) => {
                         {{ new Date(record.created_at).toLocaleDateString('id-ID') }}
                     </template>
                     <template v-else-if="column.key === 'action'">
-                        <a-button
-                            size="small"
-                            :type="['draft', 'rejected'].includes(record.status) ? 'primary' : 'default'"
-                            @click="router.visit(['draft', 'rejected'].includes(record.status) ? route('form-pengajuan.edit', record.id) : route('form-pengajuan.show', record.id))"
-                        >
-                            <template #icon><eye-outlined /></template>
-                            {{ ['draft', 'rejected'].includes(record.status) ? 'Edit' : 'Detail' }}
-                        </a-button>
+                        <div class="flex items-center justify-center gap-1">
+                            <a-tooltip v-if="['draft', 'rejected'].includes(record.status)" title="Edit Dokumen" placement="top">
+                                <Link :href="route('form-pengajuan.edit', record.id)">
+                                    <button 
+                                        type="button" 
+                                        class="table-btn-action table-btn-edit" 
+                                        aria-label="Edit Dokumen"
+                                    >
+                                        <EditOutlined />
+                                    </button>
+                                </Link>
+                            </a-tooltip>
+                            <a-tooltip title="Lihat Detail" placement="top">
+                                <Link :href="route('form-pengajuan.show', record.id)">
+                                    <button 
+                                        type="button" 
+                                        class="table-btn-action table-btn-detail" 
+                                        aria-label="Lihat Detail Dokumen"
+                                    >
+                                        <FileTextOutlined />
+                                    </button>
+                                </Link>
+                            </a-tooltip>
+                        </div>
                     </template>
                 </template>
 

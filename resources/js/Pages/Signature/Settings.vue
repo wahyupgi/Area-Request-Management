@@ -96,13 +96,6 @@ const save = (template) => {
         </template>
 
         <div class="am-signature-page max-w-5xl space-y-6">
-            <a-alert
-                message="Pengaturan Penandatangan per Template"
-                description="Slot 1 dan 2 otomatis diisi oleh KC dan AM. Atur penandatangan tambahan pada slot 3 dan 4. Slot juga dapat ditempatkan di kotak paraf kanan bawah."
-                type="info"
-                show-icon
-                class="bg-sky-500/10 border-sky-500/20 text-sky-100 custom-dark-alert"
-            />
 
             <a-tabs v-model:activeKey="activeType">
                 <a-tab-pane
@@ -222,6 +215,61 @@ html.theme-light .am-signature-page .custom-dark-alert .ant-alert-description {
 
 html.theme-light .am-signature-page .custom-dark-alert .ant-alert-icon {
     color: #0284c7;
+}
+
+html:not(.theme-light) .am-signature-page .ant-card-head {
+    border-bottom: 1px solid #334155 !important;
+    border-color: #334155 !important;
+}
+
+html:not(.theme-light) .am-signature-page .ant-tabs-nav::before,
+html:not(.theme-light) .am-signature-page .ant-tabs-nav {
+    border-bottom: 1px solid #334155 !important;
+}
+
+html:not(.theme-light) .am-signature-page .ant-btn-dashed {
+    background-color: transparent !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html:not(.theme-light) .am-signature-page .ant-btn-dashed:hover:not(:disabled) {
+    border-color: #60a5fa !important;
+    color: #93c5fd !important;
+}
+
+html:not(.theme-light) .am-signature-page .ant-btn-dashed:disabled,
+html:not(.theme-light) .am-signature-page .ant-btn-dashed.ant-btn-disabled {
+    background-color: rgba(30, 41, 59, 0.5) !important;
+    border-color: #334155 !important;
+    color: #64748b !important;
+}
+
+html.theme-light .am-signature-page .ant-card-head {
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-color: #e2e8f0 !important;
+}
+
+html.theme-light .am-signature-page .ant-tabs-nav::before,
+html.theme-light .am-signature-page .ant-tabs-nav {
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html.theme-light .am-signature-page .ant-btn-dashed {
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+}
+
+html.theme-light .am-signature-page .ant-btn-dashed:hover:not(:disabled) {
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+}
+
+html.theme-light .am-signature-page .ant-btn-dashed:disabled,
+html.theme-light .am-signature-page .ant-btn-dashed.ant-btn-disabled {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
 }
 
 html:not(.theme-light) .am-signature-page .ant-tabs-tab .ant-tabs-tab-btn {

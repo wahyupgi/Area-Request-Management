@@ -17,7 +17,7 @@ createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(
         `./Pages/${name}.vue`,
-        import.meta.glob('./Pages/**/*.vue'),
+        import.meta.glob('./Pages/**/*.vue', { eager: true }),
     ),
     setup({ el, App, props, plugin }) {
         return createApp({ render: () => h(App, props) })
@@ -27,7 +27,7 @@ createInertiaApp({
     },
     progress: {
         color: '#38bdf8', // Tailwind sky-400 to match the app theme
-        delay: 0,
+        delay: 250, // don't flash the bar on fast navigations
         showSpinner: false,
     },
 });

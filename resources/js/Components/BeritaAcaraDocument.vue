@@ -149,31 +149,36 @@ const formatCurrency = (value) => {
 
         <div class="text-xs mb-3 leading-normal text-justify">
             <p>{{ beritaAcara.pengantar }}</p>
-            <p v-if="!isSeizedGoods && !isTemplateOne" class="mt-2">Dengan data sebagai berikut :</p>
+            <p v-if="!isSeizedGoods && !isTemplateOne && !isOtherTemplate" class="mt-2">Dengan data sebagai berikut :</p>
         </div>
 
-        <table v-if="isOtherTemplate" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
-            <thead>
-                <tr>
-                    <th style="width:8%;border:1px solid #000;background:#1f497d;color:#fff!important;padding:6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">No.</th>
-                    <th
-                        v-for="column in otherTemplateColumns"
-                        :key="column.key"
-                        style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;"
-                    >{{ column.label }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(row, index) in templateRows" :key="index">
-                    <td style="border:1px solid #000;padding:6px;text-align:center;">{{ index + 1 }}</td>
-                    <td
-                        v-for="column in otherTemplateColumns"
-                        :key="column.key"
-                        style="border:1px solid #000;padding:6px;white-space:pre-wrap;overflow-wrap:anywhere;"
-                    >{{ row[column.key] || '-' }}</td>
-                </tr>
-            </tbody>
-        </table>
+        <template v-if="isOtherTemplate">
+            <table v-if="templateRows.length && templateRows.some(row => Object.values(row).some(v => v))" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
+                <thead>
+                    <tr>
+                        <th style="width:8%;border:1px solid #000;background:#1f497d;color:#fff!important;padding:6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">No.</th>
+                        <th
+                            v-for="column in otherTemplateColumns"
+                            :key="column.key"
+                            style="border:1px solid #000;background:#1f497d;color:#fff!important;padding:6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;"
+                        >{{ column.label }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(row, index) in templateRows" :key="index">
+                        <td style="border:1px solid #000;padding:6px;text-align:center;">{{ index + 1 }}</td>
+                        <td
+                            v-for="column in otherTemplateColumns"
+                            :key="column.key"
+                            style="border:1px solid #000;padding:6px;white-space:pre-wrap;overflow-wrap:anywhere;"
+                        >{{ row[column.key] || '-' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div v-else class="my-4 p-3 bg-gray-50 border border-gray-300 rounded text-center text-xs text-gray-700 italic">
+                (Rincian isi Berita Acara terlampir pada dokumen lampiran Word/PDF)
+            </div>
+        </template>
 
         <table v-else-if="isAttendanceRevision" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0.75rem 0 1rem;font-family:Tahoma,sans-serif;font-size:11px;">
                     <colgroup>

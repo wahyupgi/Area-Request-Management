@@ -1,7 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { onMounted, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
@@ -146,8 +145,8 @@ const submitMemo = () => {
 const confirmSubmit = () => submitWithSignature(signatureFile.value);
 
 onMounted(() => {
-    if (props.openSignature && props.signature?.signature_image) {
-        submitWithSignature(null);
+    if (props.openSignature) {
+        submitMemo();
     }
 });
 
@@ -222,7 +221,49 @@ const deleteMemo = async () => {
 
             <!-- Edit Form -->
             <a-form layout="vertical" @finish="save">
-                <a-row :gutter="24">
+                <!-- Khusus Template Lainnya: Hanya 1 Field Upload File PDF/Word & Tombol Kirim -->
+                <a-card v-if="memo.template?.name === 'Lainnya'" :bordered="false" class="rounded-lg shadow-sm">
+                    <h2 class="text-base font-semibold mb-1">Berkas Dokumen Memo</h2>
+                    <p class="text-xs text-gray-500 mb-4">Dokumen Memo dalam format PDF atau Word (maksimal 10 MB).</p>
+
+                    <div v-if="memo.attachments?.length > 0" class="mb-4">
+                        <a-list item-layout="horizontal" :data-source="memo.attachments" size="small" class="border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-slate-900">
+                            <template #renderItem="{ item }">
+                                <a-list-item>
+                                    <a-list-item-meta :title="item.original_name || item.file_path">
+                                        <template #avatar><paper-clip-outlined class="text-blue-600 text-lg" /></template>
+                                    </a-list-item-meta>
+                                    <template #actions>
+                                        <a-button type="link" danger size="small" @click="deleteAttachment(item)">Hapus</a-button>
+                                    </template>
+                                </a-list-item>
+                            </template>
+                        </a-list>
+                    </div>
+
+                    <p class="mb-2 text-xs text-gray-400">Unggah berkas dokumen baru jika ingin mengganti/menambah lampiran (maksimal 3 file, 10 MB per file):</p>
+                    <div class="flex items-center gap-3">
+                        <input
+                            ref="fileInput"
+                            type="file"
+                            @change="uploadFile"
+                            accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                            :disabled="memo.attachments.length >= 3 || uploading"
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        />
+                        <span v-if="uploading" class="text-sm text-gray-500">Mengupload...</span>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t flex justify-end gap-3">
+                        <a-button size="large" type="primary" @click="submitMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
+                            <template #icon><send-outlined /></template>
+                            Kirim ke AM
+                        </a-button>
+                    </div>
+                </a-card>
+
+                <!-- Template selain Lainnya -->
+                <a-row :gutter="24" v-else>
                     <a-col :xs="24" :lg="10" class="mb-6">
                         <div class="flex flex-col gap-6">
                             <!-- Informasi Memo -->
@@ -301,12 +342,6 @@ const deleteMemo = async () => {
                     <a-col :xs="24" :lg="14">
                         <!-- Dynamic Fields -->
                         <a-card v-if="memo.template" :bordered="false" class="rounded-lg shadow-sm">
-                            <DocumentTableEditor
-                                v-if="memo.template.name === 'Lainnya'"
-                                v-model:columns="form.field_values.table_columns"
-                                v-model:rows="form.field_values.items"
-                            />
-                            <template v-else>
                             <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-gray-200 rounded-lg p-5 mb-4">
                                 <div class="flex justify-between items-center border-b pb-2 mb-4">
                                     <h3 class="font-semibold">Item {{ itemIndex + 1 }}</h3>
@@ -357,7 +392,6 @@ const deleteMemo = async () => {
                                 <template #icon><plus-outlined /></template>
                                 Tambah Item
                             </a-button>
-                            </template>
                             <a-form-item label="Kalimat Penutup" class="mt-5 mb-0">
                                 <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
                             </a-form-item>

@@ -136,12 +136,6 @@ const printMemo = () => {
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <a-button @click="printMemo" class="flex items-center gap-1.5 shadow-sm">
-                        <template #icon><printer-outlined /></template>
-                        Cetak / Unduh PDF
-                    </a-button>
-                </div>
             </div>
         </template>
 

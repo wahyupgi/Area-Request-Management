@@ -125,7 +125,12 @@ class FormPengajuanController extends Controller
             throw $exception;
         }
 
-        return redirect()->route('form-pengajuan.edit', $form->id)
+        $routeParameters = ['formPengajuan' => $form->id];
+        if ($request->boolean('submit_after_save')) {
+            $routeParameters['submit'] = 1;
+        }
+
+        return redirect()->route('form-pengajuan.edit', $routeParameters)
             ->with('success', 'Draft Form Pengajuan berhasil disimpan.');
     }
 
@@ -146,6 +151,7 @@ class FormPengajuanController extends Controller
 
         return Inertia::render('FormPengajuan/Edit', [
             'formPengajuan' => $formPengajuan,
+            'openSubmit'    => $request->boolean('submit'),
             'signature'     => $user->digitalSignature,
             'branches'      => $user->availableBranchesForDocuments()
                 ->with('area:id,name')

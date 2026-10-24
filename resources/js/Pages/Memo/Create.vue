@@ -1,7 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import DocumentTableEditor from '@/Components/DocumentTableEditor.vue';
 import { ref, watch, computed } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
@@ -46,9 +45,9 @@ const defaultDocumentMeta = {
     lampiran: '',
 };
 
-const columnsForOtherMemo = (template) => template?.name === 'Lainnya'
-    ? (template.field_schema || []).map(({ key, label, type, required }) => ({ key, label, type, required }))
-    : [];
+const isOtherTemplate = computed(() => selectedTemplate.value?.name === 'Lainnya');
+const attachmentRequiredError = ref('');
+const columnsForOtherMemo = () => [];
 const emptyRowForColumns = (columns) => Object.fromEntries(columns.map((column) => [column.key, '']));
 
 const groupedTemplates = computed(() => {
@@ -79,6 +78,9 @@ const groupedTemplates = computed(() => {
 
 watch(() => form.template_id, (val) => {
     selectedTemplate.value = (props.templates || []).find(t => t.id == val) || null;
+    if (selectedTemplate.value && (!form.title || form.title === 'Lainnya')) {
+        form.title = selectedTemplate.value.name;
+    }
     const documentDefaults = selectedTemplate.value?.document_defaults || {};
     const tableColumns = columnsForOtherMemo(selectedTemplate.value);
     form.field_values = {
@@ -161,7 +163,7 @@ const fieldErrors = ref({});
 
 const validateForm = () => {
     const errors = {};
-    if (!selectedTemplate.value) return true;
+    if (!selectedTemplate.value || isOtherTemplate.value) return true;
 
     form.field_values.items.forEach((item, itemIndex) => {
         selectedTemplate.value.field_schema?.forEach((field) => {
@@ -202,10 +204,19 @@ const clearError = (key) => {
 
 const selectAttachment = (event) => {
     attachment.value = event.target.files[0] || null;
+    if (attachment.value) attachmentRequiredError.value = '';
+};
+
+const requireAttachmentForOther = () => {
+    if (isOtherTemplate.value && !attachment.value) {
+        attachmentRequiredError.value = 'Lampiran file Word/PDF wajib diunggah.';
+        return false;
+    }
+    return true;
 };
 
 const submit = () => {
-    if (!validateForm()) return;
+    if (!validateForm() || !requireAttachmentForOther()) return;
     form.submit_after_save = false;
     form.transform((data) => ({
         ...data,
@@ -217,7 +228,7 @@ const submit = () => {
 };
 
 const submitAndSign = () => {
-    if (!validateForm()) return;
+    if (!validateForm() || !requireAttachmentForOther()) return;
     form.submit_after_save = true;
     form.transform((data) => ({
         ...data,
@@ -274,7 +285,41 @@ const submitAndSign = () => {
                 </a-form-item>
             </a-card>
 
-            <a-row :gutter="24" v-if="selectedTemplate">
+            <!-- Khusus Template Lainnya: Hanya 1 Field Upload File PDF/Word & Tombol Kirim -->
+            <a-card v-if="isOtherTemplate" :bordered="false" class="mb-6 rounded-lg shadow-sm">
+                <h2 class="text-base font-semibold mb-1">Upload Berkas Memo</h2>
+                <p class="text-xs text-gray-500 mb-4">Unggah dokumen Memo Anda dalam format file PDF atau Word (maksimal 10 MB).</p>
+
+                <a-form-item
+                    label="File Dokumen (PDF / Word)"
+                    :validateStatus="attachmentRequiredError ? 'error' : ''"
+                    :help="attachmentRequiredError"
+                    class="mb-4"
+                >
+                    <input
+                        type="file"
+                        @change="selectAttachment"
+                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    <p v-if="attachment" class="mt-2 text-xs text-gray-600 font-medium">
+                        File terpilih: {{ attachment.name }}
+                    </p>
+                </a-form-item>
+
+                <div class="mt-6 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
+                    <a-button size="large" type="default" class="memo-save-draft-button" @click="submit" :loading="form.processing && !form.submit_after_save">
+                        <template #icon><save-outlined /></template>
+                        Simpan Draft
+                    </a-button>
+                    <a-button size="large" type="primary" @click="submitAndSign" :loading="form.processing && form.submit_after_save" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
+                        <template #icon><send-outlined /></template>
+                        Tanda Tangani &amp; Kirim ke AM
+                    </a-button>
+                </div>
+            </a-card>
+
+            <a-row :gutter="24" v-else-if="selectedTemplate">
                 <a-col :xs="24" :lg="10" class="mb-6">
                     <div class="flex flex-col gap-6">
                         <!-- Informasi Memo -->
@@ -348,12 +393,6 @@ const submitAndSign = () => {
                 <a-col :xs="24" :lg="14">
                     <!-- Dynamic Fields -->
                     <a-card :bordered="false" class="rounded-lg shadow-sm">
-                        <DocumentTableEditor
-                            v-if="selectedTemplate.name === 'Lainnya'"
-                            v-model:columns="form.field_values.table_columns"
-                            v-model:rows="form.field_values.items"
-                        />
-                        <template v-else>
                         <div v-for="(item, itemIndex) in form.field_values.items" :key="itemIndex" class="border border-gray-200 rounded-lg p-5 mb-4 relative">
                             <div class="flex justify-between items-center border-b pb-2 mb-4">
                                 <h3 class="font-semibold">Item {{ itemIndex + 1 }}</h3>
@@ -436,7 +475,6 @@ const submitAndSign = () => {
                             <template #icon><plus-outlined /></template>
                             Tambah Item
                         </a-button>
-                        </template>
                         <a-form-item label="Kalimat Penutup" class="mt-5 mb-0">
                             <a-textarea v-model:value="form.field_values.penutup" :rows="3" />
                         </a-form-item>

@@ -185,10 +185,9 @@ html.theme-light .main-layout {
     background: #f8fafc !important;
 }
 
-/* Dark mode: Ant Design Tags */
-html:not(.theme-light) .ant-tag,
-html.dark .ant-tag {
-    font-weight: 500;
+/* Ant Design Tags (Bold / Semibold in both Light & Dark mode) */
+.ant-tag {
+    font-weight: 600;
 }
 
 html:not(.theme-light) .ant-tag:not([class*="ant-tag-"]),

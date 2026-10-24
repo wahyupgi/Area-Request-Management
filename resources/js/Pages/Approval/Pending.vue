@@ -7,9 +7,13 @@ import {
     CheckCircleOutlined, 
     CloseCircleOutlined, 
     HistoryOutlined,
-    DownloadOutlined
+    DownloadOutlined,
+    AuditOutlined,
+    EyeOutlined
 } from '@ant-design/icons-vue';
 import { createTablePagination } from '@/utils/tablePagination';
+import IconReview3D from '@/Components/Icons/IconReview3D.vue';
+import IconDocSheet3D from '@/Components/Icons/IconDocSheet3D.vue';
 
 const downloadCsv = () => {
     const rows = [
@@ -118,12 +122,12 @@ const filteredItems = computed(() => {
 
 const unifiedColumns = computed(() => [
     { title: 'Nomor Dokumen', dataIndex: 'code', key: 'code', width: '18%' },
-    { title: 'Perihal & Tipe', dataIndex: 'title', key: 'title_type', width: '24%' },
-    { title: 'Pembuat', dataIndex: 'creator', key: 'creator', width: '11%' },
+    { title: 'Perihal & Tipe', dataIndex: 'title', key: 'title_type', width: '25%' },
+    { title: 'Pembuat', dataIndex: 'creator', key: 'creator', width: '12%' },
     { title: 'Cabang', dataIndex: 'branch', key: 'branch', width: '15%' },
     { title: 'Status', dataIndex: 'status', key: 'status', width: '10%' },
     { title: 'Tanggal', dataIndex: '_date', key: 'date', width: '10%' },
-    { title: 'Aksi', dataIndex: 'action', key: 'action', align: 'center', width: '12%' },
+    { title: 'Aksi', dataIndex: 'action', key: 'action', align: 'center', width: 76 },
 ]);
 
 const historyStatusConfig = {
@@ -254,9 +258,28 @@ const disableFutureEndDate = (date) => date && date.startOf('day').valueOf() > n
                                 {{ formatDate(record._date) }}
                             </template>
                             <template v-if="column.key === 'action'">
-                                <a-button type="primary" style="background-color: #1677ff; color: white;" size="small" @click="goToDetail(record)">
-                                    {{ record.status === 'submitted' ? 'Review' : 'Detail' }}
-                                </a-button>
+                                <div class="flex items-center justify-center">
+                                    <a-tooltip v-if="record.status === 'submitted'" title="Review Dokumen" placement="top">
+                                        <button 
+                                            type="button" 
+                                            class="am-btn-3d-action am-btn-3d-review" 
+                                            aria-label="Review Dokumen"
+                                            @click="goToDetail(record)"
+                                        >
+                                            <IconReview3D :size="30" />
+                                        </button>
+                                    </a-tooltip>
+                                    <a-tooltip v-else title="Lihat Detail" placement="top">
+                                        <button 
+                                            type="button" 
+                                            class="am-btn-3d-action am-btn-3d-detail" 
+                                            aria-label="Lihat Detail Dokumen"
+                                            @click="goToDetail(record)"
+                                        >
+                                            <IconDocSheet3D :size="30" />
+                                        </button>
+                                    </a-tooltip>
+                                </div>
                             </template>
                         </template>
                         <template #emptyText>
@@ -546,5 +569,81 @@ html.theme-light .am-approval-page .ant-table-tbody > tr:hover > td .text-xs {
 /* Header Text (inherited from global, but safety fallback) */
 html.theme-light h2.text-white {
     color: #0f172a !important;
+}
+
+/* ── Clean 3D Action Buttons ── */
+.am-btn-3d-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+    border: 1px solid transparent !important;
+    background: transparent;
+    cursor: pointer;
+    padding: 0 !important;
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.am-btn-3d-review {
+    background: rgba(37, 99, 235, 0.09) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.am-btn-3d-review:hover {
+    background: rgba(37, 99, 235, 0.18) !important;
+    border-color: rgba(59, 130, 246, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+    transform: translateY(-2px);
+}
+
+.am-btn-3d-review:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.am-btn-3d-detail {
+    background: rgba(148, 163, 184, 0.08) !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
+    color: #64748b !important;
+    font-size: 16px !important;
+}
+
+.am-btn-3d-detail:hover {
+    background: rgba(22, 119, 255, 0.08) !important;
+    border-color: rgba(22, 119, 255, 0.35) !important;
+    color: #1677ff !important;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1) !important;
+    transform: translateY(-2px);
+}
+
+.am-btn-3d-detail:active {
+    transform: translateY(0) scale(0.95);
+}
+
+/* Dark mode adjustment */
+html:not(.theme-light) .am-btn-3d-review {
+    background: rgba(37, 99, 235, 0.18) !important;
+    border-color: rgba(96, 165, 250, 0.35) !important;
+}
+
+html:not(.theme-light) .am-btn-3d-review:hover {
+    background: rgba(37, 99, 235, 0.3) !important;
+    border-color: rgba(96, 165, 250, 0.7) !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+}
+
+html:not(.theme-light) .am-btn-3d-detail {
+    background: rgba(51, 65, 85, 0.45) !important;
+    border-color: rgba(100, 116, 139, 0.35) !important;
+    color: #94a3b8 !important;
+}
+
+html:not(.theme-light) .am-btn-3d-detail:hover {
+    background: rgba(59, 130, 246, 0.2) !important;
+    border-color: rgba(96, 165, 250, 0.5) !important;
+    color: #93c5fd !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
 }
 </style>

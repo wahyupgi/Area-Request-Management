@@ -43,6 +43,22 @@ export default defineConfig({
         rollupOptions: {
             // Jalankan lebih banyak operasi paralel
             maxParallelFileOps: 20,
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('ant-design-vue') || id.includes('@ant-design/icons-vue')) {
+                            return 'vendor-antd';
+                        }
+                        if (id.includes('@inertiajs') || id.includes('vue')) {
+                            return 'vendor-vue';
+                        }
+                        if (id.includes('pdfjs-dist') || id.includes('docx-preview')) {
+                            return 'vendor-docs';
+                        }
+                        return 'vendor-others';
+                    }
+                },
+            },
         },
     },
 });

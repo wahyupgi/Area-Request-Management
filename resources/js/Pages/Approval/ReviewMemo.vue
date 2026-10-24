@@ -342,10 +342,6 @@ const formatDate = (dateString) => {
                             <a-button danger block size="large" @click="showRejectModal = true">
                                 <template #icon></template> Tolak / Minta Revisi Cabang
                             </a-button>
-
-                            <Link :href="route('approvals.pending')" class="block text-center mt-2 text-sm text-gray-400 hover:text-gray-600">
-                                &larr; Kembali ke Daftar Antrean
-                            </Link>
                         </div>
                     </a-card>
 
