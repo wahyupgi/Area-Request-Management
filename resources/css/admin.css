@@ -522,10 +522,15 @@ html.theme-light .memo-index-card .ant-card-body {
     background: #344f82 !important;
     color: #ffffff !important;
     border-color: #c8ced8 !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    line-height: 1.4 !important;
 }
 
 .memo-table-pgi .ant-table-tbody>tr>td {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
     border-color: #c8ced8 !important;
 }
 

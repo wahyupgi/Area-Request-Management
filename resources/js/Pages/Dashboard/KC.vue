@@ -370,6 +370,7 @@ const focusDocuments = (status) => {
                 :row-key="record => `${record._documentType}-${record.id}`"
                 :pagination="documentsPagination"
                 :scroll="{ x: 1090 }"
+                size="small"
             >
                 <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'code'">
@@ -542,6 +543,8 @@ const focusDocuments = (status) => {
     border-bottom: 1px solid #34516e !important;
     font-weight: 600;
     white-space: nowrap;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
 }
 
 .kc-memo-table .ant-table-tbody > tr > td {
@@ -550,6 +553,8 @@ const focusDocuments = (status) => {
     border-bottom: 1px solid #475569 !important;
     border-right: 1px solid #475569 !important;
     vertical-align: middle;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
 }
 
 .kc-memo-table .ant-table-tbody > tr > td:last-child {

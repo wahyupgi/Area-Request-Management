@@ -13,11 +13,11 @@ const memoList = computed(() => props.memos?.data ?? []);
 const paginationLinks = computed(() => props.memos?.links ?? []);
 
 const columns = [
-    { title: 'Kode', dataIndex: 'code', key: 'code' },
+    { title: 'Kode', dataIndex: 'code', key: 'code', width: 160 },
     { title: 'Perihal', key: 'template' },
-    { title: 'Cabang', dataIndex: ['branch', 'name'], key: 'branch' },
-    { title: 'Status', dataIndex: 'status', key: 'status' },
-    { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at' },
+    { title: 'Cabang', dataIndex: ['branch', 'name'], key: 'branch', width: 170 },
+    { title: 'Status', dataIndex: 'status', key: 'status', width: 130 },
+    { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at', width: 130 },
     { title: 'Aksi', key: 'action', align: 'center', width: 85 }
 ];
 
@@ -81,6 +81,7 @@ const onFilterChange = (e) => {
                 :columns="columns" 
                 rowKey="id"
                 :pagination="false"
+                size="small"
                 class="memo-table-pgi mb-4"
             >
                 <template #bodyCell="{ column, record }">

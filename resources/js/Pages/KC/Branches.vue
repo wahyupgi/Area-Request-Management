@@ -198,6 +198,9 @@ const columns = [
 .kc-branches-table .ant-table-thead > tr > th {
     color: #ffffff !important;
     background: #315a84 !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
 }
 
 html:not(.theme-light) .kc-branches-table .ant-table,

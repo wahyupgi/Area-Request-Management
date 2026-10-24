@@ -17,11 +17,11 @@ const filteredItems = computed(() => statusFilter.value
 const statusColors = { draft: 'default', submitted: 'processing', approved: 'success', rejected: 'error' };
 const statusLabels = { draft: 'Draft', submitted: 'Submitted', approved: 'Approved', rejected: 'Rejected' };
 const columns = [
-    { title: 'Kode', dataIndex: 'code', key: 'code' },
+    { title: 'Kode', dataIndex: 'code', key: 'code', width: 160 },
     { title: 'Perihal', key: 'template' },
-    { title: 'Cabang', key: 'branch' },
-    { title: 'Status', dataIndex: 'status', key: 'status' },
-    { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at' },
+    { title: 'Cabang', key: 'branch', width: 170 },
+    { title: 'Status', dataIndex: 'status', key: 'status', width: 130 },
+    { title: 'Tanggal', dataIndex: 'created_at', key: 'created_at', width: 130 },
     { title: 'Aksi', key: 'action', align: 'center', width: 85 },
 ];
 
@@ -58,6 +58,7 @@ const onFilterChange = (event) => {
                 :dataSource="filteredItems"
                 :columns="columns"
                 rowKey="id"
+                size="small"
                 :pagination="false"
             >
                 <template #bodyCell="{ column, record }">
