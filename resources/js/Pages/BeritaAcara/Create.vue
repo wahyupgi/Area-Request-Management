@@ -4,7 +4,19 @@ import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import { preventNonDigitPaste, restrictToDigits } from '@/composables/numericInput';
-import { SaveOutlined, SendOutlined, PlusOutlined, DeleteOutlined, LeftOutlined, PaperClipOutlined } from '@ant-design/icons-vue';
+import { 
+    SaveOutlined, 
+    SendOutlined, 
+    PlusOutlined, 
+    DeleteOutlined, 
+    LeftOutlined, 
+    PaperClipOutlined,
+    UploadOutlined,
+    FilePdfOutlined,
+    FileWordOutlined,
+    FileOutlined,
+    CloseCircleOutlined
+} from '@ant-design/icons-vue';
 
 const props = defineProps({
     branches: { type: Array, default: () => [] },
@@ -13,7 +25,9 @@ const props = defineProps({
 });
 
 const page = usePage();
-const { success } = useSweetAlert();
+const { success, error: showError } = useSweetAlert();
+const fileInputRef = ref(null);
+const supportFileInputRef = ref(null);
 const attachmentError = ref('');
 const showSignatureDialog = ref(false);
 const signatureFile = ref(null);
@@ -23,6 +37,20 @@ const savingSignature = ref(false);
 const attachmentValidationError = computed(() => Object.entries(form.errors)
     .find(([key]) => key === 'attachments' || key.startsWith('attachments.'))?.[1] || '');
 const allowedAttachmentExtensions = '.docx,.pdf';
+
+const triggerFileInput = () => fileInputRef.value?.click();
+const triggerSupportFileInput = () => supportFileInputRef.value?.click();
+
+const isPdf = (fileName) => /\.pdf$/i.test(fileName || '');
+const isWord = (fileName) => /\.(docx?|doc)$/i.test(fileName || '');
+
+const formatFileSize = (bytes) => {
+    if (!bytes && bytes !== 0) return '';
+    if (bytes < 1024) return bytes + ' B';
+    const kb = bytes / 1024;
+    if (kb < 1024) return kb.toFixed(1) + ' KB';
+    return (kb / (1024 * 1024)).toFixed(1) + ' MB';
+};
 const availableTemplates = computed(() => {
     return (props.templates || []).map(t => ({ value: t.name, label: t.name, templateData: t }));
 });
@@ -56,7 +84,16 @@ const form = useForm({
     submit_after_save: false,
 });
 
+watch(() => form.branch_id, (val) => {
+    if (val && form.errors.branch_id) {
+        form.clearErrors('branch_id');
+    }
+});
+
 watch(() => form.meta.template, (templateName) => {
+    if (templateName && form.errors['meta.template']) {
+        form.clearErrors('meta.template');
+    }
     const selected = availableTemplates.value.find((item) => item.value === templateName);
     if (!selected) return;
 
@@ -177,10 +214,41 @@ const formattedDetailValue = (item) => isRupiahDetail(item.label)
     : item.value;
 
 const validateBaForm = () => {
-    if (form.meta.template === 'Berita Acara Lainnya' && (!form.attachments || form.attachments.length === 0)) {
-        attachmentError.value = 'Lampiran dokumen Berita Acara (Word/PDF) wajib diunggah.';
+    attachmentError.value = '';
+    form.clearErrors();
+    let hasError = false;
+
+    if (!form.branch_id) {
+        form.setError('branch_id', 'Silakan pilih cabang terlebih dahulu.');
+        hasError = true;
+    }
+
+    if (!form.meta.template) {
+        form.setError('meta.template', 'Silakan pilih jenis Berita Acara terlebih dahulu.');
+        hasError = true;
+    }
+
+    if (form.meta.template === 'Berita Acara Lainnya') {
+        if (!form.attachments || form.attachments.length === 0) {
+            attachmentError.value = 'Lampiran dokumen Berita Acara (Word/PDF) wajib diunggah.';
+            hasError = true;
+        }
+        if (!form.title) {
+            form.title = 'Berita Acara Lainnya';
+        }
+    } else if (form.meta.template) {
+        if (!form.title || !form.title.trim()) {
+            form.setError('title', 'Judul Berita Acara wajib diisi.');
+            hasError = true;
+        }
+    }
+
+    if (hasError) {
+        showError('Data Belum Lengkap', 'Mohon lengkapi cabang dan pilihan Berita Acara yang wajib diisi.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
     }
+
     return true;
 };
 
@@ -259,22 +327,55 @@ const submitAndSend = () => {
                     class="mb-4"
                 >
                     <input
+                        ref="fileInputRef"
                         type="file"
                         @change="selectAttachment"
                         multiple
                         :accept="allowedAttachmentExtensions"
-                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        style="display: none !important;"
                     />
-                    <a-list v-if="form.attachments.length" size="small" :data-source="form.attachments" class="mt-3 border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-slate-900">
-                        <template #renderItem="{ item, index }">
-                            <a-list-item>
-                                <span class="truncate text-xs">{{ item.name }}</span>
-                                <template #actions>
-                                    <a-button type="link" danger size="small" @click="removeAttachment(index)">Hapus</a-button>
-                                </template>
-                            </a-list-item>
-                        </template>
-                    </a-list>
+
+                    <div class="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40">
+                        <a-button 
+                            type="primary" 
+                            ghost
+                            class="!flex !items-center !gap-1.5"
+                            :disabled="form.attachments.length >= 3"
+                            @click="triggerFileInput"
+                        >
+                            <template #icon><upload-outlined /></template>
+                            <span>Choose Files</span>
+                        </a-button>
+
+                        <span v-if="!form.attachments.length" class="text-sm text-gray-400">
+                            No file chosen
+                        </span>
+
+                        <div v-else class="flex flex-wrap items-center gap-2">
+                            <div 
+                                v-for="(item, index) in form.attachments" 
+                                :key="index"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm"
+                            >
+                                <file-pdf-outlined v-if="isPdf(item.name)" class="text-red-500 text-sm" />
+                                <file-word-outlined v-else-if="isWord(item.name)" class="text-blue-500 text-sm" />
+                                <file-outlined v-else class="text-gray-400 text-sm" />
+                                
+                                <span class="max-w-[260px] truncate" :title="item.name">{{ item.name }}</span>
+                                <span class="text-gray-400 text-[11px]">({{ formatFileSize(item.size) }})</span>
+                                
+                                <button
+                                    type="button"
+                                    class="ml-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                                    title="Hapus file"
+                                    aria-label="Hapus file"
+                                    @click.stop="removeAttachment(index)"
+                                >
+                                    <close-circle-outlined class="text-sm" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </a-form-item>
 
                 <div class="mt-6 pt-4 border-t flex justify-end gap-3">
@@ -337,24 +438,59 @@ const submitAndSend = () => {
                                 Unggah file DOCX atau PDF. Maksimal 3 file, 10 MB per file.
                             </p>
                             <input
+                                ref="supportFileInputRef"
                                 type="file"
                                 @change="selectAttachment"
                                 multiple
                                 :accept="allowedAttachmentExtensions"
-                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                style="display: none !important;"
                             />
+
+                            <div class="flex flex-wrap items-center gap-2 p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40">
+                                <a-button 
+                                    type="primary" 
+                                    ghost
+                                    size="small"
+                                    class="!flex !items-center !gap-1.5"
+                                    :disabled="form.attachments.length >= 3"
+                                    @click="triggerSupportFileInput"
+                                >
+                                    <template #icon><upload-outlined /></template>
+                                    <span>Choose Files</span>
+                                </a-button>
+
+                                <span v-if="!form.attachments.length" class="text-xs text-gray-400">
+                                    No file chosen
+                                </span>
+
+                                <div v-else class="flex flex-wrap items-center gap-1.5">
+                                    <div 
+                                        v-for="(item, index) in form.attachments" 
+                                        :key="index"
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm"
+                                    >
+                                        <file-pdf-outlined v-if="isPdf(item.name)" class="text-red-500 text-xs" />
+                                        <file-word-outlined v-else-if="isWord(item.name)" class="text-blue-500 text-xs" />
+                                        <file-outlined v-else class="text-gray-400 text-xs" />
+                                        
+                                        <span class="max-w-[180px] truncate" :title="item.name">{{ item.name }}</span>
+                                        <span class="text-gray-400 text-[10px]">({{ formatFileSize(item.size) }})</span>
+                                        
+                                        <button
+                                            type="button"
+                                            class="ml-0.5 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                                            title="Hapus file"
+                                            aria-label="Hapus file"
+                                            @click.stop="removeAttachment(index)"
+                                        >
+                                            <close-circle-outlined class="text-xs" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <a-alert v-if="attachmentError" class="mt-3" type="error" show-icon :message="attachmentError" />
                             <a-alert v-if="attachmentValidationError" class="mt-3" type="error" show-icon :message="attachmentValidationError" />
-                            <a-list v-if="form.attachments.length" class="mt-3" size="small" :data-source="form.attachments">
-                                <template #renderItem="{ item, index }">
-                                    <a-list-item>
-                                        <span class="truncate">{{ item.name }}</span>
-                                        <template #actions>
-                                            <a-button type="link" danger size="small" @click="removeAttachment(index)">Hapus</a-button>
-                                        </template>
-                                    </a-list-item>
-                                </template>
-                            </a-list>
                         </a-card>
                     </div>
                 </a-col>

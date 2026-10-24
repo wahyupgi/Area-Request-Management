@@ -226,7 +226,7 @@ onBeforeUnmount(() => {
         <div
             v-for="attachment in attachments"
             :key="'print-attachment-' + attachment.id"
-            class="memo-print-attachment mt-6 w-full bg-white p-4 shadow-md print:mt-0 print:min-h-0 print:p-0 print:shadow-none"
+            class="memo-print-attachment first:mt-0 mt-6 w-full bg-white p-4 shadow-md print:mt-0 print:min-h-0 print:p-0 print:shadow-none"
         >
             <p v-if="subject" class="mb-2 text-center text-xs font-medium print:hidden">Perihal: {{ subject }}</p>
             <div class="mb-3 flex justify-end gap-3 text-sm print:hidden">

@@ -3,10 +3,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BeritaAcaraDocument from '@/Components/BeritaAcaraDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { escapeHtml } from '@/utils/sanitize';
 import {
     LeftOutlined,
     PrinterOutlined,
+    DownloadOutlined,
     EditOutlined,
     PaperClipOutlined,
     CheckCircleOutlined,
@@ -15,6 +17,8 @@ import {
 
 const props = defineProps({ beritaAcara: Object });
 const user = usePage().props.auth.user;
+
+const isOtherTemplate = computed(() => ['lainnya', 'Berita Acara Lainnya'].includes(props.beritaAcara.meta?.template));
 
 const statusConfig = {
     draft:     { label: 'Draft',                color: 'default' },
@@ -31,6 +35,35 @@ const formatDate = (dateString) => {
 };
 
 const attachmentUrl = (attachment) => '/storage/' + attachment.file_path;
+
+const waitForAttachments = () => new Promise((resolve) => {
+    const startedAt = Date.now();
+    const check = () => {
+        const isReady = !document.querySelector('[data-attachment-loading]');
+        if (isReady || Date.now() - startedAt > 6000) {
+            resolve();
+            return;
+        }
+        window.setTimeout(check, 100);
+    };
+    check();
+});
+
+const downloadDocument = () => {
+    if (isOtherTemplate.value && printAttachments.value?.length > 0) {
+        const first = printAttachments.value[0];
+        const url = first.preview_path ? ('/storage/' + first.preview_path) : attachmentUrl(first);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = first.original_name || `${printFileName()}.${first.file_path?.split('.').pop() || 'pdf'}`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
+    }
+    printDocument();
+};
 
 const printFileName = () =>
     `Berita Acara - ${[props.beritaAcara.title, props.beritaAcara.code].filter(Boolean).join(' - ') || 'Dokumen'}`
@@ -59,36 +92,89 @@ const printableHtml = (element) => {
     return clone.outerHTML;
 };
 
-const printDocument = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+const printDocument = async () => {
+    await waitForAttachments();
 
-    const docEl    = printableHtml(document.querySelector('#printable-ba'));
+    const docEl    = isOtherTemplate.value ? '' : printableHtml(document.querySelector('#printable-ba'));
     const attachEl = printableHtml(document.querySelector('.memo-print-attachments'));
-    const stylesheetUrls = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.href);
-    const activeStyles   = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    if (!docEl && !attachEl) {
+        window.print();
+        return;
+    }
 
-    Promise.all(stylesheetUrls.map(url => fetch(url).then(r => r.text()).catch(() => ''))).then(styles => {
-        printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(printFileName())}</title><style>${styles.join('\n')}\n${activeStyles}</style><style>
-            @page { size: A4 portrait; margin: 0; }
-            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-            .ba-print-page { width: 210mm !important; box-sizing: border-box !important; }
-            #printable-ba { position: relative !important; width: 210mm !important; box-sizing: border-box !important; }
-            .memo-print-attachments { display: block !important; width: 210mm !important; }
-            .memo-print-attachment:first-child { page-break-before: always !important; break-before: page !important; }
-            .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
-        </style></head><body><div class="ba-print-page">${docEl}</div>${attachEl}</body></html>`);
-        printWindow.onload = () => {
-            printWindow.document.title = printFileName();
-            printWindow.onafterprint = () => printWindow.close();
-            printWindow.focus();
-            printWindow.print();
-        };
-        printWindow.document.close();
-    });
+    const oldIframe = document.getElementById('print-iframe');
+    if (oldIframe) {
+        oldIframe.remove();
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'print-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.width = '210mm';
+    iframe.style.height = '297mm';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.zIndex = '-9999';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
+
+    const headStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+        .map(el => el.outerHTML)
+        .join('\n');
+
+    const fileName = printFileName();
+
+    const html = `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${escapeHtml(fileName)}</title>
+    ${headStyles}
+    <style>
+        @page { size: A4 portrait; margin: 0; }
+        html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; width: 210mm !important; }
+        body * { visibility: visible !important; }
+        .ba-print-page, .ba-print-page * { visibility: visible !important; }
+        #printable-ba, #printable-ba * { visibility: visible !important; }
+        .memo-print-attachments, .memo-print-attachments * { visibility: visible !important; }
+        .memo-print-attachment, .memo-print-attachment * { visibility: visible !important; }
+        .memo-pdf-pages, .memo-pdf-pages * { visibility: visible !important; }
+        .memo-pdf-page { visibility: visible !important; opacity: 1 !important; }
+        .ba-print-page { width: 210mm !important; box-sizing: border-box !important; margin: 0 auto !important; }
+        #printable-ba { position: relative !important; width: 210mm !important; box-sizing: border-box !important; margin: 0 auto !important; }
+        .memo-print-attachments { display: block !important; width: 210mm !important; margin: 0 auto !important; }
+        .memo-print-attachment { display: block !important; width: 210mm !important; box-sizing: border-box !important; }
+        .memo-print-attachment:first-child { page-break-before: ${isOtherTemplate.value ? 'auto' : 'always'} !important; break-before: ${isOtherTemplate.value ? 'auto' : 'page'} !important; }
+        .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
+        .memo-pdf-page-list { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 0 !important; }
+        .memo-pdf-page { width: auto !important; height: auto !important; max-width: 100% !important; max-height: 295mm !important; margin: 0 auto !important; object-fit: contain !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+        .memo-pdf-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
+    </style>
+</head>
+<body>
+    <div class="ba-print-page">${isOtherTemplate.value ? attachEl : `${docEl}${attachEl}`}</div>
+</body>
+</html>`;
+
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        } catch (err) {
+            console.error('Print iframe failed, fallback to window.print', err);
+            window.print();
+        }
+    }, 400);
 };
 
-const printAttachments = [
+const printAttachments = computed(() => [
     ...(props.beritaAcara.attachments || []),
     ...(props.beritaAcara.attachment_path ? [{
         id: `legacy-ba-${props.beritaAcara.id}`,
@@ -96,7 +182,7 @@ const printAttachments = [
         file_path: props.beritaAcara.attachment_path,
         original_name: props.beritaAcara.attachment_name,
     }] : []),
-];
+]);
 </script>
 
 <template>
@@ -123,8 +209,18 @@ const printAttachments = [
 
                 <!-- Kiri: Preview Dokumen -->
                 <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start print:block print:w-full print:m-0 print:p-0">
-                    <div class="document-preview-scroll print:overflow-visible">
-                        <div class="document-preview-paper shadow-md print:shadow-none bg-white">
+                    <div class="document-preview-scroll print:overflow-visible w-full flex flex-col items-center">
+                        <div v-if="isOtherTemplate" id="printable-ba" class="w-full flex flex-col items-center">
+                            <MemoAttachments
+                                v-if="printAttachments.length > 0"
+                                :attachments="printAttachments"
+                                :subject="beritaAcara.meta?.perihal || beritaAcara.title"
+                            />
+                            <div v-else class="p-8 text-center text-gray-400 bg-white rounded-lg shadow-sm w-full">
+                                Belum ada berkas dokumen yang diunggah.
+                            </div>
+                        </div>
+                        <div v-else class="document-preview-paper shadow-md print:shadow-none bg-white">
                             <div id="printable-ba">
                                 <BeritaAcaraDocument :berita-acara="beritaAcara" />
                             </div>
@@ -138,10 +234,16 @@ const printAttachments = [
                     <!-- Card 1: Info Dokumen -->
                     <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
                         <template #extra>
-                            <a-button type="link" size="small" @click="printDocument">
-                                <template #icon><printer-outlined /></template>
-                                Cetak
-                            </a-button>
+                            <div class="flex items-center gap-1">
+                                <a-button type="link" size="small" @click="printDocument">
+                                    <template #icon><printer-outlined /></template>
+                                    Cetak
+                                </a-button>
+                                <a-button type="link" size="small" @click="downloadDocument">
+                                    <template #icon><download-outlined /></template>
+                                    Unduh PDF
+                                </a-button>
+                            </div>
                         </template>
 
                         <div class="space-y-3 text-sm">
@@ -257,7 +359,7 @@ const printAttachments = [
                 </a-col>
             </a-row>
 
-            <MemoAttachments :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
+            <MemoAttachments v-if="!isOtherTemplate" :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
         </div>
     </AuthenticatedLayout>
 </template>

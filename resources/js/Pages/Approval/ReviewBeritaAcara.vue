@@ -19,6 +19,8 @@ const props = defineProps({
     signature: { type: Object, default: null },
 });
 
+const isOtherTemplate = computed(() => ['lainnya', 'Berita Acara Lainnya'].includes(props.beritaAcara.meta?.template));
+
 const showRejectModal = ref(false);
 const showApproveConfirm = ref(false);
 const { success } = useSweetAlert();
@@ -132,7 +134,7 @@ const handleReject = () => {
     });
 };
 
-const printAttachments = [
+const printAttachments = computed(() => [
     ...(props.beritaAcara.attachments || []),
     ...(props.beritaAcara.attachment_path ? [{
         id: `legacy-ba-${props.beritaAcara.id}`,
@@ -140,7 +142,7 @@ const printAttachments = [
         file_path: props.beritaAcara.attachment_path,
         original_name: props.beritaAcara.attachment_name,
     }] : []),
-];
+]);
 
 const printFileName = () => `Berita Acara - ${[props.beritaAcara.title, props.beritaAcara.code].filter(Boolean).join(' - ') || 'Dokumen'}`
     .replace(/[<>:"|?*]/g, '-')
@@ -168,13 +170,46 @@ const printableHtml = (element) => {
     return clone.outerHTML;
 };
 
-const printDocument = () => {
-    const docEl = printableHtml(document.querySelector('#printable-ba'));
-    if (!docEl) {
+const attachmentUrl = (attachment) => '/storage/' + attachment.file_path;
+
+const waitForAttachments = () => new Promise((resolve) => {
+    const startedAt = Date.now();
+    const check = () => {
+        const isReady = !document.querySelector('[data-attachment-loading]');
+        if (isReady || Date.now() - startedAt > 6000) {
+            resolve();
+            return;
+        }
+        window.setTimeout(check, 100);
+    };
+    check();
+});
+
+const downloadDocument = () => {
+    if (isOtherTemplate.value && printAttachments.value?.length > 0) {
+        const first = printAttachments.value[0];
+        const url = first.preview_path ? ('/storage/' + first.preview_path) : attachmentUrl(first);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = first.original_name || `${printFileName()}.${first.file_path?.split('.').pop() || 'pdf'}`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
+    }
+    printDocument();
+};
+
+const printDocument = async () => {
+    await waitForAttachments();
+
+    const docEl = isOtherTemplate.value ? '' : printableHtml(document.querySelector('#printable-ba'));
+    const attachEl = printableHtml(document.querySelector('.memo-print-attachments'));
+    if (!docEl && !attachEl) {
         window.print();
         return;
     }
-    const attachEl = printableHtml(document.querySelector('.memo-print-attachments'));
 
     const oldIframe = document.getElementById('print-iframe');
     if (oldIframe) {
@@ -209,16 +244,26 @@ const printDocument = () => {
     <style>
         @page { size: A4 portrait; margin: 0; }
         html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; width: 210mm !important; }
+        body * { visibility: visible !important; }
+        .ba-print-page, .ba-print-page * { visibility: visible !important; }
+        #printable-ba, #printable-ba * { visibility: visible !important; }
+        .memo-print-attachments, .memo-print-attachments * { visibility: visible !important; }
+        .memo-print-attachment, .memo-print-attachment * { visibility: visible !important; }
+        .memo-pdf-pages, .memo-pdf-pages * { visibility: visible !important; }
+        .memo-pdf-page { visibility: visible !important; opacity: 1 !important; }
         .ba-print-page { width: 210mm !important; box-sizing: border-box !important; margin: 0 auto !important; }
         #printable-ba { position: relative !important; width: 210mm !important; box-sizing: border-box !important; margin: 0 auto !important; }
-        .memo-print-attachments { display: block !important; width: 210mm !important; }
-        .memo-print-attachment:first-child { page-break-before: always !important; break-before: page !important; }
+        .memo-print-attachments { display: block !important; width: 210mm !important; margin: 0 auto !important; }
+        .memo-print-attachment { display: block !important; width: 210mm !important; box-sizing: border-box !important; }
+        .memo-print-attachment:first-child { page-break-before: ${isOtherTemplate.value ? 'auto' : 'always'} !important; break-before: ${isOtherTemplate.value ? 'auto' : 'page'} !important; }
         .memo-print-attachment + .memo-print-attachment { page-break-before: always !important; break-before: page !important; }
+        .memo-pdf-page-list { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 0 !important; }
+        .memo-pdf-page { width: auto !important; height: auto !important; max-width: 100% !important; max-height: 295mm !important; margin: 0 auto !important; object-fit: contain !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+        .memo-pdf-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
     </style>
 </head>
 <body>
-    <div class="ba-print-page">${docEl}</div>
-    ${attachEl}
+    <div class="ba-print-page">${isOtherTemplate.value ? attachEl : `${docEl}${attachEl}`}</div>
 </body>
 </html>`;
 
@@ -235,7 +280,7 @@ const printDocument = () => {
             console.error('Print iframe failed, fallback to window.print', err);
             window.print();
         }
-    }, 250);
+    }, 400);
 };
 
 const formatDate = (dateString) => {
@@ -279,21 +324,31 @@ const formatDate = (dateString) => {
                                     </a-button>
                                 </a-tooltip>
                                 <a-tooltip title="Unduh PDF">
-                                    <a-button type="primary" size="small" @click="printDocument" class="flex items-center justify-center">
+                                    <a-button type="primary" size="small" @click="downloadDocument" class="flex items-center justify-center">
                                         <template #icon><download-outlined /></template>
                                     </a-button>
                                 </a-tooltip>
                             </div>
                         </template>
-                        <div class="document-preview-scroll w-full">
-                            <div class="document-preview-paper shadow-md bg-white">
+                        <div class="document-preview-scroll w-full flex flex-col items-center">
+                            <div v-if="isOtherTemplate" id="printable-ba" class="w-full flex flex-col items-center">
+                                <MemoAttachments
+                                    v-if="printAttachments.length > 0"
+                                    :attachments="printAttachments"
+                                    :subject="beritaAcara.meta?.perihal || beritaAcara.title"
+                                />
+                                <div v-else class="p-8 text-center text-gray-400 bg-white rounded-lg shadow-sm w-full">
+                                    Belum ada berkas dokumen yang diunggah.
+                                </div>
+                            </div>
+                            <div v-else class="document-preview-paper shadow-md bg-white">
                                 <div id="printable-ba">
                                     <BeritaAcaraDocument :berita-acara="beritaAcara" />
                                 </div>
                             </div>
                         </div>
                     </a-card>
-                    <MemoAttachments :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
+                    <MemoAttachments v-if="!isOtherTemplate" :attachments="printAttachments" :subject="beritaAcara.meta?.perihal || beritaAcara.title" />
                 </a-col>
 
                 <a-col :xs="24" :lg="8">
@@ -357,7 +412,7 @@ const formatDate = (dateString) => {
                     </a-card>
 
                     <!-- Signatories -->
-                    <a-card title="Penandatangan Berita Acara" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
+                    <a-card v-if="!isOtherTemplate" title="Penandatangan Berita Acara" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
                         <template #extra>
                             <a-button v-if="beritaAcara.status === 'submitted'" type="link" size="small" @click="showSignersModal = true">
                                 <template #icon><edit-outlined /></template> Edit
@@ -371,7 +426,7 @@ const formatDate = (dateString) => {
                     </a-card>
 
                     <!-- Meta Data -->
-                    <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm" size="small">
+                    <a-card v-if="!isOtherTemplate" title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm" size="small">
                         <template #extra>
                             <a-button v-if="beritaAcara.status === 'submitted'" type="link" size="small" @click="showDocumentModal = true">
                                 <template #icon><edit-outlined /></template> Edit

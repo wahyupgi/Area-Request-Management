@@ -40,6 +40,10 @@ class BeritaAcaraController extends Controller
         $user = auth()->user();
 
         $branchIds = $user->availableBranchesForDocuments()->pluck('branches.id')->all();
+        if (empty($request->input('title')) && $request->input('meta.template') === 'Berita Acara Lainnya') {
+            $request->merge(['title' => 'Berita Acara Lainnya']);
+        }
+
         $validated = $request->validate([
             'branch_id'             => ['required', 'integer', Rule::exists('branches', 'id')->whereIn('id', $branchIds)],
             'meta.template'         => 'required|string',
@@ -62,8 +66,24 @@ class BeritaAcaraController extends Controller
             'rincian_data.*.value'  => 'nullable|string|max:500',
             'keterangan_tambahan'   => 'nullable|string|max:10000',
             'penutup'               => 'nullable|string|max:10000',
-            'attachments'           => 'nullable|array|max:3',
+            'attachments'           => [
+                $request->input('meta.template') === 'Berita Acara Lainnya' ? 'required' : 'nullable',
+                'array',
+                $request->input('meta.template') === 'Berita Acara Lainnya' ? 'min:1' : 'nullable',
+                'max:3',
+            ],
             'attachments.*'         => 'file|mimes:docx,pdf|max:10240',
+        ], [
+            'branch_id.required'     => 'Cabang wajib dipilih.',
+            'branch_id.exists'       => 'Cabang tidak valid atau di luar wewenang Anda.',
+            'meta.template.required' => 'Jenis Berita Acara wajib dipilih.',
+            'title.required'         => 'Judul Berita Acara wajib diisi.',
+            'attachments.required'   => 'Lampiran berkas Berita Acara (Word/PDF) wajib diunggah.',
+            'attachments.min'        => 'Lampiran berkas Berita Acara (Word/PDF) wajib diunggah minimal 1 berkas.',
+            'attachments.max'        => 'Maksimal 3 lampiran berkas.',
+            'attachments.*.file'     => 'File lampiran tidak valid.',
+            'attachments.*.mimes'    => 'Format file lampiran harus berupa PDF atau Word (DOCX).',
+            'attachments.*.max'      => 'Ukuran masing-masing file lampiran maksimal 10 MB.',
         ]);
 
         $branch = Branch::findOrFail($validated['branch_id']);
@@ -125,7 +145,7 @@ class BeritaAcaraController extends Controller
                 ->with('error', 'Berita Acara tidak bisa diedit.');
         }
 
-        $beritaAcara->load(['template', 'attachments', 'creator.digitalSignature']);
+        $beritaAcara->load(['branch.area', 'attachments', 'creator.digitalSignature']);
 
         return Inertia::render('BeritaAcara/Edit', [
             'beritaAcara' => $beritaAcara,
