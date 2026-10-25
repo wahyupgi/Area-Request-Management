@@ -109,6 +109,7 @@ class MemoTemplate extends Model
                             ['key' => 'nominal', 'label' => 'Nominal', 'type' => 'number'],
                         ],
                     ],
+                    ['key' => 'rincian', 'label' => 'Uraian Permohonan', 'type' => 'textarea', 'required' => false],
                 ],
                 'document_defaults' => [
                     'direktorat' => 'Regional Branch Office',
@@ -132,7 +133,6 @@ class MemoTemplate extends Model
                 'category' => 'Keringanan Jasa',
                 'field_schema' => [
                     ['key' => 'nama_nasabah', 'label' => 'Nama Nasabah', 'type' => 'text', 'required' => true],
-                    ['key' => 'no_anggota', 'label' => 'No. Anggota', 'type' => 'text', 'required' => true],
                     ['key' => 'cabang', 'label' => 'Cabang', 'type' => 'text', 'required' => true],
                     ['key' => 'no_faktur', 'label' => 'No. Faktur', 'type' => 'text', 'required' => true],
                     ['key' => 'jenis_barang', 'label' => 'Jenis Barang', 'type' => 'text', 'required' => true],

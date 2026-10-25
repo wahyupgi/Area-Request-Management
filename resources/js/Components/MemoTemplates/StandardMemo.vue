@@ -62,6 +62,19 @@ const formatValue = (value) => {
     return String(value);
 };
 
+const hasNominalColumn = (columns) => {
+    return Array.isArray(columns) && columns.some((col) => col.key === 'nominal' || /nominal|biaya|jumlah/i.test(col.key || ''));
+};
+
+const calculateNominalTotal = (rows) => {
+    if (!Array.isArray(rows) || !rows.length) return 'Rp 0';
+    const sum = rows.reduce((total, row) => {
+        const val = Number(row?.nominal || 0);
+        return total + (isNaN(val) ? 0 : val);
+    }, 0);
+    return 'Rp ' + sum.toLocaleString('id-ID');
+};
+
 const getApprovedSignature = () => {
     const approval = props.memo.approvals?.find((item) => item.action === 'approved' && item.signature);
     return approval?.signature ?? null;
@@ -125,7 +138,76 @@ const signatureGridStyle = computed(() => {
     </table>
 
     <template v-else-if="isKeringananJasa">
-        <table class="w-full text-xs border-collapse border border-black mb-2.5">
+        <template v-if="memo.template?.field_schema?.some((f) => f.type === 'table')">
+            <template v-for="(item, itemIndex) in items" :key="'keringanan-' + itemIndex">
+                <div v-if="memo.template?.field_schema?.some((f) => f.type !== 'table' && f.key !== 'rincian')" class="mb-3 text-xs font-sans">
+                    <table class="text-xs border-collapse border-none" style="border: none !important;">
+                        <tbody>
+                            <tr
+                                v-for="field in memo.template?.field_schema?.filter((f) => f.type !== 'table' && f.key !== 'rincian')"
+                                :key="field.key"
+                                class="border-none"
+                                style="border: none !important;"
+                            >
+                                <td class="border-none py-0.5 pr-2 font-bold whitespace-nowrap text-gray-900" style="border: none !important; width: 140px;">
+                                    {{ cleanLabel(field.label) }}
+                                </td>
+                                <td class="border-none py-0.5 px-2 font-bold text-gray-900" style="border: none !important; width: 15px;">:</td>
+                                <td class="border-none py-0.5 pl-1 text-gray-900 whitespace-pre-wrap" style="border: none !important;">
+                                    {{ formatFieldValue(field, item?.[field.key]) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tabel Item (Rincian Jasa): tabel bergaris dengan header tanpa baris Total -->
+                <template v-for="field in memo.template?.field_schema?.filter((f) => f.type === 'table')" :key="'tbl-' + field.key">
+                    <table class="w-full text-xs border-collapse border border-black mb-4">
+                        <thead>
+                            <tr class="bg-[#1f497d] text-white">
+                                <th class="border border-black px-2.5 py-1.5 w-10 text-center font-bold !text-white">No.</th>
+                                <th
+                                    v-for="column in field.columns"
+                                    :key="column.key"
+                                    class="border border-black px-3 py-1.5 font-bold !text-white"
+                                    :class="column.key === 'nominal' ? 'text-right' : column.key === 'tanggal' ? 'text-center' : 'text-left'"
+                                >
+                                    {{ cleanLabel(column.label) }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(row, rowIndex) in item?.[field.key] || []" :key="field.key + '-' + rowIndex">
+                                <td class="border border-black px-2.5 py-1.5 text-center font-medium">{{ rowIndex + 1 }}.</td>
+                                <td
+                                    v-for="column in field.columns"
+                                    :key="column.key"
+                                    class="border border-black px-3 py-1.5 whitespace-pre-wrap"
+                                    :class="column.key === 'nominal' ? 'text-right font-medium' : column.key === 'tanggal' ? 'text-center' : 'text-left'"
+                                >
+                                    {{ formatFieldValue(column, row?.[column.key]) }}
+                                </td>
+                            </tr>
+                            <tr v-if="!(item?.[field.key]?.length)">
+                                <td :colspan="(field.columns?.length || 0) + 1" class="border border-black px-3 py-2 text-center text-gray-500 italic">
+                                    - Tidak ada rincian data -
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </template>
+
+                <!-- Rincian di bawah/di luar tabel sebelum kalimat penutup -->
+                <div v-if="item?.rincian || memo.field_values?.rincian" class="mb-4 text-xs font-sans text-gray-900 leading-normal text-justify">
+                    <p v-if="!/^\s*rincian\s*:/i.test(item?.rincian || memo.field_values?.rincian || '')" class="font-bold mb-1">Uraian Permohonan :</p>
+                    <div class="whitespace-pre-wrap">{{ item?.rincian || memo.field_values?.rincian }}</div>
+                </div>
+            </template>
+        </template>
+
+        <!-- Jika tidak ada field table (seperti Pengajuan Keringanan Pelunasan Nasabah Meninggal Dunia): tetap tampilkan tabel ringkasan informasi nasabah -->
+        <table v-else class="w-full text-xs border-collapse border border-black mb-2.5">
             <thead>
                 <tr class="bg-[#1f497d] text-white">
                     <th class="border border-black px-3 py-1 text-left font-bold whitespace-nowrap w-[32%] !text-white">Informasi Nasabah</th>
@@ -134,20 +216,10 @@ const signatureGridStyle = computed(() => {
             </thead>
             <tbody>
                 <template v-for="(item, itemIndex) in items" :key="'customer-' + itemIndex">
-                    <!-- Field non-table: tampil sebagai baris label | value -->
-                    <tr v-for="field in memo.template?.field_schema?.filter((f) => f.type !== 'table')" :key="field.key">
+                    <tr v-for="field in memo.template?.field_schema" :key="field.key">
                         <td class="border border-black px-3 py-1 font-bold whitespace-nowrap">{{ cleanLabel(field.label) }}</td>
                         <td class="border border-black px-3 py-1 whitespace-pre-wrap">{{ formatFieldValue(field, item?.[field.key]) }}</td>
                     </tr>
-                    <!-- Field bertipe table: tiap kolom jadi baris label | value -->
-                    <template v-for="field in memo.template?.field_schema?.filter((f) => f.type === 'table')" :key="'tbl-' + field.key">
-                        <template v-for="(row, rowIndex) in item?.[field.key] || []" :key="field.key + '-' + rowIndex">
-                            <tr v-for="column in field.columns" :key="field.key + '-' + rowIndex + '-' + column.key">
-                                <td class="border border-black px-3 py-1 font-bold whitespace-nowrap">{{ cleanLabel(column.label) }}</td>
-                                <td class="border border-black px-3 py-1 whitespace-pre-wrap">{{ formatFieldValue(column, row?.[column.key]) }}</td>
-                            </tr>
-                        </template>
-                    </template>
                 </template>
             </tbody>
         </table>

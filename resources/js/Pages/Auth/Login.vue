@@ -130,7 +130,11 @@ const submit = async () => {
         <div class="login-card relative z-10 w-full max-w-5xl rounded-3xl overflow-hidden flex shadow-2xl shadow-black/50" :class="isLightTheme ? 'is-light' : 'is-dark'">
             <div class="login-brand-panel hidden md:flex flex-col items-center justify-center w-1/2 p-12 relative overflow-hidden">
                 <div class="relative z-10 flex flex-col items-center text-center">
-                    <img src="/PGI-Secondary%20Logo%202%20(1).png" alt="Logo Pusat Gadai Indonesia" class="w-72 max-w-full h-auto rounded-lg" />
+                    <img
+                        src="/PGI-Secondary-White.png"
+                        alt="Logo Pusat Gadai Indonesia"
+                        class="w-72 max-w-full h-auto select-none transition-transform hover:scale-105 duration-300 drop-shadow-lg"
+                    />
                 </div>
                 <svg class="login-wave hidden md:block" viewBox="40 0 60 100" preserveAspectRatio="none" aria-hidden="true">
                     <path d="M100 0 L50 0 C44 8 58 14 74 18 C60 26 70 36 84 40 C68 48 78 58 88 62 C70 70 66 80 70 84 C50 90 44 96 40 100 L100 100 Z" fill="#6aa8ee" />
@@ -141,7 +145,11 @@ const submit = async () => {
 
             <div class="login-form-panel w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center">
                 <div class="md:hidden flex flex-col items-center mb-10">
-                    <img src="/PGI-Secondary%20Logo%202%20(1).png" alt="Logo Pusat Gadai Indonesia" class="w-56 max-w-full h-auto rounded-lg" />
+                    <img
+                        :src="isLightTheme ? '/PGI-Secondary%20Logo%202%20(1).png' : '/PGI-Secondary-White.png'"
+                        alt="Logo Pusat Gadai Indonesia"
+                        class="w-56 max-w-full h-auto select-none"
+                    />
                 </div>
 
                 <div class="mb-10 text-center md:text-left">
@@ -219,10 +227,6 @@ const submit = async () => {
 .login-card.is-light .login-form-panel p:not([role='alert']) { color: #64748b; }
 .login-brand-panel {
     background: linear-gradient(180deg, #0f4fa8 0%, #1d77d8 100%);
-}
-.login-brand-panel img {
-    background: #ffffff;
-    padding: 0.75rem;
 }
 .login-wave {
     position: absolute;
