@@ -1,5 +1,5 @@
-﻿<script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+<script setup>
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
@@ -186,16 +186,27 @@ const findActiveNavItem = (items, currentRoute, parentKeys = []) => {
     return null;
 };
 
+const isFirstNavLoad = ref(true);
+
 watch(() => route().current(), (currentRoute) => {
     if (currentRoute) {
         const activeItem = findActiveNavItem(navItems.value, currentRoute);
         selectedKeys.value = [activeItem?.selectedKey || currentRoute];
-        openKeys.value = activeItem?.parentKeys || [];
+        // Hanya set openKeys saat pertama kali load,
+        // selanjutnya user yang kontrol sendiri
+        if (isFirstNavLoad.value) {
+            openKeys.value = activeItem?.parentKeys || [];
+            isFirstNavLoad.value = false;
+        }
     }
 }, { immediate: true });
 
+let _navClicked = false;
+
 const onNavClick = (item) => {
     closeMobileNav();
+    _navClicked = true;
+    nextTick(() => { _navClicked = false; });
     router.visit(route(item.route));
 };
 
@@ -205,6 +216,27 @@ const onNavHover = (item) => {
 
 const onNavPress = (item) => {
     router.prefetch(route(item.route), { cacheFor: 30000 });
+};
+
+// Cegah accordion: submenu yang sudah terbuka tidak ditutup
+// saat submenu lain dibuka atau saat navigasi ke leaf item.
+const handleOpenChange = (newKeys) => {
+    const addedKeys = newKeys.filter(k => !openKeys.value.includes(k));
+    const removedKeys = openKeys.value.filter(k => !newKeys.includes(k));
+
+    if (_navClicked) {
+        // openChange dipicu oleh klik leaf item (navigasi) — abaikan removal
+        openKeys.value = [...new Set([...openKeys.value, ...addedKeys])];
+        return;
+    }
+
+    if (addedKeys.length > 0 && removedKeys.length > 0) {
+        // Accordion mencoba nutup sibling → abaikan, tambah saja yang baru
+        openKeys.value = [...openKeys.value, ...addedKeys];
+    } else {
+        // User sengaja nutup submenu → ikuti
+        openKeys.value = newKeys;
+    }
 };
 
 const fetchNotifications = async () => {
@@ -303,9 +335,11 @@ const handleLogout = () => {
 
             <a-menu
                 v-model:selectedKeys="selectedKeys"
-                v-model:openKeys="openKeys"
+                :openKeys="openKeys"
+                @openChange="handleOpenChange"
                 mode="inline"
                 theme="dark"
+                :multiple="true"
                 :style="{ background: isLightTheme ? '#2474ad' : '#155080' }"
                 class="border-r-0 pt-4"
             >
@@ -610,7 +644,21 @@ html.theme-light .ant-layout-header {
 }
 .ant-layout-content {
     scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.7) transparent;
+    scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}
+.ant-layout-content::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.ant-layout-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.ant-layout-content::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 9999px;
+}
+.ant-layout-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.7);
 }
 .ant-menu-item {
     border-radius: 8px !important;

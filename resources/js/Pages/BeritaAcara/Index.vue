@@ -15,7 +15,7 @@ const filteredItems = computed(() => {
 });
 
 const statusColors = { draft: 'default', submitted: 'processing', approved: 'success', rejected: 'error' };
-const statusLabels = { draft: 'Draft', submitted: 'Submitted', approved: 'Approved', rejected: 'Rejected' };
+const statusLabels = { draft: 'Draft', submitted: 'Diajukan', approved: 'Disetujui', rejected: 'Ditolak' };
 const templateLabels = {
     pengembalian_dana: 'Pengembalian Dana',
     permohonan_biaya_kost: 'Permohonan Biaya Kost',
@@ -48,9 +48,9 @@ const columns = [
                 <a-radio-group class="memo-status-filter" :value="statusFilter === 'all' ? '' : statusFilter" @change="onFilterChange" button-style="solid">
                     <a-radio-button value="">Semua</a-radio-button>
                     <a-radio-button value="draft">Draft</a-radio-button>
-                    <a-radio-button value="submitted">Submitted</a-radio-button>
-                    <a-radio-button value="approved">Approved</a-radio-button>
-                    <a-radio-button value="rejected">Rejected</a-radio-button>
+                    <a-radio-button value="submitted">Diajukan</a-radio-button>
+                    <a-radio-button value="approved">Disetujui</a-radio-button>
+                    <a-radio-button value="rejected">Ditolak</a-radio-button>
                 </a-radio-group>
                 <a-button class="memo-create-button" type="primary" @click="router.visit(route('berita-acara.create'))">
                     <template #icon><plus-outlined /></template>

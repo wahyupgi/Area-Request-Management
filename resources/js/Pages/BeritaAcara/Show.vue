@@ -210,7 +210,16 @@ const printAttachments = computed(() => [
                 <!-- Kiri: Preview Dokumen -->
                 <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start print:block print:w-full print:m-0 print:p-0">
                     <div class="document-preview-scroll print:overflow-visible w-full flex flex-col items-center">
-                        <div v-if="isOtherTemplate" id="printable-ba" class="w-full flex flex-col items-center">
+                        <div v-if="isOtherTemplate" id="printable-ba" class="w-full">
+                            <div v-if="printAttachments.length > 0" class="mb-3 px-1">
+                                <a-alert
+                                    type="info"
+                                    show-icon
+                                    message="Dokumen Lampiran"
+                                    description="Template ini berupa file yang diunggah. Tampilan di bawah adalah isi file lampiran."
+                                    class="mb-4 rounded-lg"
+                                />
+                            </div>
                             <MemoAttachments
                                 v-if="printAttachments.length > 0"
                                 :attachments="printAttachments"
@@ -233,7 +242,7 @@ const printAttachments = computed(() => [
 
                     <!-- Card 1: Info Dokumen -->
                     <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
-                        <template #extra>
+                        <template #extra v-if="user?.role !== 'KC'">
                             <div class="flex items-center gap-1">
                                 <a-button type="link" size="small" @click="printDocument">
                                     <template #icon><printer-outlined /></template>

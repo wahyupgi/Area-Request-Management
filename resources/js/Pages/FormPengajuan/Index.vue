@@ -15,7 +15,7 @@ const filteredItems = computed(() => statusFilter.value
     : props.items
 );
 const statusColors = { draft: 'default', submitted: 'processing', approved: 'success', rejected: 'error' };
-const statusLabels = { draft: 'Draft', submitted: 'Submitted', approved: 'Approved', rejected: 'Rejected' };
+const statusLabels = { draft: 'Draft', submitted: 'Diajukan', approved: 'Disetujui', rejected: 'Ditolak' };
 const columns = [
     { title: 'Kode', dataIndex: 'code', key: 'code', width: 160 },
     { title: 'Perihal', key: 'template' },
@@ -42,9 +42,9 @@ const onFilterChange = (event) => {
                 <a-radio-group class="memo-status-filter" :value="statusFilter" @change="onFilterChange" button-style="solid">
                     <a-radio-button value="">Semua</a-radio-button>
                     <a-radio-button value="draft">Draft</a-radio-button>
-                    <a-radio-button value="submitted">Submitted</a-radio-button>
-                    <a-radio-button value="approved">Approved</a-radio-button>
-                    <a-radio-button value="rejected">Rejected</a-radio-button>
+                    <a-radio-button value="submitted">Diajukan</a-radio-button>
+                    <a-radio-button value="approved">Disetujui</a-radio-button>
+                    <a-radio-button value="rejected">Ditolak</a-radio-button>
                 </a-radio-group>
 
                 <a-button class="memo-create-button" type="primary" @click="router.visit(route('form-pengajuan.create'))">

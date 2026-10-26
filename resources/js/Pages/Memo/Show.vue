@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import MemoDocument from '@/Components/MemoDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { escapeHtml } from '@/utils/sanitize';
 import {
     LeftOutlined,
@@ -15,6 +16,9 @@ import {
 
 const props = defineProps({ memo: Object });
 const user = usePage().props.auth.user;
+
+// Template "Lainnya" hanya upload file — tampilkan file langsung, bukan format dokumen
+const isOtherTemplate = computed(() => props.memo?.template?.name === 'Lainnya');
 
 const statusConfig = {
     draft: { label: 'Draft', color: 'default' },
@@ -139,11 +143,33 @@ const printMemo = () => {
                 
                 <!-- Left: Document Preview Stage -->
                 <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start print:block print:w-full print:m-0 print:p-0">
-                    <div class="document-preview-scroll print:overflow-visible">
-                        <div class="document-preview-paper shadow-md print:shadow-none bg-white">
-                            <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                    <!-- Template Lainnya: tampilkan file yang diupload langsung -->
+                    <template v-if="isOtherTemplate">
+                        <div class="w-full">
+                            <div v-if="memo.attachments?.length" class="mb-3 px-1">
+                                <a-alert
+                                    type="info"
+                                    show-icon
+                                    message="Dokumen Lampiran"
+                                    description="Template ini berupa file yang diunggah. Tampilan di bawah adalah isi file lampiran."
+                                    class="mb-4 rounded-lg"
+                                />
+                            </div>
+                            <MemoAttachments
+                                id="printable-memo"
+                                :attachments="memo.attachments"
+                                :subject="memo.field_values?.meta?.perihal || memo.title"
+                            />
                         </div>
-                    </div>
+                    </template>
+                    <!-- Template normal: tampilkan format dokumen memo -->
+                    <template v-else>
+                        <div class="document-preview-scroll print:overflow-visible w-full flex flex-col items-center">
+                            <div class="document-preview-paper shadow-md print:shadow-none bg-white">
+                                <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                            </div>
+                        </div>
+                    </template>
                 </a-col>
 
                 <!-- Right: Information & History Sidebar -->
@@ -151,7 +177,7 @@ const printMemo = () => {
                     
                     <!-- Card 1: Metadata Summary -->
                     <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
-                        <template #extra>
+                        <template #extra v-if="user?.role !== 'KC'">
                             <a-button type="link" size="small" @click="printMemo">
                                 <template #icon><printer-outlined /></template>
                                 Cetak
@@ -240,7 +266,8 @@ const printMemo = () => {
                 </a-col>
 
             </a-row>
-            <MemoAttachments :attachments="memo.attachments" :subject="memo.field_values?.meta?.perihal || memo.title" />
+            <!-- Lampiran tambahan hanya ditampilkan jika bukan template Lainnya (template Lainnya sudah tampil di area utama) -->
+            <MemoAttachments v-if="!isOtherTemplate" :attachments="memo.attachments" :subject="memo.field_values?.meta?.perihal || memo.title" />
         </div>
     </AuthenticatedLayout>
 </template>

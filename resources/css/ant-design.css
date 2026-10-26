@@ -21,6 +21,7 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 0.5rem !important;
+    font-weight: 600 !important;
 }
 
 .ant-btn > .anticon,
@@ -118,6 +119,7 @@ html:not(.theme-light) .ant-radio-button-wrapper {
     background: #1e293b !important;
     border-color: #475569 !important;
     color: #cbd5e1 !important;
+    font-weight: 600 !important;
 }
 
 html:not(.theme-light) .ant-radio-button-wrapper:not(:first-child)::before {
@@ -128,6 +130,12 @@ html:not(.theme-light) .ant-radio-button-wrapper-checked:not(.ant-radio-button-w
     background: #2563eb !important;
     border-color: #2563eb !important;
     color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+/* Light mode: radio buttons semibold */
+.ant-radio-button-wrapper {
+    font-weight: 600 !important;
 }
 
 html:not(.theme-light) .ant-modal-content,
@@ -283,6 +291,27 @@ html.dark .ant-table-wrapper .ant-table-tbody > tr > td,
     border-bottom-color: rgba(255, 255, 255, 0.05) !important;
 }
 
+/* Ensure Ant Design measure row is completely hidden and takes 0 space */
+html body .ant-table-tbody > tr.ant-table-measure-row,
+html body .ant-table-tbody > tr.ant-table-measure-row > td,
+html body tr.ant-table-measure-row,
+html body tr.ant-table-measure-row > td {
+    padding: 0 !important;
+    border: 0 !important;
+    height: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    visibility: collapse !important;
+    background: transparent !important;
+    border-bottom: 0 !important;
+    border-right: 0 !important;
+    border-top: 0 !important;
+    border-left: 0 !important;
+}
+
+html body .ant-table-tbody > tr.ant-table-measure-row:hover > td {
+    background: transparent !important;
+}
 
 
 /* Dark mode: solid (non-transparent) status tags.

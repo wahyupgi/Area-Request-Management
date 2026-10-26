@@ -72,7 +72,7 @@ class BeritaAcaraController extends Controller
                 $request->input('meta.template') === 'Berita Acara Lainnya' ? 'min:1' : 'nullable',
                 'max:3',
             ],
-            'attachments.*'         => 'file|mimes:docx,pdf|max:10240',
+            'attachments.*'         => 'file|mimes:doc,docx,pdf|max:10240',
         ], [
             'branch_id.required'     => 'Cabang wajib dipilih.',
             'branch_id.exists'       => 'Cabang tidak valid atau di luar wewenang Anda.',
@@ -270,7 +270,7 @@ class BeritaAcaraController extends Controller
             return back()->withErrors(['file' => 'Berita Acara maksimal memiliki 3 lampiran.']);
         }
 
-        $request->validate(['file' => 'required|file|mimes:docx,pdf|max:10240']);
+        $request->validate(['file' => 'required|file|mimes:doc,docx,pdf|max:10240']);
         $file = $request->file('file');
         $path = $file->store('berita-acara-attachments/' . $beritaAcara->id, 'public');
 

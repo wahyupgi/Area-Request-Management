@@ -4,7 +4,7 @@ import MemoDocument from '@/Components/MemoDocument.vue';
 import MemoAttachments from '@/Components/MemoAttachments.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { escapeHtml } from '@/utils/sanitize';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useSweetAlert } from '@/composables/useSweetAlert';
 import {
     LeftOutlined,
@@ -22,6 +22,9 @@ const props = defineProps({
     memo: Object,
     signature: Object,
 });
+
+// Template "Lainnya" hanya upload file — tampilkan file langsung di area preview
+const isOtherTemplate = computed(() => props.memo?.template?.name === 'Lainnya');
 
 const showRejectModal = ref(false);
 const showApproveConfirm = ref(false);
@@ -296,13 +299,34 @@ const formatDate = (dateString) => {
                                 </a-tooltip>
                             </div>
                         </template>
-                        <div class="document-preview-scroll print:overflow-visible">
-                            <div class="document-preview-paper shadow-md print:shadow-none bg-white">
-                                <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                        <!-- Template Lainnya: tampilkan file lampiran langsung -->
+                        <template v-if="isOtherTemplate">
+                            <div>
+                                <a-alert
+                                    v-if="memo.attachments?.length"
+                                    type="info"
+                                    show-icon
+                                    message="Dokumen Lampiran"
+                                    description="Template ini berupa file yang diunggah. Tampilan di bawah adalah isi file lampiran."
+                                    class="mb-4 rounded-lg"
+                                />
+                                <MemoAttachments
+                                    id="printable-memo"
+                                    :attachments="memo.attachments"
+                                    :subject="memo.field_values?.meta?.perihal || memo.title"
+                                />
                             </div>
-                        </div>
+                        </template>
+                        <!-- Template normal: tampilkan format dokumen memo -->
+                        <template v-else>
+                            <div class="document-preview-scroll print:overflow-visible w-full flex flex-col items-center">
+                                <div class="document-preview-paper shadow-md print:shadow-none bg-white">
+                                    <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
+                                </div>
+                            </div>
+                        </template>
                     </a-card>
-                    <MemoAttachments :attachments="memo.attachments" :subject="memo.field_values?.meta?.perihal || memo.title" />
+                    <MemoAttachments v-if="!isOtherTemplate" :attachments="memo.attachments" :subject="memo.field_values?.meta?.perihal || memo.title" />
                 </a-col>
 
                 <!-- Right: Action & Inspector Sidebar -->
@@ -462,7 +486,7 @@ const formatDate = (dateString) => {
                         <div class="space-y-3">
                             <div v-for="a in memo.approvals" :key="a.id" class="p-3 bg-gray-50 rounded-lg border border-gray-100 text-sm">
                                 <div class="flex justify-between mb-1">
-                                    <a-tag :color="a.action === 'approved' ? 'success' : 'error'" class="uppercase m-0">{{ a.action }}</a-tag>
+                                    <a-tag :color="a.action === 'approved' ? 'success' : 'error'" class="uppercase m-0">{{ a.action === 'approved' ? 'Disetujui' : 'Ditolak' }}</a-tag>
                                     <span class="text-xs text-gray-500">{{ formatDate(a.created_at) }}</span>
                                 </div>
                                 <p v-if="a.notes" class="text-gray-600 text-xs mt-2 mb-0">{{ a.notes }}</p>

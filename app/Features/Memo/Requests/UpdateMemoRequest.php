@@ -14,7 +14,7 @@ class UpdateMemoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['nullable', 'string', 'max:255', 'unique:memos,code,' . $this->route('memo')?->id],
+            'code' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'field_values' => ['nullable', 'array'],
             'field_values.meta' => ['nullable', 'array'],

@@ -150,7 +150,7 @@ const deleteAttachment = async (attachment) => {
             <a-card :bordered="false" class="rounded-lg shadow-sm">
                 <div class="flex items-center gap-3 mb-2">
                     <a-tag color="default" class="font-mono">{{ formPengajuan.code }}</a-tag>
-                    <a-tag :color="formPengajuan.status === 'rejected' ? 'error' : 'default'" class="font-semibold uppercase">{{ formPengajuan.status }}</a-tag>
+                    <a-tag :color="formPengajuan.status === 'rejected' ? 'error' : 'default'" class="font-semibold uppercase">{{ formPengajuan.status === 'rejected' ? 'Ditolak' : 'Draft' }}</a-tag>
                 </div>
                 <p class="text-sm text-gray-500 mb-0">Jenis: <span class="font-medium text-gray-800">{{ isFPP ? 'Form Permohonan Pinjaman (FPP)' : 'Form Ijin Tidak Masuk Kerja (FITMK)' }}</span></p>
             </a-card>

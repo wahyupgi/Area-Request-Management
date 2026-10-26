@@ -11,6 +11,12 @@ import {
     PlusOutlined,
     DeleteOutlined,
     PaperClipOutlined,
+    UploadOutlined,
+    FilePdfOutlined,
+    FileWordOutlined,
+    FileOutlined,
+    CloseCircleOutlined,
+    LoadingOutlined,
 } from '@ant-design/icons-vue';
 
 const props = defineProps({
@@ -103,28 +109,41 @@ const doSubmit = (signatureToUpload = signatureFile.value) => {
     if (!props.signature?.signature_image && !signatureToUpload) return;
     submittingMemo.value = true;
 
+    const doSendToAm = () => {
+        const formData = new FormData();
+        if (signatureToUpload) formData.append('signature_image', signatureToUpload);
+        router.post(route('berita-acara.submit', props.beritaAcara.id), formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                showSignatureDialog.value = false;
+                success('Berita Acara berhasil dikirim ke Area Manager.');
+                router.visit(route('berita-acara.show', props.beritaAcara.id));
+            },
+            onError: (errors) => {
+                submittingMemo.value = false;
+                showSignatureDialog.value = false;
+                showError('Gagal Mengirim Berita Acara', Object.values(errors).join(' '));
+            },
+            onFinish: () => { submittingMemo.value = false; },
+        });
+    };
+
+    if (isLainnya) {
+        doSendToAm();
+        return;
+    }
+
     // First save the latest form data, then submit
     form.put(route('berita-acara.update', props.beritaAcara.id), {
         preserveScroll: true,
         onSuccess: () => {
-            const formData = new FormData();
-            if (signatureToUpload) formData.append('signature_image', signatureToUpload);
-            router.post(route('berita-acara.submit', props.beritaAcara.id), formData, {
-                forceFormData: true,
-                onSuccess: () => {
-                    showSignatureDialog.value = false;
-                    success('Berita Acara berhasil dikirim ke Area Manager.');
-                    router.visit(route('berita-acara.show', props.beritaAcara.id));
-                },
-                onError: (errors) => {
-                    submittingMemo.value = false;
-                    showSignatureDialog.value = false;
-                    if (!errors.signature) showError(Object.values(errors).join(' '));
-                },
-                onFinish: () => { submittingMemo.value = false; },
-            });
+            doSendToAm();
         },
-        onError: () => { submittingMemo.value = false; showSignatureDialog.value = false; },
+        onError: (errors) => {
+            submittingMemo.value = false;
+            showSignatureDialog.value = false;
+            showError('Gagal Menyimpan Berita Acara', Object.values(errors).join(' '));
+        },
     });
 };
 
@@ -157,16 +176,55 @@ onMounted(() => {
     if (props.openSubmit) submitMemo();
 });
 
+const triggerFileInput = () => fileInput.value?.click();
+const isPdf = (fileName) => /\.pdf$/i.test(fileName || '');
+const isWord = (fileName) => /\.(docx?|doc)$/i.test(fileName || '');
+
 // ── Attachment upload ─────────────────────────────────────────────
-const uploadFile = () => {
+const uploadFile = async () => {
     const file = fileInput.value?.files[0];
     if (!file) return;
+
+    if (isLainnya && (props.beritaAcara.attachments?.length || 0) > 0) {
+        const confirmed = await confirm('Ganti Dokumen Berita Acara?', 'Dokumen yang ada saat ini akan digantikan dengan berkas baru.');
+        if (!confirmed) {
+            if (fileInput.value) fileInput.value.value = '';
+            return;
+        }
+        uploading.value = true;
+        const oldAttachmentId = props.beritaAcara.attachments[0].id;
+        router.delete(route('berita-acara.attachments.destroy', [props.beritaAcara.id, oldAttachmentId]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                const formData = new FormData();
+                formData.append('file', file);
+                router.post(route('berita-acara.attachments.upload', props.beritaAcara.id), formData, {
+                    forceFormData: true,
+                    preserveScroll: true,
+                    onFinish: () => { 
+                        uploading.value = false; 
+                        if (fileInput.value) fileInput.value.value = ''; 
+                    },
+                });
+            },
+            onError: () => {
+                uploading.value = false;
+                if (fileInput.value) fileInput.value.value = '';
+            }
+        });
+        return;
+    }
+
     uploading.value = true;
     const formData = new FormData();
     formData.append('file', file);
     router.post(route('berita-acara.attachments.upload', props.beritaAcara.id), formData, {
         forceFormData: true,
-        onFinish: () => { uploading.value = false; fileInput.value.value = ''; },
+        preserveScroll: true,
+        onFinish: () => { 
+            uploading.value = false; 
+            if (fileInput.value) fileInput.value.value = ''; 
+        },
     });
 };
 
@@ -201,7 +259,7 @@ const deleteDraft = async () => {
                 <div class="flex items-center justify-between gap-3 mb-2">
                     <div class="flex items-center gap-3">
                         <a-tag color="default" class="memo-code-tag font-mono">{{ beritaAcara.code }}</a-tag>
-                        <a-tag :color="beritaAcara.status === 'rejected' ? 'error' : 'default'" class="memo-status-tag font-semibold uppercase">{{ beritaAcara.status }}</a-tag>
+                        <a-tag :color="beritaAcara.status === 'rejected' ? 'error' : 'default'" class="memo-status-tag font-semibold uppercase">{{ beritaAcara.status === 'rejected' ? 'Ditolak' : 'Draft' }}</a-tag>
                     </div>
                 </div>
                 <p class="text-sm text-gray-500 mb-0">Template: <span class="font-medium text-gray-800">{{ beritaAcara.meta?.template || '-' }}</span></p>
@@ -221,36 +279,70 @@ const deleteDraft = async () => {
                     <h2 class="text-base font-semibold mb-1">Berkas Dokumen Berita Acara</h2>
                     <p class="text-xs text-gray-500 mb-4">Dokumen Berita Acara dalam format PDF atau Word (maksimal 10 MB).</p>
 
-                    <div v-if="beritaAcara.attachments?.length > 0" class="mb-4">
-                        <a-list item-layout="horizontal" :data-source="beritaAcara.attachments" size="small" class="border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-slate-900">
-                            <template #renderItem="{ item }">
-                                <a-list-item>
-                                    <a-list-item-meta :title="item.original_name || item.file_path">
-                                        <template #avatar><paper-clip-outlined class="text-blue-600 text-lg" /></template>
-                                    </a-list-item-meta>
-                                    <template #actions>
-                                        <a-button type="link" danger size="small" @click="deleteAttachment(item)">Hapus</a-button>
-                                    </template>
-                                </a-list-item>
-                            </template>
-                        </a-list>
-                    </div>
+                    <input
+                        ref="fileInput"
+                        type="file"
+                        @change="uploadFile"
+                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                        style="display: none !important;"
+                    />
 
-                    <p class="mb-2 text-xs text-gray-400">Unggah berkas dokumen baru jika ingin mengganti/menambah lampiran (maksimal 3 file, 10 MB per file):</p>
-                    <div class="flex items-center gap-3">
-                        <input
-                            ref="fileInput"
-                            type="file"
-                            @change="uploadFile"
-                            accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
-                            :disabled="(beritaAcara.attachments?.length || 0) >= 3 || uploading"
-                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        />
-                        <span v-if="uploading" class="text-sm text-gray-500">Mengupload...</span>
+                    <div class="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 min-h-[56px]">
+                        <a-button 
+                            type="primary" 
+                            ghost
+                            class="!flex !items-center !gap-1.5"
+                            :disabled="uploading"
+                            :loading="uploading"
+                            @click="triggerFileInput"
+                        >
+                            <template #icon><upload-outlined v-if="!uploading" /></template>
+                            <span>{{ (beritaAcara.attachments?.length || 0) > 0 ? 'Ganti Berkas' : 'Choose File' }}</span>
+                        </a-button>
+
+                        <span v-if="uploading" class="text-sm text-blue-500 flex items-center gap-1.5">
+                            <loading-outlined spin />
+                            <span>Mengunggah berkas...</span>
+                        </span>
+
+                        <span v-else-if="!(beritaAcara.attachments?.length)" class="text-sm text-gray-400">
+                            No file chosen
+                        </span>
+
+                        <div v-else class="flex flex-wrap items-center gap-2">
+                            <div 
+                                v-for="item in beritaAcara.attachments" 
+                                :key="item.id"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm"
+                            >
+                                <file-pdf-outlined v-if="isPdf(item.original_name || item.file_path)" class="text-red-500 text-base" />
+                                <file-word-outlined v-else-if="isWord(item.original_name || item.file_path)" class="text-blue-500 text-base" />
+                                <file-outlined v-else class="text-gray-400 text-base" />
+                                
+                                <a 
+                                    :href="'/storage/' + item.file_path" 
+                                    target="_blank" 
+                                    class="max-w-[280px] truncate text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:underline" 
+                                    :title="item.original_name || item.file_path"
+                                >
+                                    {{ item.original_name || item.file_path }}
+                                </a>
+                                
+                                <button
+                                    type="button"
+                                    class="ml-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer flex items-center p-0.5 rounded"
+                                    title="Hapus berkas"
+                                    aria-label="Hapus berkas"
+                                    @click.stop="deleteAttachment(item)"
+                                >
+                                    <close-circle-outlined class="text-sm" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-6 pt-4 border-t flex justify-end gap-3">
-                        <a-button size="large" type="primary" @click="submitMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
+                        <a-button size="large" type="primary" @click="submitMemo" :loading="submittingMemo" class="memo-submit-button bg-green-600 hover:bg-green-500 border-green-600">
                             <template #icon><send-outlined /></template>
                             Kirim ke AM
                         </a-button>
@@ -453,7 +545,7 @@ const deleteDraft = async () => {
             v-model:open="showSignatureDialog"
             title="Tanda Tangan Digital KC"
             :confirmLoading="submittingMemo"
-            :okButtonProps="{ disabled: submittingMemo || (!signature && !signatureFile) }"
+            :okButtonProps="{ disabled: submittingMemo || (!signature?.signature_image && !signatureFile) }"
             okText="Tanda Tangani & Kirim ke AM"
             cancelText="Batal"
             @ok="confirmSubmit"

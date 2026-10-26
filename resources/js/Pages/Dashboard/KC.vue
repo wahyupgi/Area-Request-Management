@@ -547,7 +547,7 @@ const focusDocuments = (status) => {
     font-size: 13px !important;
 }
 
-.kc-memo-table .ant-table-tbody > tr > td {
+.kc-memo-table .ant-table-tbody > tr:not(.ant-table-measure-row) > td {
     color: #e2e8f0 !important;
     background: transparent !important;
     border-bottom: 1px solid #475569 !important;
@@ -557,8 +557,19 @@ const focusDocuments = (status) => {
     font-size: 13px !important;
 }
 
-.kc-memo-table .ant-table-tbody > tr > td:last-child {
+.kc-memo-table .ant-table-tbody > tr:not(.ant-table-measure-row) > td:last-child {
     border-right: 0 !important;
+}
+
+.kc-memo-table .ant-table-tbody > tr.ant-table-measure-row,
+.kc-memo-table .ant-table-tbody > tr.ant-table-measure-row > td {
+    padding: 0 !important;
+    border: 0 !important;
+    height: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    visibility: collapse !important;
+    background: transparent !important;
 }
 
 .kc-memo-table .kc-memo-type-tag-memo {
@@ -597,7 +608,7 @@ const focusDocuments = (status) => {
     border-color: #ef4444 !important;
 }
 
-.kc-memo-table .ant-table-tbody > tr:hover > td {
+.kc-memo-table .ant-table-tbody > tr:not(.ant-table-measure-row):hover > td {
     color: #ffffff !important;
     background: rgba(255, 255, 255, 0.06) !important;
 }
@@ -758,15 +769,26 @@ html.theme-light .kc-memo-table .ant-table-thead > tr > th {
     border-bottom: 1px solid #274b70 !important;
 }
 
-html.theme-light .kc-memo-table .ant-table-tbody > tr > td {
+html.theme-light .kc-memo-table .ant-table-tbody > tr:not(.ant-table-measure-row) > td {
     color: #1e293b !important;
     background: #ffffff !important;
     border-bottom: 1px solid #cbd5e1 !important;
     border-right: 1px solid #cbd5e1 !important;
 }
 
-html.theme-light .kc-memo-table .ant-table-tbody > tr > td:last-child {
+html.theme-light .kc-memo-table .ant-table-tbody > tr:not(.ant-table-measure-row) > td:last-child {
     border-right: 0 !important;
+}
+
+html.theme-light .kc-memo-table .ant-table-tbody > tr.ant-table-measure-row,
+html.theme-light .kc-memo-table .ant-table-tbody > tr.ant-table-measure-row > td {
+    padding: 0 !important;
+    border: 0 !important;
+    height: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    visibility: collapse !important;
+    background: transparent !important;
 }
 
 html.theme-light .kc-memo-table .kc-memo-type-tag-memo {
@@ -805,7 +827,7 @@ html.theme-light .kc-memo-table .kc-memo-status-tag-rejected {
     border-color: #fca5a5 !important;
 }
 
-html.theme-light .kc-memo-table .ant-table-tbody > tr:hover > td {
+html.theme-light .kc-memo-table .ant-table-tbody > tr:not(.ant-table-measure-row):hover > td {
     color: #0f172a !important;
     background: #eff6ff !important;
 }

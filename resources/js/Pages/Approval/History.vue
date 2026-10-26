@@ -142,7 +142,7 @@ const printMemo = () => {
         <a-row :gutter="[24, 24]" class="max-w-7xl mx-auto">
             <!-- Left Column: Memo Document -->
             <a-col :xs="24" :lg="16" class="flex justify-center">
-                <div class="document-preview-scroll">
+                <div class="document-preview-scroll w-full flex flex-col items-center">
                     <div class="document-preview-paper shadow-md bg-white">
                         <MemoDocument :memo="memo" :show-am-signature="memo.status === 'approved'" />
                     </div>
@@ -171,7 +171,7 @@ const printMemo = () => {
                                         <p class="text-xs text-gray-500 mb-0">{{ new Date(approval.created_at).toLocaleString('id-ID') }}</p>
                                     </div>
                                     <a-tag :color="approval.action === 'approved' ? 'success' : 'error'" class="uppercase m-0">
-                                        {{ approval.action }}
+                                        {{ approval.action === 'approved' ? 'Disetujui' : 'Ditolak' }}
                                     </a-tag>
                                 </div>
                                 

@@ -191,7 +191,7 @@ const formatDate = (dateString) => {
                                 </a-tooltip>
                             </div>
                         </template>
-                        <div class="document-preview-scroll">
+                        <div class="document-preview-scroll w-full flex flex-col items-center">
                             <div id="printable-fp">
                                 <FormPengajuanDocument :berita-acara="formDocument" />
                             </div>

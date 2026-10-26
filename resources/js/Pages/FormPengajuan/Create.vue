@@ -109,9 +109,57 @@ const resetOtherLeaveType = () => {
     form.meta.request_data.leave_type_other = '';
 };
 
+const fpFieldErrors = ref({});
+
+const clearFpError = (key) => {
+    if (fpFieldErrors.value[key]) {
+        const updated = { ...fpFieldErrors.value };
+        delete updated[key];
+        fpFieldErrors.value = updated;
+    }
+};
+
+const validateFpForm = () => {
+    const errors = {};
+    const rd = form.meta.request_data;
+
+    if (!form.branch_id) {
+        form.setError('branch_id', 'Silakan pilih cabang terlebih dahulu.');
+        return false;
+    }
+    if (!form.template) {
+        form.setError('template', 'Silakan pilih jenis form pengajuan.');
+        return false;
+    }
+
+    if (form.template === 'Form Permohonan Pinjaman (FPP)') {
+        if (!rd.full_name?.trim()) errors['full_name'] = 'Nama Lengkap wajib diisi';
+        if (!rd.position?.trim()) errors['position'] = 'Jabatan wajib diisi';
+        if (!rd.work_location?.trim()) errors['work_location'] = 'Cabang/Lokasi Kerja wajib diisi';
+        if (!rd.employment_date?.trim()) errors['employment_date'] = 'Tanggal Masuk Kerja wajib diisi';
+        const loanVal = String(rd.loan_amount ?? '').replace(/\D/g, '');
+        if (!loanVal) errors['loan_amount'] = 'Jumlah Pinjaman wajib diisi';
+        if (!rd.repayment_months) errors['repayment_months'] = 'Lama Pengembalian wajib diisi';
+        if (!rd.reason?.trim()) errors['reason'] = 'Alasan Pinjaman wajib diisi';
+    } else if (form.template === 'Form Ijin Tidak Masuk Kerja (FITMK)') {
+        if (!rd.full_name?.trim()) errors['full_name'] = 'Nama wajib diisi';
+        if (!rd.start_date?.trim()) errors['start_date'] = 'Tanggal Ijin wajib diisi';
+        if (!rd.duration) errors['duration'] = 'Durasi wajib diisi';
+        if (!rd.reason?.trim()) errors['reason'] = 'Alasan wajib diisi';
+    }
+
+    fpFieldErrors.value = errors;
+    return Object.keys(errors).length === 0;
+};
+
 const saving = ref('');
 
 const persist = (sendAfterSave) => {
+    form.clearErrors();
+    if (!validateFpForm()) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
     saving.value = sendAfterSave ? 'send' : 'draft';
     form.transform(data => ({
         title: data.title || data.template,
@@ -238,23 +286,23 @@ const submitAndSend = () => persist(true);
                                 />
                                 <a-row :gutter="12">
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Nama Lengkap" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']">
-                                            <a-input v-model:value="form.meta.request_data.full_name" />
+                                        <a-form-item label="Nama Lengkap" :validateStatus="fpFieldErrors.full_name || form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="fpFieldErrors.full_name || form.errors['meta.request_data.full_name']">
+                                            <a-input v-model:value="form.meta.request_data.full_name" @change="clearFpError('full_name')" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Jabatan" :validateStatus="form.errors['meta.request_data.position'] ? 'error' : ''" :help="form.errors['meta.request_data.position']">
-                                            <a-input v-model:value="form.meta.request_data.position" />
+                                        <a-form-item label="Jabatan" :validateStatus="fpFieldErrors.position || form.errors['meta.request_data.position'] ? 'error' : ''" :help="fpFieldErrors.position || form.errors['meta.request_data.position']">
+                                            <a-input v-model:value="form.meta.request_data.position" @change="clearFpError('position')" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Cabang / Lokasi Kerja" :validateStatus="form.errors['meta.request_data.work_location'] ? 'error' : ''" :help="form.errors['meta.request_data.work_location']">
-                                            <a-input v-model:value="form.meta.request_data.work_location" />
+                                        <a-form-item label="Cabang / Lokasi Kerja" :validateStatus="fpFieldErrors.work_location || form.errors['meta.request_data.work_location'] ? 'error' : ''" :help="fpFieldErrors.work_location || form.errors['meta.request_data.work_location']">
+                                            <a-input v-model:value="form.meta.request_data.work_location" @change="clearFpError('work_location')" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Tanggal Masuk Kerja" :validateStatus="form.errors['meta.request_data.employment_date'] ? 'error' : ''" :help="form.errors['meta.request_data.employment_date']">
-                                            <a-input v-model:value="form.meta.request_data.employment_date" type="date" />
+                                        <a-form-item label="Tanggal Masuk Kerja" :validateStatus="fpFieldErrors.employment_date || form.errors['meta.request_data.employment_date'] ? 'error' : ''" :help="fpFieldErrors.employment_date || form.errors['meta.request_data.employment_date']">
+                                            <a-input v-model:value="form.meta.request_data.employment_date" type="date" @change="clearFpError('employment_date')" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="8">
@@ -283,13 +331,13 @@ const submitAndSend = () => persist(true);
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Jumlah pinjaman yang diajukan" :validateStatus="form.errors['meta.request_data.loan_amount'] ? 'error' : ''" :help="form.errors['meta.request_data.loan_amount']">
-                                            <a-input v-model:value="loanAmount" placeholder="Contoh: 5.000.000" />
+                                        <a-form-item label="Jumlah pinjaman yang diajukan" :validateStatus="fpFieldErrors.loan_amount || form.errors['meta.request_data.loan_amount'] ? 'error' : ''" :help="fpFieldErrors.loan_amount || form.errors['meta.request_data.loan_amount']">
+                                            <a-input v-model:value="loanAmount" placeholder="Contoh: 5.000.000" @change="clearFpError('loan_amount')" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Lama pengembalian (bulan)" :validateStatus="form.errors['meta.request_data.repayment_months'] ? 'error' : ''" :help="form.errors['meta.request_data.repayment_months']">
-                                            <a-input-number v-model:value="form.meta.request_data.repayment_months" :min="1" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" />
+                                        <a-form-item label="Lama pengembalian (bulan)" :validateStatus="fpFieldErrors.repayment_months || form.errors['meta.request_data.repayment_months'] ? 'error' : ''" :help="fpFieldErrors.repayment_months || form.errors['meta.request_data.repayment_months']">
+                                            <a-input-number v-model:value="form.meta.request_data.repayment_months" :min="1" @keydown="restrictToDigits" @paste="preventNonDigitPaste" @change="clearFpError('repayment_months')" class="w-full" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
@@ -309,8 +357,8 @@ const submitAndSend = () => persist(true);
                                         </a-form-item>
                                     </a-col>
                                     <a-col :span="24">
-                                        <a-form-item label="Alasan Pinjaman" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']">
-                                            <a-textarea v-model:value="form.meta.request_data.reason" :rows="4" />
+                                        <a-form-item label="Alasan Pinjaman" :validateStatus="fpFieldErrors.reason || form.errors['meta.request_data.reason'] ? 'error' : ''" :help="fpFieldErrors.reason || form.errors['meta.request_data.reason']">
+                                            <a-textarea v-model:value="form.meta.request_data.reason" :rows="4" @change="clearFpError('reason')" />
                                         </a-form-item>
                                     </a-col>
                                 </a-row>
@@ -327,8 +375,8 @@ const submitAndSend = () => persist(true);
                                 />
                                 <a-row :gutter="12">
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Nama" :validateStatus="form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="form.errors['meta.request_data.full_name']">
-                                            <a-input v-model:value="form.meta.request_data.full_name" />
+                                        <a-form-item label="Nama" :validateStatus="fpFieldErrors.full_name || form.errors['meta.request_data.full_name'] ? 'error' : ''" :help="fpFieldErrors.full_name || form.errors['meta.request_data.full_name']">
+                                            <a-input v-model:value="form.meta.request_data.full_name" @change="clearFpError('full_name')" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
@@ -347,18 +395,18 @@ const submitAndSend = () => persist(true);
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Tanggal ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.start_date'] ? 'error' : ''" :help="form.errors['meta.request_data.start_date']">
-                                            <a-input v-model:value="form.meta.request_data.start_date" type="date" />
+                                        <a-form-item label="Tanggal ijin tidak masuk kerja" :validateStatus="fpFieldErrors.start_date || form.errors['meta.request_data.start_date'] ? 'error' : ''" :help="fpFieldErrors.start_date || form.errors['meta.request_data.start_date']">
+                                            <a-input v-model:value="form.meta.request_data.start_date" type="date" @change="clearFpError('start_date')" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">
-                                        <a-form-item label="Durasi (hari)" :validateStatus="form.errors['meta.request_data.duration'] ? 'error' : ''" :help="form.errors['meta.request_data.duration']">
-                                            <a-input-number v-model:value="form.meta.request_data.duration" :min="1" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" />
+                                        <a-form-item label="Durasi (hari)" :validateStatus="fpFieldErrors.duration || form.errors['meta.request_data.duration'] ? 'error' : ''" :help="fpFieldErrors.duration || form.errors['meta.request_data.duration']">
+                                            <a-input-number v-model:value="form.meta.request_data.duration" :min="1" @keydown="restrictToDigits" @paste="preventNonDigitPaste" @change="clearFpError('duration')" class="w-full" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :span="24">
-                                        <a-form-item label="Alasan ijin tidak masuk kerja" :validateStatus="form.errors['meta.request_data.reason'] ? 'error' : ''" :help="form.errors['meta.request_data.reason']">
-                                            <a-textarea v-model:value="form.meta.request_data.reason" :rows="3" />
+                                        <a-form-item label="Alasan ijin tidak masuk kerja" :validateStatus="fpFieldErrors.reason || form.errors['meta.request_data.reason'] ? 'error' : ''" :help="fpFieldErrors.reason || form.errors['meta.request_data.reason']">
+                                            <a-textarea v-model:value="form.meta.request_data.reason" :rows="3" @change="clearFpError('reason')" />
                                         </a-form-item>
                                     </a-col>
                                     <a-col :xs="24" :md="12">

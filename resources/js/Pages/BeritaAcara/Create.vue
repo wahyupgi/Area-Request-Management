@@ -213,6 +213,16 @@ const formattedDetailValue = (item) => isRupiahDetail(item.label)
     ? formatRupiahAmount(item.value)
     : item.value;
 
+const baFieldErrors = ref({});
+
+const clearBaError = (key) => {
+    if (baFieldErrors.value[key]) {
+        const updated = { ...baFieldErrors.value };
+        delete updated[key];
+        baFieldErrors.value = updated;
+    }
+};
+
 const validateBaForm = () => {
     attachmentError.value = '';
     form.clearErrors();
@@ -241,10 +251,40 @@ const validateBaForm = () => {
             form.setError('title', 'Judul Berita Acara wajib diisi.');
             hasError = true;
         }
+
+        // Validasi baris tabel
+        const rowErrors = {};
+        if (form.meta.template === 'Permintaan Revisi Absensi') {
+            form.meta.data.rows.forEach((row, rIdx) => {
+                if (!row.nama?.trim()) rowErrors[`row.${rIdx}.nama`] = 'Nama wajib diisi';
+                if (!row.nik?.trim()) rowErrors[`row.${rIdx}.nik`] = 'NIK wajib diisi';
+                if (!row.tanggal?.trim()) rowErrors[`row.${rIdx}.tanggal`] = 'Tanggal wajib diisi';
+                if (!row.absensi_in?.trim()) rowErrors[`row.${rIdx}.absensi_in`] = 'Absensi IN wajib diisi';
+                if (!row.absensi_out?.trim()) rowErrors[`row.${rIdx}.absensi_out`] = 'Absensi OUT wajib diisi';
+            });
+        } else if (form.meta.template === 'Penghapusan Barang Sitaan') {
+            form.meta.data.rows.forEach((row, rIdx) => {
+                if (!row.nama_nasabah?.trim()) rowErrors[`row.${rIdx}.nama_nasabah`] = 'Nama Nasabah wajib diisi';
+                if (!row.no_faktur?.trim()) rowErrors[`row.${rIdx}.no_faktur`] = 'No. Faktur wajib diisi';
+                if (!row.barang?.trim()) rowErrors[`row.${rIdx}.barang`] = 'Barang wajib diisi';
+                const nom = row.nominal_pinjaman;
+                if (nom === undefined || nom === null || String(nom).trim() === '') rowErrors[`row.${rIdx}.nominal_pinjaman`] = 'Nominal Pinjaman wajib diisi';
+            });
+        } else {
+            // template lain dengan rincian_data
+            form.rincian_data.forEach((item, idx) => {
+                if (!item.value?.trim()) rowErrors[`rincian.${idx}`] = `${item.label || 'Field ini'} wajib diisi`;
+            });
+        }
+
+        if (Object.keys(rowErrors).length > 0) {
+            baFieldErrors.value = { ...baFieldErrors.value, ...rowErrors };
+            hasError = true;
+        }
     }
 
     if (hasError) {
-        showError('Data Belum Lengkap', 'Mohon lengkapi cabang dan pilihan Berita Acara yang wajib diisi.');
+        showError('Data Belum Lengkap', 'Mohon lengkapi semua field yang wajib diisi sebelum mengirim.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
     }
@@ -520,10 +560,20 @@ const submitAndSend = () => {
                                     </div>
                                 </template>
                                 <template v-else>
-                                    <div v-for="(item, index) in form.rincian_data" :key="index" class="flex gap-3 mb-2 items-center">
+                                    <div v-for="(item, index) in form.rincian_data" :key="index" class="flex gap-3 mb-3 items-start">
                                         <a-input v-model:value="item.label" placeholder="Label (Misal: NIK)" style="width: 35%;" />
-                                        <span class="text-gray-400">:</span>
-                                        <a-input :value="formattedDetailValue(item)" placeholder="Isi Data" class="flex-1" @update:value="value => updateDetailValue(item, value)" @keydown="event => restrictDetailDigits(event, item.label)" @paste="event => preventNonDigitDetailPaste(event, item.label)" />
+                                        <span class="text-gray-400 mt-1">:</span>
+                                        <div class="flex flex-col flex-1">
+                                            <a-input
+                                                :value="formattedDetailValue(item)"
+                                                placeholder="Isi Data"
+                                                :status="baFieldErrors[`rincian.${index}`] ? 'error' : ''"
+                                                @update:value="value => { updateDetailValue(item, value); clearBaError(`rincian.${index}`); }"
+                                                @keydown="event => restrictDetailDigits(event, item.label)"
+                                                @paste="event => preventNonDigitDetailPaste(event, item.label)"
+                                            />
+                                            <div v-if="baFieldErrors[`rincian.${index}`]" class="text-red-500 text-xs mt-1">{{ baFieldErrors[`rincian.${index}`] }}</div>
+                                        </div>
                                         <a-button type="text" danger @click="removeRincian(index)" class="flex-shrink-0">
                                             <template #icon><delete-outlined /></template>
                                         </a-button>
@@ -547,39 +597,66 @@ const submitAndSend = () => {
                                     </div>
                                     <template v-if="form.meta.template === 'Permintaan Revisi Absensi'">
                                         <a-row :gutter="8">
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nama" placeholder="Nama" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.nik" placeholder="NIK" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.tanggal" type="date" placeholder="Tanggal" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.absensi_in" type="time" placeholder="Absensi IN" class="mb-2" /></a-col>
-                                            <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.absensi_out" type="time" placeholder="Absensi Out" class="mb-2" /></a-col>
+                                            <a-col :xs="24" :sm="12" :md="8">
+                                                <a-input v-model:value="row.nama" placeholder="Nama" :status="baFieldErrors[`row.${index}.nama`] ? 'error' : ''" @change="clearBaError(`row.${index}.nama`)" class="mb-1" />
+                                                <div v-if="baFieldErrors[`row.${index}.nama`]" class="text-red-500 text-xs mb-2">{{ baFieldErrors[`row.${index}.nama`] }}</div>
+                                            </a-col>
+                                            <a-col :xs="24" :sm="12" :md="8">
+                                                <a-input v-model:value="row.nik" placeholder="NIK" @keydown="restrictToDigits" @paste="preventNonDigitPaste" :status="baFieldErrors[`row.${index}.nik`] ? 'error' : ''" @change="clearBaError(`row.${index}.nik`)" class="mb-1" />
+                                                <div v-if="baFieldErrors[`row.${index}.nik`]" class="text-red-500 text-xs mb-2">{{ baFieldErrors[`row.${index}.nik`] }}</div>
+                                            </a-col>
+                                            <a-col :xs="24" :sm="12" :md="8">
+                                                <a-input v-model:value="row.tanggal" type="date" placeholder="Tanggal" :status="baFieldErrors[`row.${index}.tanggal`] ? 'error' : ''" @change="clearBaError(`row.${index}.tanggal`)" class="mb-1" />
+                                                <div v-if="baFieldErrors[`row.${index}.tanggal`]" class="text-red-500 text-xs mb-2">{{ baFieldErrors[`row.${index}.tanggal`] }}</div>
+                                            </a-col>
+                                            <a-col :xs="24" :sm="12" :md="8">
+                                                <a-input v-model:value="row.absensi_in" type="time" placeholder="Absensi IN" :status="baFieldErrors[`row.${index}.absensi_in`] ? 'error' : ''" @change="clearBaError(`row.${index}.absensi_in`)" class="mb-1" />
+                                                <div v-if="baFieldErrors[`row.${index}.absensi_in`]" class="text-red-500 text-xs mb-2">{{ baFieldErrors[`row.${index}.absensi_in`] }}</div>
+                                            </a-col>
+                                            <a-col :xs="24" :sm="12" :md="8">
+                                                <a-input v-model:value="row.absensi_out" type="time" placeholder="Absensi Out" :status="baFieldErrors[`row.${index}.absensi_out`] ? 'error' : ''" @change="clearBaError(`row.${index}.absensi_out`)" class="mb-1" />
+                                                <div v-if="baFieldErrors[`row.${index}.absensi_out`]" class="text-red-500 text-xs mb-2">{{ baFieldErrors[`row.${index}.absensi_out`] }}</div>
+                                            </a-col>
                                             <a-col :xs="24" :sm="12" :md="8"><a-input v-model:value="row.ket" placeholder="Keterangan" class="mb-2" /></a-col>
                                         </a-row>
                                     </template>
                                     <template v-else-if="form.meta.template === 'Penghapusan Barang Sitaan'">
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <span class="w-[35%] flex-shrink-0">Cabang</span>
-                                            <span class="text-gray-400">:</span>
+                                        <div class="flex items-start gap-3 mb-2">
+                                            <span class="w-[35%] flex-shrink-0 mt-1">Cabang</span>
+                                            <span class="text-gray-400 mt-1">:</span>
                                             <a-input v-model:value="row.cabang" placeholder="Isi Data" class="flex-1" />
                                         </div>
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <span class="w-[35%] flex-shrink-0">Nama Nasabah</span>
-                                            <span class="text-gray-400">:</span>
-                                            <a-input v-model:value="row.nama_nasabah" placeholder="Isi Data" class="flex-1" />
+                                        <div class="flex items-start gap-3 mb-2">
+                                            <span class="w-[35%] flex-shrink-0 mt-1">Nama Nasabah</span>
+                                            <span class="text-gray-400 mt-1">:</span>
+                                            <div class="flex flex-col flex-1">
+                                                <a-input v-model:value="row.nama_nasabah" placeholder="Isi Data" :status="baFieldErrors[`row.${index}.nama_nasabah`] ? 'error' : ''" @change="clearBaError(`row.${index}.nama_nasabah`)" />
+                                                <div v-if="baFieldErrors[`row.${index}.nama_nasabah`]" class="text-red-500 text-xs mt-1">{{ baFieldErrors[`row.${index}.nama_nasabah`] }}</div>
+                                            </div>
                                         </div>
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <span class="w-[35%] flex-shrink-0">No. Faktur</span>
-                                            <span class="text-gray-400">:</span>
-                                            <a-input v-model:value="row.no_faktur" placeholder="Isi Data" class="flex-1" />
+                                        <div class="flex items-start gap-3 mb-2">
+                                            <span class="w-[35%] flex-shrink-0 mt-1">No. Faktur</span>
+                                            <span class="text-gray-400 mt-1">:</span>
+                                            <div class="flex flex-col flex-1">
+                                                <a-input v-model:value="row.no_faktur" placeholder="Isi Data" :status="baFieldErrors[`row.${index}.no_faktur`] ? 'error' : ''" @change="clearBaError(`row.${index}.no_faktur`)" />
+                                                <div v-if="baFieldErrors[`row.${index}.no_faktur`]" class="text-red-500 text-xs mt-1">{{ baFieldErrors[`row.${index}.no_faktur`] }}</div>
+                                            </div>
                                         </div>
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <span class="w-[35%] flex-shrink-0">Barang</span>
-                                            <span class="text-gray-400">:</span>
-                                            <a-input v-model:value="row.barang" placeholder="Isi Data" class="flex-1" />
+                                        <div class="flex items-start gap-3 mb-2">
+                                            <span class="w-[35%] flex-shrink-0 mt-1">Barang</span>
+                                            <span class="text-gray-400 mt-1">:</span>
+                                            <div class="flex flex-col flex-1">
+                                                <a-input v-model:value="row.barang" placeholder="Isi Data" :status="baFieldErrors[`row.${index}.barang`] ? 'error' : ''" @change="clearBaError(`row.${index}.barang`)" />
+                                                <div v-if="baFieldErrors[`row.${index}.barang`]" class="text-red-500 text-xs mt-1">{{ baFieldErrors[`row.${index}.barang`] }}</div>
+                                            </div>
                                         </div>
-                                        <div class="flex items-center gap-3">
-                                            <span class="w-[35%] flex-shrink-0">Nominal Pinjaman</span>
-                                            <span class="text-gray-400">:</span>
-                                            <a-input-number v-model:value="row.nominal_pinjaman" :precision="0" :formatter="formatNominalInput" :parser="parseNominalInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" placeholder="Isi Data" class="flex-1 w-full" />
+                                        <div class="flex items-start gap-3">
+                                            <span class="w-[35%] flex-shrink-0 mt-1">Nominal Pinjaman</span>
+                                            <span class="text-gray-400 mt-1">:</span>
+                                            <div class="flex flex-col flex-1">
+                                                <a-input-number v-model:value="row.nominal_pinjaman" :precision="0" :formatter="formatNominalInput" :parser="parseNominalInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" placeholder="Isi Data" :status="baFieldErrors[`row.${index}.nominal_pinjaman`] ? 'error' : ''" @change="clearBaError(`row.${index}.nominal_pinjaman`)" class="w-full" />
+                                                <div v-if="baFieldErrors[`row.${index}.nominal_pinjaman`]" class="text-red-500 text-xs mt-1">{{ baFieldErrors[`row.${index}.nominal_pinjaman`] }}</div>
+                                            </div>
                                         </div>
                                     </template>
                                     <template v-else>

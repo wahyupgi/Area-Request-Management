@@ -34,9 +34,9 @@ const getStatusColor = (status) => {
 const getStatusLabel = (status) => {
     const labels = {
         draft: 'Draft',
-        submitted: 'Submitted',
-        approved: 'Approved',
-        rejected: 'Rejected',
+        submitted: 'Diajukan',
+        approved: 'Disetujui',
+        rejected: 'Ditolak',
     };
     return labels[status] || status;
 };
@@ -65,9 +65,9 @@ const onFilterChange = (e) => {
                 >
                     <a-radio-button value="">Semua</a-radio-button>
                     <a-radio-button value="draft">Draft</a-radio-button>
-                    <a-radio-button value="submitted">Submitted</a-radio-button>
-                    <a-radio-button value="approved">Approved</a-radio-button>
-                    <a-radio-button value="rejected">Rejected</a-radio-button>
+                    <a-radio-button value="submitted">Diajukan</a-radio-button>
+                    <a-radio-button value="approved">Disetujui</a-radio-button>
+                    <a-radio-button value="rejected">Ditolak</a-radio-button>
                 </a-radio-group>
                 
                 <a-button class="memo-create-button" type="primary" @click="router.visit(route('memos.create'))">

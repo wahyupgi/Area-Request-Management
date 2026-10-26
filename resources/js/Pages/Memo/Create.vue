@@ -10,6 +10,11 @@ import {
     SaveOutlined, 
     SendOutlined,
     LeftOutlined,
+    UploadOutlined,
+    FilePdfOutlined,
+    FileWordOutlined,
+    FileOutlined,
+    CloseCircleOutlined,
 } from '@ant-design/icons-vue';
 
 const props = defineProps({ templates: Array, branches: Array });
@@ -76,7 +81,16 @@ const groupedTemplates = computed(() => {
     }));
 });
 
+watch(() => form.branch_id, (val) => {
+    if (val && form.errors.branch_id) {
+        form.clearErrors('branch_id');
+    }
+});
+
 watch(() => form.template_id, (val) => {
+    if (val && form.errors.template_id) {
+        form.clearErrors('template_id');
+    }
     selectedTemplate.value = (props.templates || []).find(t => t.id == val) || null;
     if (selectedTemplate.value && (!form.title || form.title === 'Lainnya')) {
         form.title = selectedTemplate.value.name;
@@ -162,9 +176,22 @@ const parseIntegerInput = (value) => {
 const fieldErrors = ref({});
 
 const validateForm = () => {
-    const errors = {};
+    form.clearErrors();
+    if (!form.branch_id) {
+        form.setError('branch_id', 'Silakan pilih cabang terlebih dahulu.');
+        showError('Data Belum Lengkap', 'Silakan pilih cabang terlebih dahulu.');
+        return false;
+    }
+
+    if (!form.template_id) {
+        form.setError('template_id', 'Silakan pilih jenis memo terlebih dahulu.');
+        showError('Data Belum Lengkap', 'Silakan pilih jenis memo terlebih dahulu.');
+        return false;
+    }
+
     if (!selectedTemplate.value || isOtherTemplate.value) return true;
 
+    const errors = {};
     form.field_values.items.forEach((item, itemIndex) => {
         selectedTemplate.value.field_schema?.forEach((field) => {
             if (field.type === 'table') {
@@ -191,7 +218,11 @@ const validateForm = () => {
     });
 
     fieldErrors.value = errors;
-    return Object.keys(errors).length === 0;
+    if (Object.keys(errors).length > 0) {
+        showError('Data Belum Lengkap', 'Mohon lengkapi semua field yang wajib diisi sebelum mengirim.');
+        return false;
+    }
+    return true;
 };
 
 const clearError = (key) => {
@@ -202,6 +233,22 @@ const clearError = (key) => {
     }
 };
 
+const fileInputRef = ref(null);
+const triggerFileInput = () => fileInputRef.value?.click();
+const removeAttachment = () => {
+    attachment.value = null;
+    if (fileInputRef.value) fileInputRef.value.value = '';
+};
+const isPdf = (fileName) => /\.pdf$/i.test(fileName || '');
+const isWord = (fileName) => /\.(docx?|doc)$/i.test(fileName || '');
+const formatFileSize = (bytes) => {
+    if (!bytes && bytes !== 0) return '';
+    if (bytes < 1024) return bytes + ' B';
+    const kb = bytes / 1024;
+    if (kb < 1024) return kb.toFixed(1) + ' KB';
+    return (kb / (1024 * 1024)).toFixed(1) + ' MB';
+};
+
 const selectAttachment = (event) => {
     attachment.value = event.target.files[0] || null;
     if (attachment.value) attachmentRequiredError.value = '';
@@ -210,6 +257,7 @@ const selectAttachment = (event) => {
 const requireAttachmentForOther = () => {
     if (isOtherTemplate.value && !attachment.value) {
         attachmentRequiredError.value = 'Lampiran file Word/PDF wajib diunggah.';
+        showError('Data Belum Lengkap', 'Lampiran file Word/PDF wajib diunggah.');
         return false;
     }
     return true;
@@ -292,19 +340,52 @@ const submitAndSign = () => {
 
                 <a-form-item
                     label="File Dokumen (PDF / Word)"
-                    :validateStatus="attachmentRequiredError ? 'error' : ''"
-                    :help="attachmentRequiredError"
+                    :validateStatus="(form.errors.attachment || attachmentRequiredError) ? 'error' : ''"
+                    :help="form.errors.attachment || attachmentRequiredError"
                     class="mb-4"
                 >
                     <input
+                        ref="fileInputRef"
                         type="file"
                         @change="selectAttachment"
                         accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
-                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        style="display: none !important;"
                     />
-                    <p v-if="attachment" class="mt-2 text-xs text-gray-600 font-medium">
-                        File terpilih: {{ attachment.name }}
-                    </p>
+
+                    <div class="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 min-h-[56px]">
+                        <a-button 
+                            type="primary" 
+                            ghost
+                            class="!flex !items-center !gap-1.5"
+                            @click="triggerFileInput"
+                        >
+                            <template #icon><upload-outlined /></template>
+                            <span>{{ attachment ? 'Ganti Berkas' : 'Choose File' }}</span>
+                        </a-button>
+
+                        <span v-if="!attachment" class="text-sm text-gray-400">
+                            No file chosen
+                        </span>
+
+                        <div v-else class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm">
+                            <file-pdf-outlined v-if="isPdf(attachment.name)" class="text-red-500 text-base" />
+                            <file-word-outlined v-else-if="isWord(attachment.name)" class="text-blue-500 text-base" />
+                            <file-outlined v-else class="text-gray-400 text-base" />
+                            
+                            <span class="max-w-[280px] truncate font-medium text-slate-800 dark:text-slate-100" :title="attachment.name">{{ attachment.name }}</span>
+                            <span class="text-gray-400 text-[11px]">({{ formatFileSize(attachment.size) }})</span>
+                            
+                            <button
+                                type="button"
+                                class="ml-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer flex items-center p-0.5 rounded"
+                                title="Hapus file"
+                                aria-label="Hapus file"
+                                @click.stop="removeAttachment"
+                            >
+                                <close-circle-outlined class="text-sm" />
+                            </button>
+                        </div>
+                    </div>
                 </a-form-item>
 
                 <div class="mt-6 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
@@ -405,15 +486,15 @@ const submitAndSign = () => {
                             <div v-for="field in selectedTemplate.field_schema" :key="field.key" class="mb-4">
                                 <a-form-item 
                                     :label="field.label" 
-                                    :required="field.required && !hasFieldValue(item[field.key])"
-                                    :validateStatus="form.errors['field_values.items.' + itemIndex + '.' + field.key] ? 'error' : ''"
-                                    :help="form.errors['field_values.items.' + itemIndex + '.' + field.key]"
+                                    :required="field.required"
+                                    :validateStatus="fieldErrors[`${itemIndex}.${field.key}`] || form.errors['field_values.items.' + itemIndex + '.' + field.key] ? 'error' : ''"
+                                    :help="fieldErrors[`${itemIndex}.${field.key}`] || form.errors['field_values.items.' + itemIndex + '.' + field.key]"
                                     class="mb-0"
                                 >
-                                    <a-input v-if="field.type === 'text'" v-model:value="item[field.key]" />
-                                    <a-input-number v-else-if="field.type === 'number'" v-model:value="item[field.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(field))" :parser="parseIntegerInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" class="w-full" />
-                                    <a-input v-else-if="field.type === 'date'" type="date" v-model:value="item[field.key]" />
-                                    <a-textarea v-else-if="field.type === 'textarea'" v-model:value="item[field.key]" :rows="4" />
+                                    <a-input v-if="field.type === 'text'" v-model:value="item[field.key]" @change="clearError(`${itemIndex}.${field.key}`)" />
+                                    <a-input-number v-else-if="field.type === 'number'" v-model:value="item[field.key]" :precision="0" :formatter="value => formatNumberInput(value, isCurrencyField(field))" :parser="parseIntegerInput" @keydown="restrictToDigits" @paste="preventNonDigitPaste" @change="clearError(`${itemIndex}.${field.key}`)" class="w-full" />
+                                    <a-input v-else-if="field.type === 'date'" type="date" v-model:value="item[field.key]" @change="clearError(`${itemIndex}.${field.key}`)" />
+                                    <a-textarea v-else-if="field.type === 'textarea'" v-model:value="item[field.key]" :rows="4" @change="clearError(`${itemIndex}.${field.key}`)" />
                                     
                                     <!-- Table field: multiple sub-rows (e.g. area + qty) -->
                                     <div v-else-if="field.type === 'table'" class="mt-2 space-y-3">

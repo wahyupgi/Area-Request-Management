@@ -120,30 +120,9 @@ class MemoService
             : [$fieldValues];
         $errors = [];
 
-        if ($template?->name === 'Lainnya' && isset($fieldValues['table_columns'])) {
-            $columns = is_array($fieldValues['table_columns']) ? $fieldValues['table_columns'] : [];
-            if (!$columns) {
-                return ['field_values.table_columns' => 'Tambahkan minimal satu kolom pada rincian memo.'];
-            }
-
-            foreach ($columns as $columnIndex => $column) {
-                if (empty($column['key']) || empty(trim((string) ($column['label'] ?? '')))) {
-                    $errors['field_values.table_columns.' . $columnIndex . '.label'] =
-                        'Nama kolom ' . ($columnIndex + 1) . ' wajib diisi.';
-                }
-            }
-
-            foreach ($items as $itemIndex => $item) {
-                $hasValue = collect($columns)->contains(
-                    fn ($column) => isset($column['key'])
-                        && isset($item[$column['key']])
-                        && trim((string) $item[$column['key']]) !== ''
-                );
-
-                if (!$hasValue) {
-                    $errors['field_values.items.' . $itemIndex] =
-                        'Isi minimal satu kolom pada baris ' . ($itemIndex + 1) . '.';
-                }
+        if (strcasecmp(trim($template?->name ?? ''), 'Lainnya') === 0) {
+            if ($memo->attachments()->count() === 0) {
+                $errors['attachment'] = 'Lampiran dokumen memo (Word/PDF) wajib diunggah.';
             }
 
             return $errors;

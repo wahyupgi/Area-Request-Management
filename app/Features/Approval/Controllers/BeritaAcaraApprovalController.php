@@ -109,7 +109,7 @@ class BeritaAcaraApprovalController extends Controller
         }
 
         if ($beritaAcara->status !== BeritaAcara::STATUS_SUBMITTED) {
-            return back()->withErrors(['status' => 'Berita Acara ini tidak dalam status submitted.']);
+            return back()->withErrors(['status' => 'Berita Acara ini tidak sedang dalam status diajukan / menunggu persetujuan.']);
         }
 
         if (!$user->digitalSignature) {
@@ -136,7 +136,7 @@ class BeritaAcaraApprovalController extends Controller
         }
 
         if ($beritaAcara->status !== BeritaAcara::STATUS_SUBMITTED) {
-            return back()->withErrors(['status' => 'Berita Acara ini tidak dalam status submitted.']);
+            return back()->withErrors(['status' => 'Berita Acara ini tidak sedang dalam status diajukan / menunggu persetujuan.']);
         }
 
         $validated = $request->validate([

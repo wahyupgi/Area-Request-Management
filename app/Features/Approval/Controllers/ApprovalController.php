@@ -91,7 +91,7 @@ class ApprovalController extends Controller
         }
 
         if ($memo->status !== 'submitted') {
-            return back()->withErrors(['status' => 'Memo ini tidak dalam status submitted.']);
+            return back()->withErrors(['status' => 'Memo ini tidak sedang dalam status diajukan / menunggu persetujuan.']);
         }
 
         $signature = $this->service->resolveSignature($request, $user);
@@ -118,7 +118,7 @@ class ApprovalController extends Controller
         }
 
         if ($memo->status !== 'submitted') {
-            return back()->withErrors(['status' => 'Memo ini tidak dalam status submitted.']);
+            return back()->withErrors(['status' => 'Memo ini tidak sedang dalam status diajukan / menunggu persetujuan.']);
         }
 
         $this->service->rejectMemo($memo, $user, $request->notes);

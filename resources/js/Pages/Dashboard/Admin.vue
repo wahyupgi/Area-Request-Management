@@ -176,9 +176,9 @@ const donutSegments = computed(() => {
     const radius = 42;
     const circumference = 2 * Math.PI * radius;
     const statuses = [
-        { label: 'Approved', value: approvedCount.value, color: '#2563eb', strokeWidth: 13.5 },
-        { label: 'Pending', value: pendingCount.value, color: '#f2b323', strokeWidth: 10.5 },
-        { label: 'Rejected', value: rejectedCount.value, color: '#f97360', strokeWidth: 8 },
+        { label: 'Disetujui', value: approvedCount.value, color: '#2563eb', strokeWidth: 13.5 },
+        { label: 'Menunggu', value: pendingCount.value, color: '#f2b323', strokeWidth: 10.5 },
+        { label: 'Ditolak', value: rejectedCount.value, color: '#f97360', strokeWidth: 8 },
     ];
     let offset = 0;
 
@@ -377,9 +377,9 @@ const statusChartData = computed(() => [
                     </div>
 
                     <div class="dashboard-approval-legend">
-                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-approved"></i>Approved</span><strong>{{ approvedCount }}</strong></div>
-                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-pending"></i>Pending</span><strong>{{ pendingCount }}</strong></div>
-                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-rejected"></i>Rejected</span><strong>{{ rejectedCount }}</strong></div>
+                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-approved"></i>Disetujui</span><strong>{{ approvedCount }}</strong></div>
+                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-pending"></i>Menunggu</span><strong>{{ pendingCount }}</strong></div>
+                        <div class="dashboard-legend-row"><span><i class="dashboard-legend-dot dashboard-legend-rejected"></i>Ditolak</span><strong>{{ rejectedCount }}</strong></div>
                     </div>
                 </div>
 

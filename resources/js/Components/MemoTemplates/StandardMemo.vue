@@ -12,8 +12,40 @@ const props = defineProps({
 
 const isKeringananJasa = computed(() => props.memo.template?.category === 'Keringanan Jasa');
 const isPhoneDeathReliefMemo = computed(() => props.memo.template?.name === 'Pengajuan Keringanan Pelunasan Nasabah Meninggal Dunia');
+const isReclaimMemo = computed(() => {
+    return props.memo.template?.name === 'Permohonan Keringanan Denda Reclaim'
+        || props.memo.title?.toLowerCase().includes('denda reclaim')
+        || (props.memo.template?.category === 'Keringanan Jasa' && props.memo.template?.field_schema?.some((f) => f.key === 'rincian_reclaim'))
+        || props.items.some((item) => Array.isArray(item?.rincian_reclaim));
+});
 const isSdmRequest = computed(() => props.memo.template?.name === 'HRD - Permohonan Permintaan SDM');
 const sdmField = computed(() => props.memo.template?.field_schema?.find((field) => field.type === 'table'));
+
+const reclaimTableColumns = [
+    { key: 'nama_nasabah', label: 'Nama Nasabah' },
+    { key: 'tanggal_jatuh_tempo', label: 'Tgl jatuh Tempo', type: 'date' },
+    { key: 'tanggal_pembayaran', label: 'Tgl Pembayaran', type: 'date' },
+    { key: 'pinjaman_pokok', label: 'Pinjaman Pokok', type: 'number' },
+    { key: 'no_faktur', label: 'No Faktur' },
+    { key: 'jenis_barang', label: 'Jenis Barang' },
+    { key: 'keterangan', label: 'Keterangan' },
+];
+
+const getTableColumns = (field) => {
+    if (field.key === 'rincian_reclaim' || isReclaimMemo.value) {
+        return reclaimTableColumns;
+    }
+    return field.columns || [];
+};
+
+const getReclaimPermohonan = (item) => {
+    return item?.permohonan
+        || item?.rincian_reclaim?.find((r) => r?.permohonan)?.permohonan
+        || props.memo.field_values?.permohonan
+        || item?.rincian
+        || props.memo.field_values?.rincian
+        || '';
+};
 
 const formatFieldValue = (field, value) => {
     if (value === undefined || value === null || value === '') return '-';
@@ -36,7 +68,7 @@ const formatFieldValue = (field, value) => {
         }
 
         return date.toLocaleDateString('id-ID', {
-            day: '2-digit', month: 'short', year: 'numeric',
+            day: '2-digit', month: isReclaimMemo.value ? 'long' : 'short', year: 'numeric',
         });
     }
     if (field.key.includes('persentase')) return `${value}%`;
@@ -140,11 +172,11 @@ const signatureGridStyle = computed(() => {
     <template v-else-if="isKeringananJasa">
         <template v-if="memo.template?.field_schema?.some((f) => f.type === 'table')">
             <template v-for="(item, itemIndex) in items" :key="'keringanan-' + itemIndex">
-                <div v-if="memo.template?.field_schema?.some((f) => f.type !== 'table' && f.key !== 'rincian')" class="mb-3 text-xs font-sans">
+                <div v-if="memo.template?.field_schema?.some((f) => f.type !== 'table' && !['rincian', 'permohonan'].includes(f.key))" class="mb-3 text-xs font-sans">
                     <table class="text-xs border-collapse border-none" style="border: none !important;">
                         <tbody>
                             <tr
-                                v-for="field in memo.template?.field_schema?.filter((f) => f.type !== 'table' && f.key !== 'rincian')"
+                                v-for="field in memo.template?.field_schema?.filter((f) => f.type !== 'table' && !['rincian', 'permohonan'].includes(f.key))"
                                 :key="field.key"
                                 class="border-none"
                                 style="border: none !important;"
@@ -166,12 +198,11 @@ const signatureGridStyle = computed(() => {
                     <table class="w-full text-xs border-collapse border border-black mb-4">
                         <thead>
                             <tr class="bg-[#1f497d] text-white">
-                                <th class="border border-black px-2.5 py-1.5 w-10 text-center font-bold !text-white">No.</th>
+                                <th v-if="!isReclaimMemo" class="border border-black px-2.5 py-1.5 w-10 text-center font-bold !text-white">No.</th>
                                 <th
-                                    v-for="column in field.columns"
+                                    v-for="column in getTableColumns(field)"
                                     :key="column.key"
-                                    class="border border-black px-3 py-1.5 font-bold !text-white"
-                                    :class="column.key === 'nominal' ? 'text-right' : column.key === 'tanggal' ? 'text-center' : 'text-left'"
+                                    class="border border-black px-2 py-1.5 font-bold !text-white text-center"
                                 >
                                     {{ cleanLabel(column.label) }}
                                 </th>
@@ -179,18 +210,18 @@ const signatureGridStyle = computed(() => {
                         </thead>
                         <tbody>
                             <tr v-for="(row, rowIndex) in item?.[field.key] || []" :key="field.key + '-' + rowIndex">
-                                <td class="border border-black px-2.5 py-1.5 text-center font-medium">{{ rowIndex + 1 }}.</td>
+                                <td v-if="!isReclaimMemo" class="border border-black px-2.5 py-1.5 text-center font-medium">{{ rowIndex + 1 }}.</td>
                                 <td
-                                    v-for="column in field.columns"
+                                    v-for="column in getTableColumns(field)"
                                     :key="column.key"
-                                    class="border border-black px-3 py-1.5 whitespace-pre-wrap"
-                                    :class="column.key === 'nominal' ? 'text-right font-medium' : column.key === 'tanggal' ? 'text-center' : 'text-left'"
+                                    class="border border-black px-2 py-1.5 whitespace-pre-wrap text-center"
+                                    :class="column.key === 'pinjaman_pokok' ? 'font-medium' : ''"
                                 >
                                     {{ formatFieldValue(column, row?.[column.key]) }}
                                 </td>
                             </tr>
                             <tr v-if="!(item?.[field.key]?.length)">
-                                <td :colspan="(field.columns?.length || 0) + 1" class="border border-black px-3 py-2 text-center text-gray-500 italic">
+                                <td :colspan="isReclaimMemo ? getTableColumns(field).length : ((getTableColumns(field)?.length || 0) + 1)" class="border border-black px-3 py-2 text-center text-gray-500 italic">
                                     - Tidak ada rincian data -
                                 </td>
                             </tr>
@@ -199,7 +230,10 @@ const signatureGridStyle = computed(() => {
                 </template>
 
                 <!-- Rincian di bawah/di luar tabel sebelum kalimat penutup -->
-                <div v-if="item?.rincian || memo.field_values?.rincian" class="mb-4 text-xs font-sans text-gray-900 leading-normal text-justify">
+                <div v-if="isReclaimMemo && getReclaimPermohonan(item)" class="mb-4 text-xs font-sans text-gray-900 leading-normal text-justify">
+                    <div class="whitespace-pre-wrap">{{ getReclaimPermohonan(item) }}</div>
+                </div>
+                <div v-else-if="item?.rincian || memo.field_values?.rincian" class="mb-4 text-xs font-sans text-gray-900 leading-normal text-justify">
                     <p v-if="!/^\s*rincian\s*:/i.test(item?.rincian || memo.field_values?.rincian || '')" class="font-bold mb-1">Uraian Permohonan :</p>
                     <div class="whitespace-pre-wrap">{{ item?.rincian || memo.field_values?.rincian }}</div>
                 </div>

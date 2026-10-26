@@ -143,7 +143,7 @@ const attachments = [
 
                 <!-- Kiri: Preview Dokumen -->
                 <a-col :xs="24" :lg="16" class="flex flex-col items-center justify-start print:block print:w-full print:m-0 print:p-0">
-                    <div class="document-preview-scroll print:overflow-visible">
+                    <div class="document-preview-scroll print:overflow-visible w-full flex flex-col items-center">
                         <div class="document-preview-paper shadow-md print:shadow-none bg-white">
                             <div id="printable-fp">
                                 <FormPengajuanDocument :berita-acara="document" />
@@ -157,7 +157,7 @@ const attachments = [
 
                     <!-- Card 1: Info Dokumen -->
                     <a-card title="Informasi Dokumen" :bordered="false" class="rounded-lg shadow-sm mb-6" size="small">
-                        <template #extra>
+                        <template #extra v-if="user?.role !== 'KC'">
                             <a-button type="link" size="small" @click="printDocument">
                                 <template #icon><printer-outlined /></template>
                                 Cetak

@@ -16,6 +16,30 @@
     max-width: 100%;
 }
 
+/* Document preview containers — hide scrollbars (rollbars) completely for a clean look */
+.document-preview-scroll,
+.document-preview-paper,
+.memo-document,
+#printable-ba,
+#printable-fp,
+.request-form-document,
+.memo-attachment-docx {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.document-preview-scroll::-webkit-scrollbar,
+.document-preview-paper::-webkit-scrollbar,
+.memo-document::-webkit-scrollbar,
+#printable-ba::-webkit-scrollbar,
+#printable-fp::-webkit-scrollbar,
+.request-form-document::-webkit-scrollbar,
+.memo-attachment-docx::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
 @media screen and (min-width: 768px) {
     .document-preview-scroll {
         width: 100%;
@@ -23,6 +47,14 @@
         max-width: 100%;
         overflow-x: auto;
         overscroll-behavior-x: contain;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+
+    .document-preview-scroll::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
     }
 
     .document-preview-scroll > .document-preview-paper,
@@ -32,6 +64,8 @@
         width: 210mm;
         min-width: 210mm;
         max-width: none;
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 
@@ -412,6 +446,16 @@
     .request-form-document {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+
+    .memo-document::-webkit-scrollbar,
+    #printable-ba::-webkit-scrollbar,
+    .request-form-document::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
     }
 
     .memo-document > *,
