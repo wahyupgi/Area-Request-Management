@@ -350,8 +350,8 @@ const signatureGridStyle = computed(() => {
             <div class="h-14 w-full flex items-end justify-center relative">
                 <img v-if="slot.user?.digital_signature?.signature_image" :src="'/storage/' + slot.user.digital_signature.signature_image" :alt="slot.label" @error="handleImgError" class="h-12 object-contain absolute bottom-0" />
             </div>
-            <p class="relative top-1 w-full whitespace-nowrap text-[10px] mt-1 text-black leading-none">{{ displayName(slot) }}</p>
-            <p class="relative -top-0.5 w-full font-bold text-gray-800 leading-tight">
+            <p class="relative top-2 w-full whitespace-nowrap text-[10px] mt-1 text-black leading-none">{{ displayName(slot) }}</p>
+            <p class="relative -top-1 w-full font-bold text-gray-800 leading-tight">
                 <span v-for="(line, roleIndex) in roleLines(slot.role === 'Area Manager' ? 'Manager' : slot.role)" :key="roleIndex" class="block whitespace-nowrap">{{ line }}</span>
             </p>
         </div>

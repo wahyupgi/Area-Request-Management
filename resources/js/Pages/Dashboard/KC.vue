@@ -285,24 +285,24 @@ const focusDocuments = (status) => {
             </button>
 
             <!-- Submitted / Pending -->
-            <button type="button" @click="focusDocuments('submitted')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-amber-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-amber-400/90 tracking-wider">Menunggu AM</span>
+            <button type="button" @click="focusDocuments('submitted')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
+                <span class="text-xs font-semibold text-slate-400 tracking-wider">Menunggu AM</span>
                 <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.submitted ?? 0 }}</p>
-                <p class="text-[11px] text-amber-400/70 mt-2">Dalam proses verifikasi</p>
+                <p class="text-[11px] text-slate-500 mt-2">Dalam proses verifikasi</p>
             </button>
 
             <!-- Approved -->
-            <button type="button" @click="focusDocuments('approved')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-emerald-400 tracking-wider">Disetujui</span>
+            <button type="button" @click="focusDocuments('approved')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
+                <span class="text-xs font-semibold text-slate-400 tracking-wider">Disetujui</span>
                 <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.approved ?? 0 }}</p>
-                <p class="text-[11px] text-emerald-500/70 mt-2">Selesai & resmi</p>
+                <p class="text-[11px] text-slate-500 mt-2">Selesai & resmi</p>
             </button>
 
             <!-- Rejected -->
-            <button type="button" @click="focusDocuments('rejected')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-rose-500/20 shadow-sm block w-full text-left transition-all">
-                <span class="text-xs font-semibold text-rose-400 tracking-wider">Perlu Revisi</span>
+            <button type="button" @click="focusDocuments('rejected')" class="dashboard-kpi-card card-hover-rise bg-slate-800/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/20 shadow-sm block w-full text-left transition-all">
+                <span class="text-xs font-semibold text-slate-400 tracking-wider">Perlu Revisi</span>
                 <p class="text-2xl font-bold text-blue-400 mt-1">{{ submissionStats.rejected ?? 0 }}</p>
-                <p class="text-[11px] text-rose-500/70 mt-2">Ditolak Area Manager</p>
+                <p class="text-[11px] text-slate-500 mt-2">Ditolak Area Manager</p>
             </button>
         </div>
 
