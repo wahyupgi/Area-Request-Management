@@ -54,6 +54,7 @@ class MemoController extends Controller
             ->get();
 
         return Inertia::render('Memo/Create', [
+            'signature' => auth()->user()->digitalSignature,
             'templates' => $templates,
             'branches' => auth()->user()
                 ->availableBranchesForDocuments()
@@ -70,13 +71,23 @@ class MemoController extends Controller
     {
         $memo = $this->service->createDraft($request);
 
+        // Kirim langsung dari server bila TTD sudah ada / diunggah, tanpa singgah di halaman edit.
+        $user = auth()->user();
+        if ($request->boolean('submit_after_save') && ($user->digitalSignature || $request->hasFile('signature_image'))) {
+            $response = $this->performSubmit($request, $memo);
+
+            if ($memo->fresh()->status === 'submitted') {
+                return $response;
+            }
+        }
+
         $routeParameters = ['memo' => $memo->id];
         if ($request->boolean('submit_after_save')) {
             $routeParameters['submit'] = 1;
         }
 
-        return redirect()->route('memos.edit', $routeParameters)
-            ->with('success', 'Memo berhasil dibuat sebagai draft.');
+        // Toast "draft tersimpan" ditampilkan oleh frontend (Create.vue) agar tidak dobel.
+        return redirect()->route('memos.edit', $routeParameters);
     }
 
     /**
@@ -149,14 +160,22 @@ class MemoController extends Controller
             'status' => 'draft',
         ]);
 
-        return redirect()->route('memos.edit', $memo->id)
-            ->with('success', 'Memo berhasil diperbarui.');
+        // Toast ditampilkan oleh frontend (Edit.vue) agar tidak dobel saat simpan + kirim.
+        return redirect()->route('memos.edit', $memo->id);
     }
 
     /**
      * Submit memo to AM.
      */
     public function submit(SubmitMemoRequest $request, Memo $memo)
+    {
+        return $this->performSubmit($request, $memo);
+    }
+
+    /**
+     * Proses kirim memo ke AM (dipakai oleh submit() dan store() untuk kirim langsung).
+     */
+    private function performSubmit(Request $request, Memo $memo)
     {
         $user = auth()->user();
 

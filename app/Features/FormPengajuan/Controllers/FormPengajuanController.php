@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\FormPengajuan;
 use App\Models\FormPengajuanAttachment;
+use App\Mail\DocumentSubmitted;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -17,6 +19,7 @@ class FormPengajuanController extends Controller
     public function create()
     {
         return Inertia::render('FormPengajuan/Create', [
+            'signature' => auth()->user()->digitalSignature,
             'branches' => auth()->user()
                 ->availableBranchesForDocuments()
                 ->with('area:id,name')
@@ -75,7 +78,8 @@ class FormPengajuanController extends Controller
             'meta.request_data.substitute_position' => 'nullable|string|max:255',
             'meta.request_data.phone' => 'nullable|string|max:100',
             'attachments' => 'nullable|array|max:3',
-            'attachments.*' => 'file|mimes:docx,pdf|max:10240',
+            'attachments.*' => 'file|mimes:pdf|max:10240',
+            'signature_image' => ['nullable', 'file', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'submit' => 'required|boolean',
             'title' => 'required|string|max:500',
         ]);
@@ -90,7 +94,7 @@ class FormPengajuanController extends Controller
         $storedPaths = [];
 
         try {
-            DB::transaction(function () use ($validated, $user, $branch, $request, &$storedPaths) {
+            $form = DB::transaction(function () use ($validated, $user, $branch, $request, &$storedPaths) {
                 $form = FormPengajuan::create([
                     'template' => $validated['template'],
                     'title' => $validated['title'],
@@ -114,6 +118,8 @@ class FormPengajuanController extends Controller
                         'original_name' => $file->getClientOriginalName(),
                     ]);
                 }
+
+                return $form;
             });
         } catch (\Throwable $exception) {
             if ($storedPaths && !Storage::disk('public')->delete($storedPaths)) {
@@ -130,8 +136,21 @@ class FormPengajuanController extends Controller
             $routeParameters['submit'] = 1;
         }
 
-        return redirect()->route('form-pengajuan.edit', $routeParameters)
-            ->with('success', 'Draft Form Pengajuan berhasil disimpan.');
+        // Kirim langsung dari server bila TTD sudah ada, tanpa singgah di halaman edit.
+        if ($request->boolean('submit_after_save') && ($user->digitalSignature || $request->hasFile('signature_image'))) {
+            $response = $this->submit($request, $form);
+
+            if ($form->fresh()->status === FormPengajuan::STATUS_SUBMITTED) {
+                return $response;
+            }
+        }
+
+        $redirect = redirect()->route('form-pengajuan.edit', $routeParameters);
+
+        // Saat langsung kirim, toast cukup dari proses submit agar tidak dobel.
+        return $request->boolean('submit_after_save')
+            ? $redirect
+            : $redirect->with('success', 'Draft Form Pengajuan berhasil disimpan.');
     }
 
     /**
@@ -207,8 +226,8 @@ class FormPengajuanController extends Controller
             'data'  => $validated['meta']['request_data'] ?? $formPengajuan->data,
         ]);
 
-        return redirect()->route('form-pengajuan.edit', $formPengajuan->id)
-            ->with('success', 'Form Pengajuan berhasil diperbarui.');
+        // Toast ditampilkan oleh frontend (Edit.vue) agar tidak dobel saat simpan + kirim.
+        return redirect()->route('form-pengajuan.edit', $formPengajuan->id);
     }
 
     /**
@@ -250,6 +269,8 @@ class FormPengajuanController extends Controller
             'status'       => FormPengajuan::STATUS_SUBMITTED,
             'submitted_at' => now(),
         ]);
+
+        $this->notifyAreaManager($formPengajuan);
 
         return redirect()->route('form-pengajuan.show', $formPengajuan->id)
             ->with('success', 'Form Pengajuan berhasil dikirim ke Area Manager.');
@@ -352,4 +373,30 @@ class FormPengajuanController extends Controller
 
         return back()->with('success', 'Lampiran Form Pengajuan berhasil dihapus.');
     }
-}
+
+    /**
+     * Kirim email ke Area Manager (diantrekan, kegagalan tidak membatalkan pengiriman).
+     */
+    private function notifyAreaManager(FormPengajuan $doc): void
+    {
+        $doc->loadMissing(['creator', 'areaManager', 'branch']);
+
+        if (!$doc->areaManager?->email || !$doc->creator) {
+            return;
+        }
+
+        try {
+            Mail::to($doc->areaManager->email)->queue(new DocumentSubmitted(
+                'Form Pengajuan',
+                $doc->title,
+                $doc->code,
+                $doc->branch?->name,
+                $doc->creator,
+                $doc->areaManager,
+                route('approvals.form-pengajuan.review', $doc->id),
+                $doc->submitted_at,
+            ));
+        } catch (\Throwable $e) {
+            \Log::warning('Gagal mengantrekan email Form Pengajuan: ' . $e->getMessage());
+        }
+    }}

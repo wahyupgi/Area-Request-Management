@@ -53,6 +53,9 @@ const signatureFile       = ref(null);
 const signaturePreview    = ref(null);
 const signatureError      = ref('');
 const submittingMemo      = ref(false);
+// Kirim otomatis dari halaman Create: data sudah tersimpan, tidak perlu simpan ulang.
+const autoSubmitting      = ref(props.openSubmit && !!props.signature?.signature_image);
+let skipSave = false;
 
 // ── Attachment state ──────────────────────────────────────────────
 const fileInput  = ref(null);
@@ -116,11 +119,12 @@ const doSubmit = (signatureToUpload = signatureFile.value) => {
             forceFormData: true,
             onSuccess: () => {
                 showSignatureDialog.value = false;
-                success('Berita Acara berhasil dikirim ke Area Manager.');
                 router.visit(route('berita-acara.show', props.beritaAcara.id));
             },
             onError: (errors) => {
                 submittingMemo.value = false;
+                autoSubmitting.value = false;
+                skipSave = false;
                 showSignatureDialog.value = false;
                 showError('Gagal Mengirim Berita Acara', Object.values(errors).join(' '));
             },
@@ -128,7 +132,7 @@ const doSubmit = (signatureToUpload = signatureFile.value) => {
         });
     };
 
-    if (isLainnya) {
+    if (isLainnya || skipSave) {
         doSendToAm();
         return;
     }
@@ -173,7 +177,7 @@ const selectSignature = (event) => {
 const confirmSubmit = () => doSubmit(signatureFile.value);
 
 onMounted(() => {
-    if (props.openSubmit) submitMemo();
+    if (props.openSubmit) { skipSave = true; submitMemo(); }
 });
 
 const triggerFileInput = () => fileInput.value?.click();
@@ -184,6 +188,11 @@ const isWord = (fileName) => /\.(docx?|doc)$/i.test(fileName || '');
 const uploadFile = async () => {
     const file = fileInput.value?.files[0];
     if (!file) return;
+    if (!isPdf(file.name) && file.type !== 'application/pdf') {
+        if (fileInput.value) fileInput.value.value = '';
+        showError('Format Tidak Sesuai', 'File lampiran hanya boleh berupa PDF (.pdf).');
+        return;
+    }
 
     if (isLainnya && (props.beritaAcara.attachments?.length || 0) > 0) {
         const confirmed = await confirm('Ganti Dokumen Berita Acara?', 'Dokumen yang ada saat ini akan digantikan dengan berkas baru.');
@@ -243,6 +252,12 @@ const deleteDraft = async () => {
 
 <template>
     <Head :title="'Edit Berita Acara: ' + beritaAcara.title" />
+    <Teleport to="body">
+        <div v-if="autoSubmitting" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;align-items:center;gap:10px;padding:10px 18px;border-radius:999px;background:#fff;color:#334155;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+            <a-spin size="small" />
+            <span>Memproses...</span>
+        </div>
+    </Teleport>
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-2.5">
@@ -274,16 +289,16 @@ const deleteDraft = async () => {
             </a-alert>
 
             <a-form layout="vertical" @finish="save">
-                <!-- Khusus Berita Acara Lainnya: Hanya 1 Field Upload File PDF/Word & Tombol Kirim -->
+                <!-- Khusus Berita Acara Lainnya: Hanya 1 Field Upload File PDF & Tombol Kirim -->
                 <a-card v-if="isLainnya" :bordered="false" class="rounded-lg shadow-sm">
                     <h2 class="text-base font-semibold mb-1">Berkas Dokumen Berita Acara</h2>
-                    <p class="text-xs text-gray-500 mb-4">Dokumen Berita Acara dalam format PDF atau Word (maksimal 10 MB).</p>
+                    <p class="text-xs text-gray-500 mb-4">Dokumen Berita Acara dalam format PDF (maksimal 10 MB).</p>
 
                     <input
                         ref="fileInput"
                         type="file"
                         @change="uploadFile"
-                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                        accept=".pdf,application/pdf"
                         style="display: none !important;"
                     />
 
@@ -398,13 +413,13 @@ const deleteDraft = async () => {
                                         </template>
                                     </a-list>
                                 </div>
-                                <p class="mb-2 text-xs text-gray-400">Maksimal 3 lampiran DOCX/PDF, 10 MB per file. {{ beritaAcara.attachments?.length || 0 }}/3 file digunakan.</p>
+                                <p class="mb-2 text-xs text-gray-400">Maksimal 3 lampiran PDF, 10 MB per file. {{ beritaAcara.attachments?.length || 0 }}/3 file digunakan.</p>
                                 <div class="flex items-center gap-3">
                                     <input
                                         ref="fileInput"
                                         type="file"
                                         @change="uploadFile"
-                                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                                        accept=".pdf,application/pdf"
                                         :disabled="(beritaAcara.attachments?.length || 0) >= 3 || uploading"
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                     />

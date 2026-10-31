@@ -36,7 +36,7 @@ const signatureError = ref('');
 const savingSignature = ref(false);
 const attachmentValidationError = computed(() => Object.entries(form.errors)
     .find(([key]) => key === 'attachments' || key.startsWith('attachments.'))?.[1] || '');
-const allowedAttachmentExtensions = '.docx,.pdf';
+const allowedAttachmentExtensions = '.pdf,application/pdf';
 
 const triggerFileInput = () => fileInputRef.value?.click();
 const triggerSupportFileInput = () => supportFileInputRef.value?.click();
@@ -82,6 +82,7 @@ const form = useForm({
     penutup: 'Demikian berita acara ini dibuat agar dapat dipergunakan sebagai mana mestinya. Terima kasih atas perhatiannya dan kerjasamanya.',
     attachments: [],
     submit_after_save: false,
+    signature_image: null,
 });
 
 watch(() => form.branch_id, (val) => {
@@ -134,6 +135,11 @@ watch(() => form.meta.template, (templateName) => {
 const selectAttachment = (event) => {
     attachmentError.value = '';
     const selectedFiles = Array.from(event.target.files || []);
+    if (selectedFiles.some((file) => !isPdf(file.name) && file.type !== 'application/pdf')) {
+        attachmentError.value = 'Format file lampiran harus berupa PDF (.pdf).';
+        event.target.value = '';
+        return;
+    }
     const allFiles = [...form.attachments, ...selectedFiles];
 
     if (allFiles.length > 3) {
@@ -240,7 +246,7 @@ const validateBaForm = () => {
 
     if (form.meta.template === 'Berita Acara Lainnya') {
         if (!form.attachments || form.attachments.length === 0) {
-            attachmentError.value = 'Lampiran dokumen Berita Acara (Word/PDF) wajib diunggah.';
+            attachmentError.value = 'Lampiran dokumen Berita Acara (PDF) wajib diunggah.';
             hasError = true;
         }
         if (!form.title) {
@@ -300,12 +306,52 @@ const submit = () => {
     });
 };
 
-const submitAndSend = () => {
-    if (!validateBaForm()) return;
+const sendWithForm = () => {
     form.submit_after_save = true;
     form.post(route('berita-acara.store'), {
         forceFormData: true,
+        onSuccess: () => { showSignatureDialog.value = false; },
+        onFinish: () => { savingSignature.value = false; },
     });
+};
+
+const submitAndSend = () => {
+    if (!validateBaForm()) return;
+
+    // TTD belum ada: minta TTD dulu lewat dialog, tanpa pindah halaman.
+    if (!props.signature?.signature_image) {
+        showSignatureDialog.value = true;
+        return;
+    }
+
+    form.signature_image = null;
+    sendWithForm();
+};
+
+const selectSignature = (event) => {
+    const file = event.target.files?.[0];
+    signatureError.value = '';
+    signatureFile.value = file || null;
+    signaturePreview.value = null;
+    if (!file) return;
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+        signatureError.value = 'Tanda tangan harus berupa file PNG atau JPG.';
+        signatureFile.value = null; event.target.value = ''; return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        signatureError.value = 'Ukuran tanda tangan maksimal 2MB.';
+        signatureFile.value = null; event.target.value = ''; return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => { signaturePreview.value = e.target.result; };
+    reader.readAsDataURL(file);
+};
+
+const confirmSignature = () => {
+    if (!signatureFile.value) return;
+    savingSignature.value = true;
+    form.signature_image = signatureFile.value;
+    sendWithForm();
 };
 
 
@@ -355,13 +401,13 @@ const submitAndSend = () => {
                 </a-form-item>
             </a-card>
 
-            <!-- Khusus Berita Acara Lainnya: Hanya 1 Field Upload File PDF/Word & Tombol Kirim -->
+            <!-- Khusus Berita Acara Lainnya: Hanya 1 Field Upload File PDF & Tombol Kirim -->
             <a-card v-if="form.meta.template === 'Berita Acara Lainnya'" :bordered="false" class="mb-6 rounded-lg shadow-sm">
                 <h2 class="text-base font-semibold mb-1">Upload Berkas Berita Acara</h2>
-                <p class="text-xs text-gray-500 mb-4">Unggah dokumen Berita Acara Anda dalam format file PDF atau Word (maksimal 10 MB).</p>
+                <p class="text-xs text-gray-500 mb-4">Unggah dokumen Berita Acara Anda dalam format file PDF (maksimal 10 MB).</p>
 
                 <a-form-item
-                    label="File Dokumen (PDF / Word)"
+                    label="File Dokumen (PDF)"
                     :validateStatus="attachmentError || attachmentValidationError ? 'error' : ''"
                     :help="attachmentError || attachmentValidationError"
                     class="mb-4"
@@ -475,7 +521,7 @@ const submitAndSend = () => {
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <h2 class="text-sm font-semibold mb-1">Lampiran Pendukung</h2>
                             <p class="text-xs text-gray-400 mb-3">
-                                Unggah file DOCX atau PDF. Maksimal 3 file, 10 MB per file.
+                                Unggah file PDF. Maksimal 3 file, 10 MB per file.
                             </p>
                             <input
                                 ref="supportFileInputRef"
@@ -704,5 +750,26 @@ const submitAndSend = () => {
             </a-row>
         </a-form>
 
+        <!-- Modal TTD: muncul bila TTD KC belum ada saat klik Kirim -->
+        <a-modal
+            v-model:open="showSignatureDialog"
+            title="Tanda Tangan Digital KC"
+            :confirmLoading="savingSignature"
+            :okButtonProps="{ disabled: savingSignature || !signatureFile }"
+            okText="Tanda Tangani & Kirim ke AM"
+            cancelText="Batal"
+            @ok="confirmSignature"
+            centered
+        >
+            <p class="text-sm text-gray-500 mb-4">Masukkan tanda tangan terlebih dahulu sebelum Berita Acara dikirim ke Area Manager.</p>
+            <a-form layout="vertical">
+                <a-form-item label="Upload tanda tangan" extra="Format PNG/JPG, maksimal 2MB.">
+                    <input type="file" @change="selectSignature" accept="image/png,image/jpeg" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                </a-form-item>
+            </a-form>
+            <img v-if="signaturePreview" :src="signaturePreview" alt="Preview tanda tangan" class="h-16 mt-4 object-contain border border-gray-200 rounded-lg p-1" />
+            <p v-if="signatureError" class="text-red-500 text-sm mt-2">{{ signatureError }}</p>
+            <p v-if="form.errors.signature_image" class="text-red-500 text-sm mt-2">{{ form.errors.signature_image }}</p>
+        </a-modal>
     </AuthenticatedLayout>
 </template>

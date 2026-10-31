@@ -9,13 +9,14 @@ import { SaveOutlined, SendOutlined, LeftOutlined } from '@ant-design/icons-vue'
 const props = defineProps({
     branches:  { type: Array, default: () => [] },
     templates: { type: Array, default: () => [] },
+    signature: { type: Object, default: null },
 });
 
 const page = usePage();
 const { success } = useSweetAlert();
 
 const attachmentError = ref('');
-const allowedAttachmentExtensions = '.docx,.pdf';
+const allowedAttachmentExtensions = '.pdf,application/pdf';
 
 const availableTemplates = computed(() => {
     return (props.templates || []).map(t => ({
@@ -86,6 +87,11 @@ watch(() => form.template, (templateName) => {
 const selectAttachment = (event) => {
     attachmentError.value = '';
     const selectedFiles = Array.from(event.target.files || []);
+    if (selectedFiles.some(file => !/\.pdf$/i.test(file.name || '') && file.type !== 'application/pdf')) {
+        attachmentError.value = 'Format file lampiran harus berupa PDF (.pdf).';
+        event.target.value = '';
+        return;
+    }
     const allFiles = [...form.attachments, ...selectedFiles];
 
     if (allFiles.length > 3) {
@@ -153,13 +159,24 @@ const validateFpForm = () => {
 };
 
 const saving = ref('');
+const showSignatureDialog = ref(false);
+const signatureFile = ref(null);
+const signaturePreview = ref(null);
+const signatureError = ref('');
 
-const persist = (sendAfterSave) => {
+const persist = (sendAfterSave, signatureToUpload = null) => {
     form.clearErrors();
     if (!validateFpForm()) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
     }
+
+    // TTD belum ada: minta TTD dulu lewat dialog, tanpa pindah halaman.
+    if (sendAfterSave && !props.signature?.signature_image && !signatureToUpload) {
+        showSignatureDialog.value = true;
+        return;
+    }
+
     saving.value = sendAfterSave ? 'send' : 'draft';
     form.transform(data => ({
         title: data.title || data.template,
@@ -169,10 +186,35 @@ const persist = (sendAfterSave) => {
         submit: false,
         submit_after_save: sendAfterSave,
         attachments: data.attachments,
+        ...(signatureToUpload ? { signature_image: signatureToUpload } : {}),
     })).post(route('form-pengajuan.store'), {
         forceFormData: true,
+        onSuccess: () => { showSignatureDialog.value = false; },
         onFinish: () => { saving.value = ''; },
     });
+};
+
+const selectSignature = (event) => {
+    const file = event.target.files?.[0];
+    signatureError.value = '';
+    signatureFile.value = file || null;
+    signaturePreview.value = null;
+    if (!file) return;
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+        signatureError.value = 'Format harus PNG atau JPG.';
+        signatureFile.value = null; event.target.value = ''; return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        signatureError.value = 'Ukuran maksimal 2MB.';
+        signatureFile.value = null; event.target.value = ''; return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => { signaturePreview.value = e.target.result; };
+    reader.readAsDataURL(file);
+};
+
+const confirmSignature = () => {
+    if (signatureFile.value) persist(true, signatureFile.value);
 };
 
 const submit = () => persist(false);
@@ -244,7 +286,7 @@ const submitAndSend = () => persist(true);
                         <a-card :bordered="false" class="rounded-lg shadow-sm">
                             <h2 class="text-sm font-semibold mb-1">Lampiran Pendukung</h2>
                             <p class="text-xs text-gray-400 mb-3">
-                                Unggah file DOCX atau PDF. Maksimal 3 file, 10 MB per file.
+                                Unggah file PDF. Maksimal 3 file, 10 MB per file.
                             </p>
                             <input
                                 type="file"
@@ -443,5 +485,26 @@ const submitAndSend = () => persist(true);
                 </a-col>
             </a-row>
         </a-form>
+        <!-- Modal TTD: muncul bila TTD KC belum ada saat klik Kirim -->
+        <a-modal
+            v-model:open="showSignatureDialog"
+            title="Tanda Tangan Digital KC"
+            :confirmLoading="saving === 'send'"
+            :okButtonProps="{ disabled: saving === 'send' || !signatureFile }"
+            okText="Tanda Tangani & Kirim ke AM"
+            cancelText="Batal"
+            @ok="confirmSignature"
+            centered
+        >
+            <p class="text-sm text-gray-500 mb-4">Masukkan tanda tangan terlebih dahulu sebelum Form Pengajuan dikirim ke Area Manager.</p>
+            <a-form layout="vertical">
+                <a-form-item label="Upload tanda tangan" extra="Format PNG/JPG, maksimal 2MB.">
+                    <input type="file" @change="selectSignature" accept="image/png,image/jpeg" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                </a-form-item>
+            </a-form>
+            <img v-if="signaturePreview" :src="signaturePreview" alt="Preview tanda tangan" class="h-16 mt-4 object-contain border border-gray-200 rounded-lg p-1" />
+            <p v-if="signatureError" class="text-red-500 text-sm mt-2">{{ signatureError }}</p>
+            <p v-if="form.errors.signature_image" class="text-red-500 text-sm mt-2">{{ form.errors.signature_image }}</p>
+        </a-modal>
     </AuthenticatedLayout>
 </template>

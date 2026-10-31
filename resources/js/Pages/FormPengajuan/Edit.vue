@@ -36,6 +36,9 @@ const signatureFile       = ref(null);
 const signaturePreview    = ref(null);
 const signatureError      = ref('');
 const submitting          = ref(false);
+// Kirim otomatis dari halaman Create: data sudah tersimpan, tidak perlu simpan ulang.
+const autoSubmitting      = ref(props.openSubmit && !!props.signature?.signature_image);
+let skipSave = false;
 
 // ── Attachment state ──────────────────────────────────────────────
 const fileInput = ref(null);
@@ -72,7 +75,10 @@ const save = () => {
 // ── Submit to AM ──────────────────────────────────────────────────
 const doSubmit = (signatureToUpload = signatureFile.value) => {
     submitting.value = true;
-    form.put(route('form-pengajuan.update', props.formPengajuan.id), {
+    const saveFirst = skipSave
+        ? (opts) => opts.onSuccess()
+        : (opts) => form.put(route('form-pengajuan.update', props.formPengajuan.id), opts);
+    saveFirst({
         preserveScroll: true,
         onSuccess: () => {
             const formData = new FormData();
@@ -81,11 +87,12 @@ const doSubmit = (signatureToUpload = signatureFile.value) => {
                 forceFormData: true,
                 onSuccess: () => {
                     showSignatureDialog.value = false;
-                    success('Form Pengajuan berhasil dikirim ke Area Manager.');
                     router.visit(route('form-pengajuan.show', props.formPengajuan.id));
                 },
                 onError: (errors) => {
                     submitting.value = false;
+                    autoSubmitting.value = false;
+                    skipSave = false;
                     showSignatureDialog.value = false;
                     if (!errors.signature) showError(Object.values(errors).join(' '));
                 },
@@ -122,7 +129,7 @@ const selectSignature = (event) => {
 const confirmSubmit = () => doSubmit(signatureFile.value);
 
 onMounted(() => {
-    if (props.openSubmit) submitForm();
+    if (props.openSubmit) { skipSave = true; submitForm(); }
 });
 
 // ── Attachment ────────────────────────────────────────────────────
@@ -135,6 +142,12 @@ const deleteAttachment = async (attachment) => {
 
 <template>
     <Head :title="'Edit Form Pengajuan: ' + formPengajuan.title" />
+    <Teleport to="body">
+        <div v-if="autoSubmitting" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;align-items:center;gap:10px;padding:10px 18px;border-radius:999px;background:#fff;color:#334155;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+            <a-spin size="small" />
+            <span>Memproses...</span>
+        </div>
+    </Teleport>
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-2.5">
@@ -234,7 +247,7 @@ const deleteAttachment = async (attachment) => {
                                 </a-list-item>
                             </template>
                         </a-list>
-                        <p class="mb-2 text-xs text-gray-400">Maksimal 3 lampiran DOCX/PDF, 10 MB per file.</p>
+                        <p class="mb-2 text-xs text-gray-400">Maksimal 3 lampiran PDF, 10 MB per file.</p>
                     </div>
 
                     <!-- Action buttons -->

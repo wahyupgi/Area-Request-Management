@@ -22,13 +22,13 @@ const isSdmRequest = computed(() => props.memo.template?.name === 'HRD - Permoho
 const sdmField = computed(() => props.memo.template?.field_schema?.find((field) => field.type === 'table'));
 
 const reclaimTableColumns = [
-    { key: 'nama_nasabah', label: 'Nama Nasabah' },
-    { key: 'tanggal_jatuh_tempo', label: 'Tgl jatuh Tempo', type: 'date' },
-    { key: 'tanggal_pembayaran', label: 'Tgl Pembayaran', type: 'date' },
-    { key: 'pinjaman_pokok', label: 'Pinjaman Pokok', type: 'number' },
-    { key: 'no_faktur', label: 'No Faktur' },
-    { key: 'jenis_barang', label: 'Jenis Barang' },
-    { key: 'keterangan', label: 'Keterangan' },
+    { key: 'nama_nasabah', label: 'Nama\nNasabah', width: '13%' },
+    { key: 'tanggal_jatuh_tempo', label: 'Tgl Jatuh\nTempo', type: 'date', nowrap: true, width: '13.5%' },
+    { key: 'tanggal_pembayaran', label: 'Tgl\nPembayaran', type: 'date', nowrap: true, width: '14.5%' },
+    { key: 'pinjaman_pokok', label: 'Pinjaman\nPokok', type: 'number', nowrap: true, width: '14%' },
+    { key: 'no_faktur', label: 'No Faktur', nowrap: true, width: '15%' },
+    { key: 'jenis_barang', label: 'Jenis\nBarang', width: '11%' },
+    { key: 'keterangan', label: 'Keterangan', align: 'left', width: '19%' },
 ];
 
 const getTableColumns = (field) => {
@@ -68,7 +68,7 @@ const formatFieldValue = (field, value) => {
         }
 
         return date.toLocaleDateString('id-ID', {
-            day: '2-digit', month: isReclaimMemo.value ? 'long' : 'short', year: 'numeric',
+            day: '2-digit', month: 'short', year: 'numeric',
         });
     }
     if (field.key.includes('persentase')) return `${value}%`;
@@ -195,14 +195,18 @@ const signatureGridStyle = computed(() => {
 
                 <!-- Tabel Item (Rincian Jasa): tabel bergaris dengan header tanpa baris Total -->
                 <template v-for="field in memo.template?.field_schema?.filter((f) => f.type === 'table')" :key="'tbl-' + field.key">
-                    <table class="w-full text-xs border-collapse border border-black mb-4">
+                    <table :class="['w-full border-collapse border border-black mb-4', isReclaimMemo ? 'text-[10.5px] table-fixed' : 'text-xs']">
                         <thead>
                             <tr class="bg-[#1f497d] text-white">
                                 <th v-if="!isReclaimMemo" class="border border-black px-2.5 py-1.5 w-10 text-center font-bold !text-white">No.</th>
                                 <th
                                     v-for="column in getTableColumns(field)"
                                     :key="column.key"
-                                    class="border border-black px-2 py-1.5 font-bold !text-white text-center"
+                                    :style="column.width ? { width: column.width } : undefined"
+                                    :class="[
+                                        'border border-black py-1.5 font-bold !text-white text-center align-middle leading-tight',
+                                        isReclaimMemo ? 'px-1 whitespace-pre-line' : 'px-2',
+                                    ]"
                                 >
                                     {{ cleanLabel(column.label) }}
                                 </th>
@@ -214,8 +218,14 @@ const signatureGridStyle = computed(() => {
                                 <td
                                     v-for="column in getTableColumns(field)"
                                     :key="column.key"
-                                    class="border border-black px-2 py-1.5 whitespace-pre-wrap text-center"
-                                    :class="column.key === 'pinjaman_pokok' ? 'font-medium' : ''"
+                                    :style="column.width ? { width: column.width } : undefined"
+                                    :class="[
+                                        'border border-black py-1.5 align-middle leading-snug',
+                                        isReclaimMemo ? 'px-1.5' : 'px-2',
+                                        column.nowrap ? 'whitespace-nowrap' : 'whitespace-pre-wrap break-words',
+                                        column.align === 'left' ? 'text-left' : 'text-center',
+                                        column.key === 'pinjaman_pokok' ? 'font-medium' : '',
+                                    ]"
                                 >
                                     {{ formatFieldValue(column, row?.[column.key]) }}
                                 </td>

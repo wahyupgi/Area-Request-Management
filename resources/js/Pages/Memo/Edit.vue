@@ -123,7 +123,7 @@ const submitWithSignature = (signatureToUpload = signatureFile.value) => {
             forceFormData: true,
             onSuccess: () => {
                 showSignatureDialog.value = false;
-                success('Internal Memo berhasil dikirim ke Area Manager.');
+                // Toast sukses ditampilkan lewat flash dari server (MemoController::submit).
                 router.visit(route('memos.show', props.memo.id));
             },
             onError: (errors) => {
@@ -177,6 +177,11 @@ const isWord = (fileName) => /\.(docx?|doc)$/i.test(fileName || '');
 const uploadFile = async () => {
     const file = fileInput.value?.files[0];
     if (!file) return;
+    if (!isPdf(file.name) && file.type !== 'application/pdf') {
+        if (fileInput.value) fileInput.value.value = '';
+        showError('Format Tidak Sesuai', 'File lampiran hanya boleh berupa PDF (.pdf).');
+        return;
+    }
 
     if (props.memo.template?.name === 'Lainnya' && props.memo.attachments?.length > 0) {
         const confirmed = await confirm('Ganti Dokumen Memo?', 'Dokumen memo yang ada saat ini akan digantikan dengan berkas baru.');
@@ -280,16 +285,16 @@ const deleteMemo = async () => {
 
             <!-- Edit Form -->
             <a-form layout="vertical" @finish="save">
-                <!-- Khusus Template Lainnya: Hanya 1 Field Upload File PDF/Word & Tombol Kirim -->
+                <!-- Khusus Template Lainnya: Hanya 1 Field Upload File PDF & Tombol Kirim -->
                 <a-card v-if="memo.template?.name === 'Lainnya'" :bordered="false" class="rounded-lg shadow-sm">
                     <h2 class="text-base font-semibold mb-1">Berkas Dokumen Memo</h2>
-                    <p class="text-xs text-gray-500 mb-4">Dokumen Memo dalam format PDF atau Word (maksimal 10 MB).</p>
+                    <p class="text-xs text-gray-500 mb-4">Dokumen Memo dalam format PDF (maksimal 10 MB).</p>
 
                     <input
                         ref="fileInput"
                         type="file"
                         @change="uploadFile"
-                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                        accept=".pdf,application/pdf"
                         style="display: none !important;"
                     />
 
@@ -415,14 +420,14 @@ const deleteMemo = async () => {
                                     </a-list>
                                 </div>
                                 <p class="mb-2 text-xs text-gray-400">
-                                    Maksimal 3 lampiran DOCX/PDF, 10 MB per file. {{ memo.attachments.length }}/3 file digunakan.
+                                    Maksimal 3 lampiran PDF, 10 MB per file. {{ memo.attachments.length }}/3 file digunakan.
                                 </p>
                                 <div class="flex items-center gap-3">
                                     <input
                                         ref="fileInput"
                                         type="file"
                                         @change="uploadFile"
-                                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                                        accept=".pdf,application/pdf"
                                         :disabled="memo.attachments.length >= 3 || uploading"
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                     />

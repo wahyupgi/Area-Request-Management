@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\BeritaAcara;
 use App\Models\BeritaAcaraAttachment;
 use App\Models\Branch;
+use App\Mail\DocumentSubmitted;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -72,17 +74,18 @@ class BeritaAcaraController extends Controller
                 $request->input('meta.template') === 'Berita Acara Lainnya' ? 'min:1' : 'nullable',
                 'max:3',
             ],
-            'attachments.*'         => 'file|mimes:doc,docx,pdf|max:10240',
+            'attachments.*'         => 'file|mimes:pdf|max:10240',
+            'signature_image'       => ['nullable', 'file', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
         ], [
             'branch_id.required'     => 'Cabang wajib dipilih.',
             'branch_id.exists'       => 'Cabang tidak valid atau di luar wewenang Anda.',
             'meta.template.required' => 'Jenis Berita Acara wajib dipilih.',
             'title.required'         => 'Judul Berita Acara wajib diisi.',
-            'attachments.required'   => 'Lampiran berkas Berita Acara (Word/PDF) wajib diunggah.',
-            'attachments.min'        => 'Lampiran berkas Berita Acara (Word/PDF) wajib diunggah minimal 1 berkas.',
+            'attachments.required'   => 'Lampiran berkas Berita Acara (PDF) wajib diunggah.',
+            'attachments.min'        => 'Lampiran berkas Berita Acara (PDF) wajib diunggah minimal 1 berkas.',
             'attachments.max'        => 'Maksimal 3 lampiran berkas.',
             'attachments.*.file'     => 'File lampiran tidak valid.',
-            'attachments.*.mimes'    => 'Format file lampiran harus berupa PDF atau Word (DOCX).',
+            'attachments.*.mimes'    => 'Format file lampiran harus berupa PDF.',
             'attachments.*.max'      => 'Ukuran masing-masing file lampiran maksimal 10 MB.',
         ]);
 
@@ -128,8 +131,21 @@ class BeritaAcaraController extends Controller
             $routeParameters['submit'] = 1;
         }
 
-        return redirect()->route('berita-acara.edit', $routeParameters)
-            ->with('success', 'Draft Berita Acara berhasil disimpan.');
+        // Kirim langsung dari server bila TTD sudah ada, tanpa singgah di halaman edit.
+        if ($request->boolean('submit_after_save') && ($user->digitalSignature || $request->hasFile('signature_image'))) {
+            $response = $this->submit($request, $ba);
+
+            if ($ba->fresh()->status === BeritaAcara::STATUS_SUBMITTED) {
+                return $response;
+            }
+        }
+
+        $redirect = redirect()->route('berita-acara.edit', $routeParameters);
+
+        // Saat langsung kirim, toast cukup dari proses submit agar tidak dobel.
+        return $request->boolean('submit_after_save')
+            ? $redirect
+            : $redirect->with('success', 'Draft Berita Acara berhasil disimpan.');
     }
 
     /**
@@ -206,8 +222,8 @@ class BeritaAcaraController extends Controller
             'penutup'             => $validated['penutup'] ?? null,
         ]);
 
-        return redirect()->route('berita-acara.edit', $beritaAcara->id)
-            ->with('success', 'Berita Acara berhasil diperbarui.');
+        // Toast ditampilkan oleh frontend (Edit.vue) agar tidak dobel saat simpan + kirim.
+        return redirect()->route('berita-acara.edit', $beritaAcara->id);
     }
 
     /**
@@ -250,6 +266,8 @@ class BeritaAcaraController extends Controller
             'submitted_at' => now(),
         ]);
 
+        $this->notifyAreaManager($beritaAcara);
+
         return redirect()->route('berita-acara.show', $beritaAcara->id)
             ->with('success', 'Berita Acara berhasil dikirim ke Area Manager.');
     }
@@ -270,7 +288,7 @@ class BeritaAcaraController extends Controller
             return back()->withErrors(['file' => 'Berita Acara maksimal memiliki 3 lampiran.']);
         }
 
-        $request->validate(['file' => 'required|file|mimes:doc,docx,pdf|max:10240']);
+        $request->validate(['file' => 'required|file|mimes:pdf|max:10240']);
         $file = $request->file('file');
         $path = $file->store('berita-acara-attachments/' . $beritaAcara->id, 'public');
 
@@ -333,4 +351,30 @@ class BeritaAcaraController extends Controller
             'items' => $items,
         ]);
     }
-}
+
+    /**
+     * Kirim email ke Area Manager (diantrekan, kegagalan tidak membatalkan pengiriman).
+     */
+    private function notifyAreaManager(BeritaAcara $doc): void
+    {
+        $doc->loadMissing(['creator', 'areaManager', 'branch']);
+
+        if (!$doc->areaManager?->email || !$doc->creator) {
+            return;
+        }
+
+        try {
+            Mail::to($doc->areaManager->email)->queue(new DocumentSubmitted(
+                'Berita Acara',
+                $doc->title,
+                $doc->code,
+                $doc->branch?->name,
+                $doc->creator,
+                $doc->areaManager,
+                route('approvals.ba.review', $doc->id),
+                $doc->submitted_at,
+            ));
+        } catch (\Throwable $e) {
+            \Log::warning('Gagal mengantrekan email Berita Acara: ' . $e->getMessage());
+        }
+    }}

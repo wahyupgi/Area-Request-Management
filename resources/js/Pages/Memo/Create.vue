@@ -17,7 +17,7 @@ import {
     CloseCircleOutlined,
 } from '@ant-design/icons-vue';
 
-const props = defineProps({ templates: Array, branches: Array });
+const props = defineProps({ templates: Array, branches: Array, signature: { type: Object, default: null } });
 
 const defaultClosing = 'Demikian Internal Memo ini dibuat agar dapat dipergunakan sebagaimana mestinya. Terima kasih atas perhatian dan kerjasamanya.';
 
@@ -250,14 +250,21 @@ const formatFileSize = (bytes) => {
 };
 
 const selectAttachment = (event) => {
-    attachment.value = event.target.files[0] || null;
+    const file = event.target.files[0] || null;
+    if (file && !isPdf(file.name) && file.type !== 'application/pdf') {
+        attachment.value = null;
+        event.target.value = '';
+        showError('Format Tidak Sesuai', 'File lampiran hanya boleh berupa PDF (.pdf).');
+        return;
+    }
+    attachment.value = file;
     if (attachment.value) attachmentRequiredError.value = '';
 };
 
 const requireAttachmentForOther = () => {
     if (isOtherTemplate.value && !attachment.value) {
-        attachmentRequiredError.value = 'Lampiran file Word/PDF wajib diunggah.';
-        showError('Data Belum Lengkap', 'Lampiran file Word/PDF wajib diunggah.');
+        attachmentRequiredError.value = 'Lampiran file PDF wajib diunggah.';
+        showError('Data Belum Lengkap', 'Lampiran file PDF wajib diunggah.');
         return false;
     }
     return true;
@@ -275,13 +282,60 @@ const submit = () => {
     });
 };
 
-const submitAndSign = () => {
-    if (!validateForm() || !requireAttachmentForOther()) return;
+const showSignatureDialog = ref(false);
+const signatureFile = ref(null);
+const signaturePreview = ref(null);
+const signatureError = ref('');
+const sendingWithSignature = ref(false);
+
+const sendNow = (signatureToUpload = null) => {
     form.submit_after_save = true;
     form.transform((data) => ({
         ...data,
         attachment: attachment.value,
-    })).post(route('memos.store'), { forceFormData: true });
+        ...(signatureToUpload ? { signature_image: signatureToUpload } : {}),
+    })).post(route('memos.store'), {
+        forceFormData: true,
+        onSuccess: () => { showSignatureDialog.value = false; },
+        onFinish: () => { sendingWithSignature.value = false; },
+    });
+};
+
+const submitAndSign = () => {
+    if (!validateForm() || !requireAttachmentForOther()) return;
+
+    // TTD belum ada: minta TTD dulu lewat dialog, tanpa pindah halaman.
+    if (!props.signature?.signature_image) {
+        showSignatureDialog.value = true;
+        return;
+    }
+
+    sendNow();
+};
+
+const selectSignature = (event) => {
+    const file = event.target.files?.[0];
+    signatureError.value = '';
+    signatureFile.value = file || null;
+    signaturePreview.value = null;
+    if (!file) return;
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+        signatureError.value = 'Tanda tangan harus berupa file PNG atau JPG.';
+        signatureFile.value = null; event.target.value = ''; return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        signatureError.value = 'Ukuran tanda tangan maksimal 2MB.';
+        signatureFile.value = null; event.target.value = ''; return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => { signaturePreview.value = e.target.result; };
+    reader.readAsDataURL(file);
+};
+
+const confirmSignature = () => {
+    if (!signatureFile.value) return;
+    sendingWithSignature.value = true;
+    sendNow(signatureFile.value);
 };
 </script>
 
@@ -333,13 +387,13 @@ const submitAndSign = () => {
                 </a-form-item>
             </a-card>
 
-            <!-- Khusus Template Lainnya: Hanya 1 Field Upload File PDF/Word & Tombol Kirim -->
+            <!-- Khusus Template Lainnya: Hanya 1 Field Upload File PDF & Tombol Kirim -->
             <a-card v-if="isOtherTemplate" :bordered="false" class="mb-6 rounded-lg shadow-sm">
                 <h2 class="text-base font-semibold mb-1">Upload Berkas Memo</h2>
-                <p class="text-xs text-gray-500 mb-4">Unggah dokumen Memo Anda dalam format file PDF atau Word (maksimal 10 MB).</p>
+                <p class="text-xs text-gray-500 mb-4">Unggah dokumen Memo Anda dalam format file PDF (maksimal 10 MB).</p>
 
                 <a-form-item
-                    label="File Dokumen (PDF / Word)"
+                    label="File Dokumen (PDF)"
                     :validateStatus="(form.errors.attachment || attachmentRequiredError) ? 'error' : ''"
                     :help="form.errors.attachment || attachmentRequiredError"
                     class="mb-4"
@@ -348,7 +402,7 @@ const submitAndSign = () => {
                         ref="fileInputRef"
                         type="file"
                         @change="selectAttachment"
-                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                        accept=".pdf,application/pdf"
                         style="display: none !important;"
                     />
 
@@ -463,10 +517,10 @@ const submitAndSign = () => {
                             <input
                                 type="file"
                                 @change="selectAttachment"
-                                accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                                accept=".pdf,application/pdf"
                                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                             />
-                            <p class="text-xs text-gray-400 mt-2">Format: .docx atau .pdf. Untuk menjaga format dokumen, unggah PDF. Maksimal 10MB.</p>
+                            <p class="text-xs text-gray-400 mt-2">Format: .pdf (maksimal 10MB).</p>
                         </a-card>
                     </div>
                 </a-col>
@@ -574,5 +628,26 @@ const submitAndSign = () => {
                 </a-col>
             </a-row>
         </a-form>
+        <!-- Modal TTD: muncul bila TTD KC belum ada saat klik Kirim -->
+        <a-modal
+            v-model:open="showSignatureDialog"
+            title="Tanda Tangan Digital KC"
+            :confirmLoading="sendingWithSignature"
+            :okButtonProps="{ disabled: sendingWithSignature || !signatureFile }"
+            okText="Tanda Tangani & Kirim ke AM"
+            cancelText="Batal"
+            @ok="confirmSignature"
+            centered
+        >
+            <p class="text-sm text-gray-500 mb-4">Masukkan tanda tangan terlebih dahulu sebelum Internal Memo dikirim ke Area Manager.</p>
+            <a-form layout="vertical">
+                <a-form-item label="Upload tanda tangan" extra="Format PNG/JPG, maksimal 2MB.">
+                    <input type="file" @change="selectSignature" accept="image/png,image/jpeg" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                </a-form-item>
+            </a-form>
+            <img v-if="signaturePreview" :src="signaturePreview" alt="Preview tanda tangan" class="h-16 mt-4 object-contain border border-gray-200 rounded-lg p-1" />
+            <p v-if="signatureError" class="text-red-500 text-sm mt-2">{{ signatureError }}</p>
+            <p v-if="form.errors.signature_image" class="text-red-500 text-sm mt-2">{{ form.errors.signature_image }}</p>
+        </a-modal>
     </AuthenticatedLayout>
 </template>

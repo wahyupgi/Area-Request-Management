@@ -76,7 +76,8 @@ class StoreMemoRequest extends FormRequest
                     $this->user()->availableBranchesForDocuments()->pluck('branches.id')->all()
                 ),
             ],
-            'attachment' => ['nullable', 'file', 'mimes:doc,docx,pdf', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'signature_image' => ['nullable', 'file', 'mimes:png,jpg,jpeg', 'max:2048'],
         ];
     }
 }
